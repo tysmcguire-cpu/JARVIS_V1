@@ -1,6 +1,25 @@
+import type { UserSettings } from "@prisma/client";
 import { findModule, type ModuleSlug } from "./navigation";
 const phases: Partial<Record<ModuleSlug, string>> = { assistant: "Phase 5", notifications: "Phase 6", settings: "Phase 1" };
-export function ModulePage({ slug, demo }: { slug: ModuleSlug; demo: boolean }) {
+export function ModulePage({ slug, demo, settings }: { slug: ModuleSlug; demo: boolean; settings?: UserSettings | null }) {
   const moduleInfo = findModule(slug)!;
-  return <><div className="page-heading"><div><p className="eyebrow">JARVIS WORKSPACE</p><h1>{moduleInfo.label}</h1><p className="subtitle">{slug === "settings" ? "Connection status and initial workspace preferences." : "A dedicated space for the next stage of your personal operating system."}</p></div></div>{slug === "settings" ? <div className="settings-grid"><section className="panel"><div className="panel-heading"><h2>Initial notification defaults</h2></div><dl className="preferences">{[["Timezone", "America/Chicago"], ["Weekly review", "Enabled · Sunday 18:00"], ["Deadline reminders", "Enabled"], ["Financial alerts", "Enabled"], ["Morning briefing", "Disabled · inactive time 08:00"], ["Unsolicited AI recommendations", "Disabled"]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="settings-note">Defaults shown for reference. Editing and notification delivery arrive in later phases; no notifications are currently sent.</p></section><section className="panel"><div className="panel-heading"><h2>Connections</h2></div><dl className="preferences">{["Google Calendar", "Gmail", "GitHub", "Canvas LMS", "Google Drive", "Financial accounts", "Telegram", "OpenAI"].map(name => <div key={name}><dt>{name}</dt><dd>Not connected</dd></div>)}</dl><p className="settings-note">{demo ? "Synthetic preview is isolated from all owner data." : "Supabase identity verified for this session. External connectors are deferred to Phase 4."}</p></section></div> : <section className="panel empty-state"><span className="small-badge">Planned · {phases[slug] ?? "Phase 2"}</span><h2>Your {moduleInfo.label.toLowerCase()} space is ready to grow.</h2><p>Navigation and access protection are in place. This module has no data entry or external actions in Foundation.</p></section>}</>;
+  const demoPreferences = [["Timezone", "America/Chicago"], ["Weekly review", "Enabled · Sunday 18:00"], ["Deadline reminders", "Enabled"], ["Financial alerts", "Enabled"], ["Morning briefing", "Disabled · inactive time 08:00"], ["Unsolicited AI recommendations", "Disabled"]];
+  const enabled = (value: boolean) => value ? "Enabled" : "Disabled";
+  const preferences = demo ? demoPreferences : settings ? [
+    ["Timezone", settings.timezone],
+    ["Weekly review", `${enabled(settings.weeklyReviewEnabled)} · ${["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][settings.weeklyReviewDay]} ${settings.weeklyReviewTime}`],
+    ["Deadline reminders", enabled(settings.deadlineReminders)],
+    ["Financial alerts", enabled(settings.financialAlerts)],
+    ["Morning briefing", `${enabled(settings.morningBriefingEnabled)} · ${settings.morningBriefingEnabled ? "scheduled" : "inactive time"} ${settings.morningBriefingTime}`],
+    ["Unsolicited AI recommendations", enabled(settings.unsolicitedAiEnabled)]
+  ] : [];
+  return <>
+    <div className="page-heading"><div><p className="eyebrow">JARVIS WORKSPACE</p><h1>{moduleInfo.label}</h1><p className="subtitle">{slug === "settings" ? "Connection status and initial workspace preferences." : "A dedicated space for the next stage of your personal operating system."}</p></div></div>
+    {slug === "settings" ? <div className="settings-grid">
+      <section className="panel"><div className="panel-heading"><h2>Initial notification defaults</h2></div><dl className="preferences">{preferences.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+        <p className="settings-note">{demo ? "Synthetic defaults shown for reference." : settings ? "Preferences loaded from your owner-scoped database record." : "No settings record exists. Run the documented owner provisioning command."} Editing and notification delivery arrive in later phases; no notifications are currently sent.</p>
+      </section>
+      <section className="panel"><div className="panel-heading"><h2>Connections</h2></div><dl className="preferences">{["Google Calendar", "Gmail", "GitHub", "Canvas LMS", "Google Drive", "Financial accounts", "Telegram", "OpenAI"].map(name => <div key={name}><dt>{name}</dt><dd>Not connected</dd></div>)}</dl><p className="settings-note">{demo ? "Synthetic preview is isolated from all owner data." : "Supabase identity verified for this session. External connectors are deferred to Phase 4."}</p></section>
+    </div> : <section className="panel empty-state"><span className="small-badge">Planned · {phases[slug] ?? "Phase 2"}</span><h2>Your {moduleInfo.label.toLowerCase()} space is ready to grow.</h2><p>Navigation and access protection are in place. This module has no data entry or external actions in Foundation.</p></section>}
+  </>;
 }

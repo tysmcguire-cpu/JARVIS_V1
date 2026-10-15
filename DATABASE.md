@@ -9,18 +9,10 @@ UserSettings has a cascading owner foreign key, unique owner key, timestamps and
 1. Create a Supabase development project. Disable new user signups and anonymous sign-in. Create the owner manually in Auth with a strong password; copy its UUID into JARVIS_OWNER_ID.
 2. Copy the database URLs from Supabase Connect into .env. Use a pooled runtime URL with `pgbouncer=true` for transaction pooling and direct/session connection for DIRECT_URL. Require SSL remotely. URL-encode password characters. Do not commit either URL.
 3. Run `pnpm db:generate`, `pnpm db:validate`, `pnpm db:migrate`. Migration requires Supabase's auth schema; it will not work unchanged on generic PostgreSQL.
-4. Provision the owner using the SQL below in Supabase SQL Editor, replacing the explicitly marked UUID. This is a manual operation; no application superuser endpoint exists.
+4. Run `pnpm db:provision` explicitly. The command verifies the configured Auth identity, refuses to replace another/synthetic owner, and creates the owner/settings records without overwriting existing preferences. It creates jarvis_app with a cryptographically generated password, SELECT on the three application tables, no superuser/role creation/database creation/RLS bypass, and owner-scoped SELECT policies. Its password is saved only to the ignored .env DATABASE_URL; DIRECT_URL remains the separate administrative connection. The command will not reset an existing role with unknown credentials.
+5. Run `pnpm db:verify`. It checks the live migration, persisted owner/settings and defaults, runtime role restrictions, owner/second-user/unscoped RLS, transaction identity isolation, write denial and denial of access to auth.users. It changes no user records. Errors suppress private details.
 
-```sql
-begin;
-insert into public."User" (id, "updatedAt")
-values ('<APPROVED_AUTH_USER_UUID>'::uuid, now());
-insert into public."UserSettings" ("userId", "updatedAt")
-values ('<APPROVED_AUTH_USER_UUID>'::uuid, now());
-commit;
-```
-
-The app does not need a Supabase service-role API key. Prisma uses its database connection only on the server. Provision a least-privilege runtime role with SELECT/INSERT/UPDATE/DELETE on application tables only, never schema creation or auth table access. A privileged role may bypass RLS: server-side owner checks and scoped queries remain mandatory. Browser roles have SELECT-only access, further restricted by RLS. Database migrations must use a separate privileged connection. Configure roles in Supabase before production.
+The app does not need a Supabase service-role API key. Prisma uses its database connection only on the server. Phase 1 runtime access is SELECT-only; later phases must explicitly grant narrowly scoped writes and add matching RLS policies when implementing internal data entry. Role/policy provisioning is explicit environment setup rather than a schema migration requiring deployment-specific database roles. Browser roles have SELECT-only access under RLS. Never use migration administrator credentials as the running app's DATABASE_URL. Do not supply DIRECT_URL to a deployed request runtime; keep it in a separate migration environment.
 
 The synthetic UI needs no database. Optional development seed requires JARVIS_SEED_SYNTHETIC=true and JARVIS_DATABASE_ENV=development, refuses production and existing real owner rows, and still requires a real development Auth owner UUID. It only seeds a clearly labeled synthetic owner/settings. Never seed production.
 

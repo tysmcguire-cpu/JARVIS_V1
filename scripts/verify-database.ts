@@ -1,0 +1,52 @@
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { PrismaClient } from "@prisma/client";
+import { z } from "zod";
+process.loadEnvFile(".env");
+const ownerId = z.uuid().parse(process.env.JARVIS_OWNER_ID);
+const runtime = new PrismaClient();
+const admin = new PrismaClient({ datasources: { db: { url: z.string().min(1).parse(process.env.DIRECT_URL) } } });
+async function verify() {
+  const migrations = await admin.$queryRaw<{ count: number }[]>`SELECT count(*)::int AS count FROM public._prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
+  assert(migrations[0].count >= 1);
+  const role = await runtime.$queryRaw<{ name: string; bypass: boolean; superuser: boolean }[]>`SELECT current_user AS name, rolbypassrls AS bypass, rolsuper AS superuser FROM pg_roles WHERE rolname=current_user`;
+  assert.equal(role[0].name, "jarvis_app");
+  assert.equal(role[0].bypass, false);
+  assert.equal(role[0].superuser, false);
+  assert.equal(await runtime.userSettings.count(), 0);
+  await runtime.$transaction(async tx => {
+    await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub', ${ownerId}, true)`;
+    const settings = await tx.userSettings.findUniqueOrThrow({ where: { userId: ownerId } });
+    assert.equal(settings.timezone, "America/Chicago");
+    assert.equal(settings.weeklyReviewTime, "18:00");
+    assert.equal(settings.morningBriefingEnabled, false);
+    assert.equal(settings.morningBriefingTime, "08:00");
+    assert.equal(settings.unsolicitedAiEnabled, false);
+  });
+  await runtime.$transaction(async tx => {
+    await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub', ${randomUUID()}, true)`;
+    assert.equal(await tx.user.count(), 0);
+    assert.equal(await tx.userSettings.count(), 0);
+    assert.equal(await tx.auditLog.count(), 0);
+  });
+  assert.equal(await runtime.userSettings.count(), 0);
+  await assert.rejects(runtime.$queryRaw`SELECT id FROM auth.users LIMIT 1`);
+  await assert.rejects(runtime.$executeRaw`UPDATE public."UserSettings" SET timezone=timezone WHERE false`);
+  const owner = await admin.user.findUniqueOrThrow({ where: { id: ownerId }, include: { settings: true } });
+  assert.equal(owner.synthetic, false);
+  assert(owner.settings);
+  const rls = await admin.$queryRaw<{ count: number }[]>`SELECT count(*)::int AS count FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN ('User','UserSettings','AuditLog') AND c.relrowsecurity`;
+  assert.equal(rls[0].count, 3);
+  const projectUrl = z.url().parse(process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const headers = { apikey: z.string().min(1).parse(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) };
+  const settingsResponse = await fetch(`${projectUrl}/auth/v1/settings`, { headers, signal: AbortSignal.timeout(15000) });
+  assert.equal(settingsResponse.status, 200);
+  const authSettings = await settingsResponse.json();
+  assert.equal(authSettings.disable_signup, true);
+  assert.equal(authSettings.external.email, true);
+  assert.equal(authSettings.external.anonymous_users, false);
+  const anonymousResponse = await fetch(`${projectUrl}/rest/v1/UserSettings?select=userId&limit=1`, { headers, signal: AbortSignal.timeout(15000) });
+  assert([401, 403].includes(anonymousResponse.status));
+  console.info("PASS: live migration, persisted owner/settings, runtime least privilege, owner-scoped reads, second-user isolation, pool identity isolation, auth-table denial, write denial, disabled signup/anonymous auth and anonymous Data API denial.");
+}
+verify().catch(() => { console.error("Live database verification failed; secret values and private errors suppressed."); process.exitCode=1; }).finally(async () => { await runtime.$disconnect(); await admin.$disconnect(); });

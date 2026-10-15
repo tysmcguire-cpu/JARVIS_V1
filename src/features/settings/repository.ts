@@ -1,8 +1,5 @@
 import "server-only";
-import { db } from "@/lib/db";
-import { requireOwner } from "@/features/auth/server";
+import { withOwnerDatabase } from "@/lib/owner-db";
 export async function readSettings() {
-  const owner = await requireOwner();
-  // Explicit ownership is required even with a privileged Prisma connection.
-  return db.userSettings.findUnique({ where: { userId: owner.id } });
+  return withOwnerDatabase((tx, ownerId) => tx.userSettings.findUnique({ where: { userId: ownerId } }));
 }

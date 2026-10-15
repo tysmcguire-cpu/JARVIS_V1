@@ -16,12 +16,13 @@ src/features/shell/       responsive navigation and module placeholders
 src/components/ui/        local shadcn/ui-style primitives
 src/lib/                  environment, database and Supabase adapters
 prisma/                   schema, reviewed SQL migration and guarded seed
+scripts/                  explicit owner/role provisioning and live DB verification
 tests/                    Vitest policies and Playwright shell tests
 ```
 
 Private layout checks the Supabase user on the server. Every future data operation must independently invoke requireOwner; layout protection alone does not secure actions or APIs. The proxy refreshes cookies and rejects missing configuration or an unauthorized owner before streaming, preserving actual redirect/404 response statuses. It is an early gate, not a replacement for data-layer authorization. getUser verifies session validity with Supabase. Only the exact server-configured owner UUID is accepted. No session object from the browser establishes trust.
 
-Synthetic routes use fixed fixtures, never repositories. The private dashboard has genuine empty states, not synthetic owner facts. Module pages are explicitly labeled placeholders. Notifications settings are reference defaults, not a working preference editor. Static defaults mirror schema defaults; stored settings are available through the owner-scoped repository for future editors.
+Synthetic routes use fixed fixtures, never repositories. The private dashboard has genuine empty states, not synthetic owner facts. Module pages are explicitly labeled placeholders. Private Settings reads persisted preferences through withOwnerDatabase, which independently verifies the owner and sets auth.uid's request claim locally inside a Prisma transaction. The SELECT-only jarvis_app role is subject to RLS; unscoped/other-owner reads return no records. Explicit owner predicates remain required. Transaction-local claims cannot leak between pooled requests. Demo settings remain static synthetic examples; editing and notification delivery are deferred.
 
 Prisma 6.19 is deliberately retained for its established PostgreSQL engine and directUrl support; a future Prisma 7 upgrade requires adapter/config migration. Next/React and ESLint config versions are locked together in pnpm-lock.yaml. Use frozen-lockfile installs.
 

@@ -7,13 +7,15 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:production": "playwright test --config playwright.production.config.ts",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate": "prisma migrate deploy",
+    "db:provision": "tsx scripts/provision-owner.ts",
+    "db:verify": "tsx scripts/verify-database.ts",
     "db:seed": "tsx prisma/seed.ts"
   },
   "engines": {

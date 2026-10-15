@@ -11,7 +11,7 @@ The complete JARVIS_SPEC.md is authoritative. Scope is Phase 1 only; no Phase 2 
 - Phase 1 creates identity/settings/audit schema. Domain schemas are designed below and added with their owning phases, avoiding unimplemented tables presented as working features.
 
 ## Missing requirements / conflicts
-- Owner Supabase UUID, Supabase project and connection strings require user configuration. Live auth, migrations and persistence cannot be verified without them.
+- Owner Supabase UUID, project and connection strings were supplied locally and verified. They remain excluded from Git and must be configured separately on other computers.
 - Full normalized domain database versus incremental delivery: Phase 1 includes foundation tables only; Phase 2 adds financial, academic, calendar, career, projects, goals and notes entities. Later phases add Telegram, connectors, AI and jobs.
 - Notifications enabled by default means stored preferences in Phase 1, not live delivery before Phase 6. AI recommendations stay opt-in; scheduled weekly reviews are the explicitly authorized exception.
 - Encryption key custody, backup retention, deletion/export policy, notification thresholds, currency and institution-specific grade rules remain decisions before relevant phases. Initial currency is configurable USD, never a claim about owner data.
@@ -30,14 +30,15 @@ The complete JARVIS_SPEC.md is authoritative. Scope is Phase 1 only; no Phase 2 
 - [x] Read and preserve complete master specification.
 - [x] Review architecture, dependencies, conflicts and missing requirements.
 - [x] Initialize application and modular structure.
-- [x] Add owner authentication and synthetic preview (live Supabase verification pending).
-- [x] Add schema, migration and development seed (migration executed on embedded PostgreSQL; live Supabase pending).
+- [x] Add owner authentication and synthetic preview; owner confirmed live login, stored Settings, logout and login again.
+- [x] Apply migration to Supabase, provision owner/settings and SELECT-only runtime role; verify persisted defaults and ownership isolation.
 - [x] Complete required documentation and environment template.
 - [x] Finish final local checks and record results below.
-- [x] Git author configured from owner-provided identity: Ty McGuire. Foundation prepared for the initial local commit; push access unverified.
+- [x] Git author configured from owner-provided identity: Ty McGuire. Initial Foundation commit e6b79e6 exists locally.
+- [ ] GitHub delivery: push execution approval was declined. Commit final verification locally; do not claim a successful upload.
 
 ## Status
-Plan prepared before implementation. Phase 1 code is implemented and local verification passes. Phase 1 remains awaiting live Supabase acceptance; Phase 2 is blocked until that verification is complete. No real accounts, AI services, Telegram or financial services were connected. No deployment, purchases or external autonomous actions occurred.
+Phase 1 Foundation functionality is implemented and verified locally and against the configured Supabase development project. The owner confirmed the live authentication workflow. GitHub delivery remains pending push execution approval. Phase 2 is not started or authorized by the current task. Supabase is the only configured application service; no financial, AI, Telegram or other domain integrations were connected. No deployment, purchases or external autonomous actions occurred.
 
 ## Executed verification — October 15, 2026
 
@@ -49,16 +50,20 @@ Plan prepared before implementation. Phase 1 code is implemented and local verif
 | Prisma validate | Passed with temporary credential-free localhost URL variables; no connection attempted |
 | ESLint | Passed with no warnings after fixes |
 | TypeScript | Passed |
-| Vitest | 7 tests passed: owner/demo policy and executable PostgreSQL migration/RLS/constraints/defaults/deletion |
+| Vitest | 18 tests passed: owner/demo policy, actual server-action/owner boundaries with mocked provider responses, and executable PostgreSQL migration/RLS/constraints/defaults/deletion |
 | Production build | Passed on Next.js 16.4.1, React 19.3.1, Node 24.19.0 using Webpack |
 | Production smoke | 2 tests passed: demo forbidden despite enabled flag, private redirect and frame protection |
 | Desktop/mobile E2E | 6 tests passed: protected routes, responsive navigation/settings and invalid demo routes |
 | Visual review | Desktop/mobile dashboard and settings screenshots inspected |
-| Live Supabase migration/authentication | Not run: owner project/credentials not provided |
-| Commit/push | Author configured from owner-provided identity; Foundation prepared for initial local commit. Origin read access verified; push not performed |
+| Live Supabase database | Migration applied, owner/settings persisted, SELECT-only runtime role provisioned; owner/second-user/unscoped RLS, pool identity isolation, write denial and auth-table denial passed |
+| Live Auth configuration / anonymous Data API | Disabled signup/anonymous sign-in, enabled email sign-in and anonymous table-read denial verified by db:verify |
+| Live owner authentication | Owner confirmed login, stored Settings, logout and login again; password remained private |
+| Commit/push | Initial commit e6b79e6 exists; final changes prepared for local commit. Push execution approval declined; no upload claimed |
 
 Initial failures were corrected: pnpm build-script approval/PATH setup, anonymous PostCSS export lint warning, and Next.js streamed redirects/404s returning HTTP 200. Proxy preflight gates now preserve the expected statuses and are covered by browser/production tests. Turbopack CSS worker failure required the supported Webpack mode. OneDrive read-only flags on generated .next output interrupted a repeat build; clearing only those generated flags allowed the final build to pass. No source content was deleted.
 
-## Remaining Foundation acceptance steps
+## Remaining delivery and later release checks
 
-Owner action required: configure a dedicated Supabase development project and local .env, disable signup/anonymous auth, create the sole approved Auth user, set its UUID, supply pooled/direct DB URLs, apply migrations and provision the owner row per DATABASE.md. Then execute README.md's live login, unauthorized-user, revocation, persistence and RLS checklist. Never paste credentials into chat or commit them. Git author identity is now configured from owner-provided details. Origin is https://github.com/tysmcguire-cpu/JARVIS_V1.git; read access succeeded and no remote refs were returned. Push access is not yet verified.
+Push the verified commits to https://github.com/tysmcguire-cpu/JARVIS_V1.git once execution approval is granted; no remote history is to be overwritten. Configure the ignored .env securely on each computer. Runtime DATABASE_URL now uses the real provisioned jarvis_app role; DIRECT_URL remains administrative and is only for local migrations/setup. Provisioning was rerun successfully without replacing owner preferences or resetting credentials.
+
+Long-duration live refresh/expiry/revocation, an additional real Auth account, MFA, physical iPhone Safari, backup/restore and export/deletion remain Phase 6 release hardening tasks. Mocked auth-boundary tests and live database second-identity tests cover the Foundation denial paths; they are not claimed as live additional-account tests. No further phases begin during this task.
