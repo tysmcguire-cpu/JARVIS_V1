@@ -67,3 +67,9 @@ Initial failures were corrected: pnpm build-script approval/PATH setup, anonymou
 GitHub delivery is verified at https://github.com/tysmcguire-cpu/JARVIS_V1.git on master; no remote history was overwritten. Configure the ignored .env securely on each computer. Runtime DATABASE_URL now uses the real provisioned jarvis_app role; DIRECT_URL remains administrative and is only for local migrations/setup. Provisioning was rerun successfully without replacing owner preferences or resetting credentials.
 
 Long-duration live refresh/expiry/revocation, an additional real Auth account, MFA, physical iPhone Safari, backup/restore and export/deletion remain Phase 6 release hardening tasks. Mocked auth-boundary tests and live database second-identity tests cover the Foundation denial paths; they are not claimed as live additional-account tests. No further phases begin during this task.
+
+## Owner-requested visual refinement
+
+The owner separately authorized a more technical appearance using three screenshots as visual references, with Phase 2 explicitly deferred. The refinement adds an original vector circular centerpiece, cyan instrument-panel styling, a local clock, matching sign-in styling and responsive layouts. It changes presentation only; no accounts, integrations or autonomous actions were added. Desktop/mobile browser checks and visual review cover the dashboard, sign-in and Settings. Existing security and regression checks remain applicable.
+
+Visual-refinement validation executed successfully: ESLint, TypeScript, 18 unit/database/auth-boundary tests, six desktop/mobile E2E tests (including dashboard overflow checks), production build and two production boundary tests. Desktop/mobile dashboard and sign-in screenshots were inspected. No reference images were copied into the application; the centerpiece is original SVG/CSS.

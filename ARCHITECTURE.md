@@ -29,3 +29,7 @@ Prisma 6.19 is deliberately retained for its established PostgreSQL engine and d
 No services are hosted or paid for by this repository. Phase 6 must choose a persistent job runner: Vercel request handlers alone are not a durable scheduler. No secrets/token encryption is claimed until a real connector and encryption key policy exist.
 
 Development/build scripts explicitly use Webpack. Turbopack's CSS worker failed to start on this Windows runtime even outside the sandbox; Webpack compiled successfully. This is a tooling choice, with no change to application behavior. Next.js generated AGENTS.md is retained for future contributors.
+
+## Command-center visual system
+
+The owner-authorized visual refresh stays within Foundation; Phase 2 remains deferred. command-theme.css layers a dark navy/cyan instrument aesthetic over the structural stylesheet: fine background grids, restrained glow, corner-framed panels, monospaced labels and responsive navigation. CommandCore is an original decorative SVG with a slow outer-ring rotation, not an AI, CPU, memory or connection monitor. Reduced-motion preferences disable rotation. InterfaceClock displays actual browser-local time without announcing every second to assistive technology. Dashboard protocol labels describe access/data context and disconnected domain integrations accurately; synthetic metrics remain labeled. Login and all modules share the theme. No supplied reference images, stock assets, external fonts, new dependencies or backend features are introduced.
