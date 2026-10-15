@@ -10,7 +10,7 @@ export function Shell({ children, active, demo }: { children: React.ReactNode; a
   const [collapsed, setCollapsed] = useState(false);
   const [mobile, setMobile] = useState(false);
   const href = (slug: string) => demo ? `/demo/${slug}` : slug === "dashboard" ? "/" : `/${slug}`;
-  return <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
+  return <div className={`app-shell ${active === "dashboard" ? "dashboard-shell" : ""} ${collapsed ? "sidebar-collapsed" : ""}`}>
     <a href="#main-content" className="skip-link">Skip to content</a>
     {mobile && <button className="nav-backdrop" onClick={() => setMobile(false)} aria-label="Close navigation" />}
     <aside className={`sidebar ${mobile ? "mobile-open" : ""}`} aria-label="Primary navigation">
