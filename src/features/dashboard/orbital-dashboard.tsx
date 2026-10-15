@@ -2,7 +2,7 @@
 import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, FolderKanban, Network, NotebookPen, Pause, Play, Settings, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
-import { CommandCore } from "@/components/ui/command-core";
+import { FlowingCore } from "@/components/ui/flowing-core";
 import { navigation } from "@/features/shell/navigation";
 
 const modules = [
@@ -38,13 +38,12 @@ export function OrbitalDashboard({ demo }: { demo: boolean }) {
         </svg>
         <div className="hub-dust" aria-hidden="true">{Array.from({ length: 24 }, (_, i) => <i key={i} style={{ "--particle-angle": `${i * 15}deg`, "--particle-delay": `${i * .27}s` } as CSSProperties} />)}</div>
         <div className="hub-center">
-          <div className="hub-scanner" aria-hidden="true" />
-          <CommandCore />
+          <FlowingCore paused={paused} />
           <div className="hub-selection" aria-live="polite"><span className="hub-selection-caption">{focused ? "WORKSPACE DESTINATION" : "SELECT A WORKSPACE"}</span><strong>{focused ? label(focused.slug) : "Your world. Within reach."}</strong><p>{focused ? focused.detail : "Choose any module surrounding the core."}</p></div>
         </div>
         <nav className="orbital-modules" aria-label="Workspace modules">
-          {modules.map((module, index) => { const Icon = module.icon; return <Link key={module.slug} href={href(module.slug)} aria-label={`Open ${label(module.slug)}`} className={`orbit-module orbit-${module.side} ${selected === module.slug ? "module-selected" : ""}`} style={{ "--module-x": `${module.x}%`, "--module-y": `${module.y}%`, "--module-delay": `${index * 45}ms` } as CSSProperties} onMouseEnter={() => setSelected(module.slug)} onMouseLeave={() => setSelected(null)} onFocus={() => setSelected(module.slug)} onBlur={() => setSelected(null)}>
-            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><span className="orbit-module-index">{String(index + 1).padStart(2, "0")} / {module.phase === "01" ? "FOUNDATION" : `PLANNED · PHASE ${module.phase}`}</span><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
+          {modules.map((module, index) => { const Icon = module.icon; return <Link key={module.slug} href={href(module.slug)} aria-label={`Open ${label(module.slug)}`} className={`orbit-module orbit-${module.side} ${selected === module.slug ? "module-selected" : ""}`} style={{ "--module-x": `${module.x}%`, "--module-y": `${module.y}%`, "--module-delay": `${index * 45}ms` } as CSSProperties} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) setPaused(true); }} onMouseEnter={() => setSelected(module.slug)} onMouseLeave={() => setSelected(null)} onFocus={() => setSelected(module.slug)} onBlur={() => setSelected(null)}>
+            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><span className="orbit-module-index">{String(index + 1).padStart(2, "0")} / {module.phase === "01" ? "FOUNDATION" : `PLANNED · PHASE ${module.phase}`}</span><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span><span className="module-trace" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
           </Link>; })}
         </nav>
       </div>

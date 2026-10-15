@@ -1,0 +1,63 @@
+/* Latest owner direction: desktop only, one viewport, no page or panel scrolling. */
+html, body { height: 100%; overflow: hidden; }
+.desktop-size-notice { display: none; }
+.app-shell, .app-shell.sidebar-collapsed { height: 100dvh; min-height: 0; overflow: hidden; }
+.app-shell .workspace { display: grid; grid-template-rows: 56px minmax(0, 1fr) 28px; height: 100%; min-height: 0; overflow: hidden; }
+.app-shell .topbar { height: 56px; }
+.app-shell #main-content { min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding: 12px 24px; gap: 10px; }
+.app-shell .mode-banner { flex-shrink: 0; padding: 6px 10px; font-size: 8px; }
+.app-shell .workspace-footer { padding: 6px 24px; font-size: 7px; }
+.app-shell .sidebar { height: 100dvh; min-height: 0; overflow: hidden; padding: 18px 14px 10px; }
+.app-shell .brand { padding-bottom: 18px; }
+.app-shell .nav-group { margin-top: 12px; }.app-shell .nav-caption { font-size: 8px; margin-bottom: 5px; }
+.app-shell .nav-item { min-height: 30px; padding: 7px 12px; margin: 1px 0; font-size: 11px; }
+.app-shell .sidebar-footer { padding-top: 10px; }.app-shell .privacy-line, .app-shell .collapse-button { padding: 9px; font-size: 9px; }.app-shell .collapse-button { margin-top: 4px; }
+.dashboard-shell, .dashboard-shell.sidebar-collapsed { display: grid; grid-template-columns: minmax(0, 1fr); }
+.dashboard-shell #main-content { max-width: none; padding: 10px 24px; }
+.orbital-dashboard { display: grid; grid-template-rows: 46px minmax(0, 1fr) 15px; gap: 8px; flex: 1; min-height: 0; }
+.orbital-heading { margin: 0; }.orbital-heading h1 { font-size: 23px; }.orbital-heading .eyebrow { margin-bottom: 4px; font-size: 7px; }.motion-control { padding: 8px 12px; font-size: 9px; }
+.orbital-console { display: grid; grid-template-rows: 28px minmax(0, 1fr) 31px; min-height: 0; background: radial-gradient(ellipse at 50% 48%, #10196670, transparent 53%), radial-gradient(#4a66a52e .6px, transparent .6px), #020a16; background-size: auto, 16px 16px, auto; }
+.console-topline, .console-bottomline { padding: 7px 18px; min-height: 0; font-size: 7px; }
+.console-bottomline > span:nth-child(2) { font-size: 6px; }.signal-decoration { height: 18px; }.signal-decoration i { max-height: 16px; }
+.orbital-field { display: block; height: auto; min-height: 0; margin: 0 28px; padding: 0; }
+.hub-center { position: absolute; left: 50%; top: 48%; height: min(82%, 650px); width: auto; aspect-ratio: 1; margin: 0; transform: translate(-50%, -50%); }
+.hub-connections { display: block; opacity: .7; }.hub-boundary, .hub-boundary-inner, .hub-crosshair { opacity: .23; }
+.hub-dust { display: none; }
+.hub-selection { top: calc(100% - 4px); width: 150%; left: -25%; min-height: 0; }.hub-selection-caption { font-size: 6px; margin-bottom: 5px; }.hub-selection strong { font-size: clamp(11px, 1vw, 16px); }.hub-selection p { font-size: 9px; margin-top: 4px; }
+.orbital-modules { display: block; width: auto; }
+.orbit-module { position: absolute; left: var(--module-x); top: var(--module-y); transform: translate(-50%, -50%); width: min(20%, 290px); height: clamp(48px, 7.6svh, 88px); min-height: 0; padding: clamp(6px, 1svh, 13px) 13px; gap: 11px; border-color: #28465f; background: linear-gradient(110deg, #0a1934eb, #071322ed); }
+.orbit-module-copy { gap: clamp(3px, .5svh, 6px); }.orbit-module-copy strong { font-size: clamp(11px, 1.1vw, 16px); line-height: 1.15; }.orbit-module-index { font-size: 6px; letter-spacing: .7px; }.orbit-module-detail { display: block; font-size: 9px; line-height: 1.2; }.orbit-module-icon { width: 33px; height: 34px; background: #14304b66; border-color: #2d4966; }.orbit-module-icon svg { width: 19px; }.orbit-module-arrow { display: block; width: 12px; }.module-port { display: block; }
+.orbit-module:nth-child(3n) .orbit-module-icon { color: #9d99f6; border-color: #52467f; background: #27204155; }.orbit-module:hover, .orbit-module:focus-visible, .orbit-module.module-selected { border-color: #76dff3; background: linear-gradient(110deg, #112a48, #0b2036); box-shadow: 0 0 25px #5a65f333, inset 0 0 18px #42d8eb11; }
+.module-trace { display: flex; gap: 3px; height: 3px; margin-top: 1px; }.module-trace i { display: block; width: 9px; height: 2px; background: #3e88aa; opacity: .25; animation: module-trace-flow 3.4s ease-in-out infinite; }.module-trace i:nth-child(2n) { width: 14px; animation-delay: .3s; }.module-trace i:nth-child(3n) { animation-delay: .7s; background: #8b7cda; }.module-selected .module-trace i { background: #8be7f4; }
+.hub-footnote { margin: 0; font-size: 8px; line-height: 15px; white-space: nowrap; }
+
+/* Organic, time-deformed filaments are drawn locally at a capped 24fps. */
+.flowing-core { position: relative; height: 100%; width: 100%; aspect-ratio: 1; }
+.flowing-core canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.flowing-aura { position: absolute; inset: 18%; border-radius: 50%; background: radial-gradient(ellipse, #092e7c55, #0a125222 55%, transparent 72%); filter: blur(12px); animation: flowing-aura 12s ease-in-out infinite alternate; }
+.flowing-wordmark { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 1.4svh, 19px); pointer-events: none; }
+.flowing-wordmark strong { color: #c3faff; font-size: clamp(28px, 3.5vw, 66px); font-weight: 300; letter-spacing: .24em; margin-left: .24em; text-shadow: 0 0 8px #3ef0ef99, 0 0 28px #317cff88; }
+.flowing-wordmark > span { color: #7fc6e5; font: clamp(4px, .55vw, 8px) var(--interface-mono); letter-spacing: .2em; }.flowing-wordmark .flowing-wordmark-sub { font-size: clamp(4px, .46vw, 7px); color: #8d9bd5; letter-spacing: .14em; }
+.flowing-coordinate { position: absolute; font: 6px var(--interface-mono); letter-spacing: 1.4px; color: #537aa6; }.coordinate-a { top: 6%; left: 50%; transform: translateX(-50%); white-space: nowrap; }.coordinate-b { bottom: 6%; left: 50%; transform: translateX(-50%); }
+.motion-paused .flowing-aura { animation-play-state: paused; }
+
+/* Existing module screens also stay within the desktop viewport. */
+.app-shell .page-heading { flex-shrink: 0; margin: 9px 0 5px; gap: 15px; }.app-shell .page-heading h1 { font-size: 27px; }.app-shell .page-heading .eyebrow { font-size: 8px; margin-bottom: 6px; }.app-shell .page-heading .subtitle { font-size: 11px; margin-top: 6px; }
+.app-shell .settings-grid { flex: 1; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.settings-grid .panel { display: flex; flex-direction: column; min-height: 0; }.settings-grid .panel-heading { padding: 15px 21px; flex-shrink: 0; }.settings-grid .panel-heading h2 { font-size: 15px; }.settings-grid .preferences { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; min-height: 0; padding: 0 21px; }.settings-grid .preferences > div { padding: clamp(5px, 1svh, 12px) 0; font-size: 11px; line-height: 1.35; flex-shrink: 0; gap: 15px; }.settings-grid .settings-note { padding: 12px 21px; font-size: 10px; line-height: 1.5; flex-shrink: 0; }
+.app-shell #main-content > .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }.app-shell #main-content > .empty-state p { margin: 0 auto; }
+.login-screen { height: 100dvh; min-height: 0; overflow: hidden; padding: 24px 5vw; gap: 5vw; }
+.login-card { padding: 27px; max-height: calc(100dvh - 48px); }.login-brand { margin-bottom: 23px; }.login-card h1 { font-size: 29px; }.login-form { margin: 21px 0; gap: 9px; }.login-form input { padding: 10px; margin-bottom: 4px; }.login-footnote { margin-top: 21px; }.login-instrument .command-core { max-width: min(34vw, 65svh); }.login-version { bottom: 13px; }
+@keyframes module-trace-flow { 0%, 100% { opacity: .2; } 50% { opacity: .8; } }
+@keyframes flowing-aura { from { opacity: .5; transform: scale(.9) rotate(-12deg); } to { opacity: 1; transform: scale(1.12) rotate(12deg); } }
+@media (max-height: 740px) and (min-width: 1024px) {
+  .app-shell .workspace { grid-template-rows: 47px minmax(0, 1fr) 24px; }.app-shell .topbar { height: 47px; }.app-shell #main-content { padding-top: 8px; padding-bottom: 8px; gap: 7px; }.orbital-dashboard { grid-template-rows: 39px minmax(0, 1fr) 12px; gap: 6px; }.orbital-heading h1 { font-size: 21px; }.orbital-heading .eyebrow { font-size: 6px; }.orbital-console { grid-template-rows: 24px minmax(0, 1fr) 26px; }.console-topline, .console-bottomline { padding: 5px 15px; font-size: 6px; }.orbit-module { padding: 6px 10px; gap: 8px; }.orbit-module-icon { width: 27px; height: 29px; }.orbit-module-icon svg { width: 17px; }.orbit-module-copy { gap: 3px; }.orbit-module-index { font-size: 5px; }.orbit-module-copy strong { font-size: 12px; }.orbit-module-detail { font-size: 8px; }.module-trace { display: none; }.hub-selection-caption { margin-bottom: 3px; font-size: 5px; }.hub-selection strong { font-size: 11px; }.hub-selection p { font-size: 8px; margin-top: 3px; }.hub-footnote { font-size: 7px; line-height: 12px; }
+  .app-shell .sidebar { padding-top: 13px; }.app-shell .brand { padding-bottom: 12px; }.app-shell .brand-mark { padding: 7px; }.app-shell .nav-group { margin-top: 8px; }.app-shell .nav-item { padding-top: 6px; padding-bottom: 6px; min-height: 29px; }.app-shell .sidebar-footer { padding-top: 4px; }.app-shell .privacy-line, .app-shell .collapse-button { padding: 7px; }
+  .settings-grid .panel-heading { padding: 12px 18px; }.settings-grid .preferences { padding: 0 18px; }.settings-grid .preferences > div { font-size: 10px; padding: 5px 0; }.settings-grid .settings-note { font-size: 9px; padding: 10px 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .flowing-aura, .module-trace i { animation: none !important; } }
+@media (max-width: 1023px), (max-height: 599px) {
+  body > :not(.desktop-size-notice) { display: none !important; }
+  .desktop-size-notice { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 18px; height: 100dvh; padding: 30px; background: radial-gradient(ellipse, #10275b, #030d19 70%); color: #a8d5e7; }
+  .desktop-size-notice > span { font: 9px var(--interface-mono); letter-spacing: 2px; color: #58d9ed; }.desktop-size-notice h1 { font-size: 30px; }.desktop-size-notice p { max-width: 380px; font-size: 13px; line-height: 1.7; }
+}

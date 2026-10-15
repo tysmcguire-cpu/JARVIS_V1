@@ -1,6 +1,6 @@
 # JARVIS
 
-Private, single-owner personal operating system. **Foundation only**: responsive application shell, Supabase owner sign-in, PostgreSQL owner/settings storage and an isolated synthetic preview. Domain modules are navigation placeholders, not working tracking tools. Supabase is configured and verified in the owner's local workspace. No financial, AI, Telegram or other domain integrations are connected; nothing is deployed.
+Private, single-owner personal operating system. **Foundation only**: desktop application shell, Supabase owner sign-in, PostgreSQL owner/settings storage and an isolated synthetic preview. The owner's latest UI direction is desktop-only, minimum 1024×600, with the complete interface fitting one viewport without scrolling. Domain modules are navigation placeholders, not working tracking tools. Supabase is configured and verified in the owner's local workspace. No financial, AI, Telegram or other domain integrations are connected; nothing is deployed.
 
 JARVIS_SPEC.md contains the complete original requirements. Read IMPLEMENTATION_PLAN.md for architecture decisions, phase gates and verification status. See ARCHITECTURE.md, DATABASE.md, SECURITY.md, INTEGRATIONS.md and DEPLOYMENT.md before configuring real services.
 
@@ -39,7 +39,7 @@ pnpm test:production
 pnpm start
 ```
 
-The E2E suite starts its own development server on port 3100 with isolated .next-tests output, explicitly clears Supabase configuration and tests synthetic mobile/desktop navigation and fail-closed routes. It does not verify a live Supabase connection. `pnpm db:verify` separately tests the configured live database without modifying records. Build needs generated Prisma client but no real credentials. Optional database seeding is explicitly guarded and described in DATABASE.md.
+The E2E suite starts its own development server on port 3100 with isolated .next-tests output, explicitly clears Supabase configuration and tests desktop navigation, viewport fit, flowing animation/pause/reduced motion and fail-closed routes at 1280×720, 1366×768 and 1920×1080, plus the minimum 1024×600 size. Smaller windows show a desktop-size notice. These tests do not verify a live Supabase connection. `pnpm db:verify` separately tests the configured live database without modifying records. Build needs generated Prisma client but no real credentials. Optional database seeding is explicitly guarded and described in DATABASE.md.
 
 Production smoke tests use the completed build on port 3101 and verify demo is blocked even with its flag enabled. Vitest executes the reviewed migration in embedded PostgreSQL with an emulated Supabase auth schema, checking defaults, singleton/auth constraints, RLS and cascading deletion. This does not replace verification on the user's Supabase project.
 
@@ -48,7 +48,7 @@ Production smoke tests use the completed build on port 3101 and verify demo is b
 - Live migration, owner/settings persistence, initial preferences, least-privilege runtime role, owner-scoped RLS, second-user database isolation and write/auth-table denial have been executed successfully.
 - The owner confirmed successful login, database-backed Settings, logout and login again. No owner password was shared with the assistant.
 - Automated auth-boundary tests cover absent, wrong-owner, invalid/revoked sessions and wrong-password responses using mocked provider responses; they do not impersonate real users.
-- Actual additional-account testing, long-running refresh/expiry/revocation, MFA and physical iPhone Safari testing remain release-hardening checks in Phase 6. Mobile layout/navigation is covered with Chromium iPhone emulation.
+- Actual additional-account testing, long-running refresh/expiry/revocation and MFA remain release-hardening checks in Phase 6. The owner subsequently replaced mobile support with a desktop-only, single-viewport requirement; physical iPhone support is no longer a current acceptance requirement.
 
 ## Continue on another computer
 
