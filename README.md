@@ -60,4 +60,4 @@ Future phases add data entry, integrations, AI and durable notifications. Do not
 
 This checkout is inside OneDrive. During verification, OneDrive marked generated .next directories read-only and interrupted a repeat build. Clearing the read-only attributes on that generated directory allowed rebuilding. For reliable ongoing development, keep the working checkout outside synchronized folders; never remove source files to fix build artifacts. The scripts use Webpack because the bundled Windows runtime failed to launch Turbopack's CSS worker.
 
-Origin is configured to https://github.com/tysmcguire-cpu/JARVIS_V1.git and read access is verified. The repository-local Git author is configured from the owner's supplied name and email. Push access is not yet verified.
+Phase 1 is committed and pushed to the master branch at https://github.com/tysmcguire-cpu/JARVIS_V1.git. Remote read/write access is verified. The repository-local Git author is configured from the owner's supplied name and email. Local .env credentials and generated output remain excluded.

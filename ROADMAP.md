@@ -2,7 +2,7 @@
 
 See IMPLEMENTATION_PLAN.md for dependencies, acceptance criteria and status.
 
-1. Foundation: implemented and verified, including live Supabase migration/persistence/least-privilege access and owner-confirmed login/logout. GitHub delivery pending push execution approval.
+1. Foundation: complete and pushed to GitHub, including live Supabase migration/persistence/least-privilege access and owner-confirmed login/logout.
 2. Core tracking: finances, academics, calendar/tasks, career, projects, goals/habits and notes.
 3. Telegram: restricted pairing, webhook verification, commands, idempotency and undo.
 4. Connectors: mocks, OAuth/read-only sync, CSV and health reporting.

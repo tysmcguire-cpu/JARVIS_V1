@@ -35,10 +35,10 @@ The complete JARVIS_SPEC.md is authoritative. Scope is Phase 1 only; no Phase 2 
 - [x] Complete required documentation and environment template.
 - [x] Finish final local checks and record results below.
 - [x] Git author configured from owner-provided identity: Ty McGuire. Initial Foundation commit e6b79e6 exists locally.
-- [ ] GitHub delivery: push execution approval was declined. Commit final verification locally; do not claim a successful upload.
+- [x] GitHub delivery: Foundation commits e6b79e6 and 4e65b55 pushed to origin/master; remote commit verified.
 
 ## Status
-Phase 1 Foundation functionality is implemented and verified locally and against the configured Supabase development project. The owner confirmed the live authentication workflow. GitHub delivery remains pending push execution approval. Phase 2 is not started or authorized by the current task. Supabase is the only configured application service; no financial, AI, Telegram or other domain integrations were connected. No deployment, purchases or external autonomous actions occurred.
+Phase 1 Foundation is complete, verified locally and against the configured Supabase development project, and pushed to GitHub. The owner confirmed the live authentication workflow. Phase 2 is not started or authorized by the current task. Supabase is the only configured application service; no financial, AI, Telegram or other domain integrations were connected. No deployment, purchases or external autonomous actions occurred.
 
 ## Executed verification — October 15, 2026
 
@@ -58,12 +58,12 @@ Phase 1 Foundation functionality is implemented and verified locally and against
 | Live Supabase database | Migration applied, owner/settings persisted, SELECT-only runtime role provisioned; owner/second-user/unscoped RLS, pool identity isolation, write denial and auth-table denial passed |
 | Live Auth configuration / anonymous Data API | Disabled signup/anonymous sign-in, enabled email sign-in and anonymous table-read denial verified by db:verify |
 | Live owner authentication | Owner confirmed login, stored Settings, logout and login again; password remained private |
-| Commit/push | Initial commit e6b79e6 exists; final changes prepared for local commit. Push execution approval declined; no upload claimed |
+| Commit/push | Foundation commits e6b79e6 and 4e65b55 pushed to origin/master; remote commit verified |
 
 Initial failures were corrected: pnpm build-script approval/PATH setup, anonymous PostCSS export lint warning, and Next.js streamed redirects/404s returning HTTP 200. Proxy preflight gates now preserve the expected statuses and are covered by browser/production tests. Turbopack CSS worker failure required the supported Webpack mode. OneDrive read-only flags on generated .next output interrupted a repeat build; clearing only those generated flags allowed the final build to pass. No source content was deleted.
 
 ## Remaining delivery and later release checks
 
-Push the verified commits to https://github.com/tysmcguire-cpu/JARVIS_V1.git once execution approval is granted; no remote history is to be overwritten. Configure the ignored .env securely on each computer. Runtime DATABASE_URL now uses the real provisioned jarvis_app role; DIRECT_URL remains administrative and is only for local migrations/setup. Provisioning was rerun successfully without replacing owner preferences or resetting credentials.
+GitHub delivery is verified at https://github.com/tysmcguire-cpu/JARVIS_V1.git on master; no remote history was overwritten. Configure the ignored .env securely on each computer. Runtime DATABASE_URL now uses the real provisioned jarvis_app role; DIRECT_URL remains administrative and is only for local migrations/setup. Provisioning was rerun successfully without replacing owner preferences or resetting credentials.
 
 Long-duration live refresh/expiry/revocation, an additional real Auth account, MFA, physical iPhone Safari, backup/restore and export/deletion remain Phase 6 release hardening tasks. Mocked auth-boundary tests and live database second-identity tests cover the Foundation denial paths; they are not claimed as live additional-account tests. No further phases begin during this task.
