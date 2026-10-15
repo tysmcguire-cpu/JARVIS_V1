@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id          String        @id @db.Uuid
+  singleton   Boolean       @unique @default(true)
+  displayName String        @default("Owner") @db.VarChar(100)
+  synthetic   Boolean       @default(false)
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(6)
+  settings    UserSettings?
+  auditLogs   AuditLog[]
+}
+
+model UserSettings {
+  userId                  String   @id @db.Uuid
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timezone                String   @default("America/Chicago") @db.VarChar(100)
+  currency                String   @default("USD") @db.Char(3)
+  weeklyReviewEnabled     Boolean  @default(true)
+  weeklyReviewDay         Int      @default(0)
+  weeklyReviewTime        String   @default("18:00") @db.VarChar(5)
+  deadlineReminders       Boolean  @default(true)
+  financialAlerts         Boolean  @default(true)
+  morningBriefingEnabled  Boolean  @default(false)
+  morningBriefingTime     String   @default("08:00") @db.VarChar(5)
+  unsolicitedAiEnabled    Boolean  @default(false)
+  createdAt               DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String   @db.VarChar(100)
+  outcome   String   @db.VarChar(20)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([userId, createdAt])
+}
