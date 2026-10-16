@@ -4,6 +4,16 @@ Owner direction, October 16, 2026: host the existing desktop UI for authenticate
 
 ## Proposed host: Render
 
+**Current deployment:** the owner has deployed the $7/month Render website at https://jarvis-yfki.onrender.com using the existing database/login and confirmed hosted modules and Telegram /status. Telegram uses the authenticated webhook; local polling is stopped. Current cost target is the existing web instance, with no separate paid workers. The earlier separate-worker proposal below is an optional scaling alternative, not the required setup.
+
+### Scheduler on the existing paid instance
+
+Set the Render Start Command to `corepack pnpm hosted:start`. Keep the existing build command. This launcher starts Next.js and, when enabled, a separate lightweight Node child for durable notification scans and webhook reply retries. It propagates shutdown, waits up to 25 seconds, and fails the service if either child exits unexpectedly so the host can restart the whole service. A stalled background tick also fails the service; transient database/API errors retry with private details suppressed. There is no request-scoped timer and no additional paid service.
+
+Set `JARVIS_NOTIFICATIONS_ENABLED=true` in Render only when ready to activate stored schedules; the hosted start command is required as well. In Notifications review timezone, weekly time, deadlines and threshold, then explicitly enable Telegram delivery if desired. Morning briefings remain off by default. Webhook reply retries run independently whenever valid Telegram/webhook configuration is present. Do not run local polling, a second notification worker or `telegram:replies` alongside this hosted configuration.
+
+The loop scans approximately every 30 seconds without overlapping its own ticks. Persisted rule locks, deduplication, fenced delivery leases and bounded seven-day catch-up protect restarts and overlapping deployments. Telegram can still duplicate an uncertain send after a crash. All processes share the instance's CPU/RAM and uptime; monitor Render resource use and logs. Scaling to a separate worker is an explicit future cost decision. This arrangement targets one continuously running Node web instance and is unsuitable for serverless/free sleeping hosting. Verify a real scheduled delivery after deployment; local automated checks are not that live acceptance.
+
 Render supports the Next.js Node web service and separate continuously running background workers. This is a proposal; no account, paid service, repository permission or deployment was created. Confirm the actual recurring compute prices before creating services. Use one instance per worker, disable automatic deploys initially, and choose a region near the production Supabase database.
 
 Start by creating/signing into your own Render account at https://dashboard.render.com. Review its terms yourself. Then authorize its GitHub integration for JARVIS_V1 only when ready. Keep the repository private. Local commits must be explicitly pushed before the host can use them; record the approved commit before deployment.
@@ -14,11 +24,11 @@ Use Node 24 LTS and the packageManager version in package.json. Ensure pnpm is a
 
 | Service | Build command | Start command |
 | --- | --- | --- |
-| Web service | `corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm db:generate && corepack pnpm build` | `corepack pnpm start --hostname 0.0.0.0` |
+| Web service, including cohosted background processing | `corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm db:generate && corepack pnpm build` | `corepack pnpm hosted:start` |
 | Telegram background worker | `corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm db:generate` | `corepack pnpm telegram:poll` |
 | Optional notification background worker | Same as Telegram worker | `corepack pnpm notifications:run` |
 
-The web service uses the host-supplied PORT. Two services suffice for website plus Telegram commands; the third provides scheduled notifications when explicitly activated. Worker scripts accept host-injected environment variables without an on-disk .env. Continuous polling needs paid worker compute; confirm pricing in the dashboard. During worker redeploys, ensure the old poller is stopped before starting its replacement; overlapping Telegram pollers conflict.
+The web service uses the host-supplied PORT. The current hosted plan uses only the web service, its Telegram webhook, and the cohosted scheduler described above. The separate worker rows are alternatives if explicitly approved later; never enable both arrangements. Worker scripts accept host-injected environment variables without an on-disk .env. During any polling cutover, stop the old poller before starting its replacement; overlapping Telegram pollers conflict.
 
 ## Secrets and database
 

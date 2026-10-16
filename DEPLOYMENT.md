@@ -1,10 +1,10 @@
 # Deployment readiness
 
-Current owner target: hosted desktop website accessible from any computer after sign-in; Telegram is the phone interface. Mobile/tablet UI work is explicitly excluded. HOSTING_SETUP.md contains the proposed Render service commands, environment separation, database choice, poller cutover and owner acceptance steps. No host was provisioned. Workers accept host-injected secrets without requiring a local .env file.
+Current owner deployment: $7/month Render desktop website, existing Supabase database/login, and verified Telegram webhook. Mobile/tablet UI work is explicitly excluded. HOSTING_SETUP.md contains the cohosted scheduler start command, environment separation, resource limits and owner acceptance steps. No additional paid worker is required for the current single-instance setup. Workers accept host-injected secrets without requiring a local .env file. Historical readiness notes below describe predeployment requirements.
 
 All six local implementation phases are built. Keep JARVIS_AI_ENABLED=false until API billing, model access and sharing consent are approved. Configure OPENAI_API_KEY/OPENAI_MODEL only as server secrets. No deployment or paid AI call was performed. Apply all reviewed migrations and restricted runtime grants before a future approved deployment.
 
-No deployment has been performed or authorized. The Next.js Node runtime is Vercel-compatible; Prisma and server-only dependencies must remain in server code. Never use a static export for authenticated routes.
+The Next.js website runtime is Vercel-compatible, but the cohosted scheduler requires a continuous Node host such as the selected paid Render instance. Prisma and server-only dependencies must remain in server code. Never use a static export for authenticated routes.
 
 Before a future approved deployment: run frozen dependency install, generate Prisma client, validate schema, deploy reviewed migrations with DIRECT_URL, run all tests/build, verify Supabase owner configuration and least-privilege runtime connection, set environment secrets in the host and confirm demo returns 404 in production. Do not enable demo as a hosted preview.
 

@@ -33,7 +33,8 @@
     "backup": "tsx scripts/backup.ts",
     "db:verify-release": "tsx scripts/verify-release.ts",
     "check:client-secrets": "tsx scripts/check-client-secrets.ts",
-    "local": "next start --hostname 127.0.0.1"
+    "local": "next start --hostname 127.0.0.1",
+    "hosted:start": "node --import tsx scripts/hosted-start.ts"
   },
   "engines": {
     "node": ">=22.12"
