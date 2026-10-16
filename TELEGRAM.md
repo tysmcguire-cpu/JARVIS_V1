@@ -66,3 +66,5 @@ The `20261016010000_telegram` migration adds TelegramIdentity and TelegramMessag
 ## Current local activation
 
 The owner has configured the local bot, selected their private chat using the marker, paired it through Settings and confirmed real note synchronization. Status and note replies were verified delivered with no pending replies. Local polling is running on this computer. Real undo and restart/retry acceptance checks are still pending; do not repeat state provisioning or overwrite the existing pairing. Credentials remain local and excluded from Git.
+
+Live undo is now verified: the owner sent /undo, its reply was delivered, the command receipt was marked undone, and the referenced test note no longer exists. Restart/retry behavior remains covered by automated tests; a live process-restart check is still outstanding.

@@ -137,3 +137,5 @@ Telegram implementation is ready for activation; live integration is not claimed
 ### Live Telegram activation — October 15, 2026
 
 The owner saved the bot token locally. Telegram getMe authenticated it without exposing the token. A random marker sent by the owner identified the approved private chat; its IDs were saved to the ignored .env, and local polling was started. The owner completed the signed-in pairing flow. Database checks confirmed the approved pairing, delivered start/status replies, and a delivered note confirmation with no pending replies. The owner confirmed the note synced successfully to the website. Real /undo and polling-restart/retry verification remain outstanding; their automated tests pass. No public webhook or deployment was created.
+
+Live undo is now verified: the owner sent /undo, its reply was delivered, the command receipt was marked undone, and the referenced test note no longer exists. Restart/retry behavior remains covered by automated tests; a live process-restart check is still outstanding.
