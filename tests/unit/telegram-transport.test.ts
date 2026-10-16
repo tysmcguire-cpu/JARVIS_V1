@@ -1,0 +1,8 @@
+import {it,expect,vi,afterEach} from 'vitest';
+vi.mock('server-only',()=>({}));
+import {sendReply,TelegramDeliveryError} from '@/features/telegram/transport';
+const config={token:'synthetic-placeholder',botId:'123456',ownerId:'synthetic',userId:'42',chatId:'42'};
+afterEach(()=>vi.unstubAllGlobals());
+it('sends plain text only to the approved chat without link previews',async()=>{const mock=vi.fn().mockResolvedValue({ok:true,json:async()=>({ok:true,result:{message_id:1}})});vi.stubGlobal('fetch',mock);await sendReply(config,'Synthetic reply');const options=mock.mock.calls[0][1];expect(JSON.parse(options.body)).toMatchObject({chat_id:'42',text:'Synthetic reply',protect_content:true,link_preview_options:{is_disabled:true}});expect(JSON.parse(options.body)).not.toHaveProperty('parse_mode')});
+it('honors Telegram retry_after and suppresses provider error contents',async()=>{vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:false,json:async()=>({ok:false,description:'private provider details',parameters:{retry_after:65}})}));await expect(sendReply(config,'Synthetic')).rejects.toMatchObject({retryAfter:65,message:'Telegram delivery unavailable.'})});
+it('turns network exceptions into a redacted retryable error',async()=>{vi.stubGlobal('fetch',vi.fn().mockRejectedValue(Error('sensitive transport details')));await expect(sendReply(config,'Synthetic')).rejects.toBeInstanceOf(TelegramDeliveryError)});

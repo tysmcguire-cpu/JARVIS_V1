@@ -1,0 +1,18 @@
+import {beforeEach,afterEach,it,expect,vi} from 'vitest';
+import {validWebhookSecret,getTelegramConfig,approvedUpdate} from '@/features/telegram/config';
+import {parseCommand} from '@/features/telegram/commands';
+const owner='a2c92111-c2a3-4ab2-91dc-3d1abc84cc33';
+const env={TELEGRAM_ENABLED:'true',TELEGRAM_BOT_TOKEN:'123456:synthetic_placeholder_not_a_real_bot_token',TELEGRAM_OWNER_USER_ID:'42',TELEGRAM_OWNER_CHAT_ID:'42',JARVIS_OWNER_ID:owner,TELEGRAM_WEBHOOK_SECRET:'synthetic_webhook_secret_for_tests_only_1234'};
+const mocks=vi.hoisted(()=>({process:vi.fn(),flush:vi.fn(),database:vi.fn(),owner:vi.fn()}));
+vi.mock('server-only',()=>({}));vi.mock('@/features/telegram/service',()=>({processUpdate:mocks.process,flushReplies:mocks.flush,withBotDatabase:mocks.database}));vi.mock('@/features/auth/server',()=>({requireOwner:mocks.owner}));
+import {POST} from '@/app/api/telegram/webhook/route';
+import {createTelegramPairing,disconnectTelegram,readTelegramStatus,retryTelegramReplies} from '@/features/telegram/actions';
+beforeEach(()=>{vi.resetAllMocks();for(const [key,value] of Object.entries(env))vi.stubEnv(key,value)});afterEach(()=>vi.unstubAllEnvs());
+it('requires complete explicit configuration and numeric approved IDs',()=>{expect(getTelegramConfig({...env,TELEGRAM_ENABLED:'false'})).toBeNull();expect(getTelegramConfig({...env,TELEGRAM_OWNER_CHAT_ID:'-1'})).toBeNull();expect(getTelegramConfig(env)).toMatchObject({userId:'42',ownerId:owner})});
+it('validates webhook secrets and deterministic addressed commands',()=>{expect(validWebhookSecret(env.TELEGRAM_WEBHOOK_SECRET,env.TELEGRAM_WEBHOOK_SECRET)).toBe(true);expect(validWebhookSecret('wrong',env.TELEGRAM_WEBHOOK_SECRET)).toBe(false);expect(validWebhookSecret(null,undefined)).toBe(false);expect(parseCommand('/task@my_bot Title | 2026-10-15')).toMatchObject({name:'task',parts:['Title','2026-10-15']});expect(approvedUpdate({update_id:1,edited_message:{}},getTelegramConfig(env)!)).toBeNull()});
+const request=(body:string,secret:string|null=env.TELEGRAM_WEBHOOK_SECRET)=>new Request('http://localhost/api/telegram/webhook',{method:'POST',headers:{'Content-Type':'application/json',...(secret?{'X-Telegram-Bot-Api-Secret-Token':secret}:{})},body});
+it('rejects forged webhook requests before reading records',async()=>{expect((await POST(request('{}',null))).status).toBe(401);expect((await POST(request('{}','wrong'))).status).toBe(401);expect(mocks.process).not.toHaveBeenCalled()});
+it('bounds webhook payloads and rejects malformed JSON',async()=>{expect((await POST(request('{'))).status).toBe(400);expect((await POST(request('x'.repeat(32769)))).status).toBe(413);expect(mocks.process).not.toHaveBeenCalled()});
+it('ignores unauthorized updates without dispatching pending replies',async()=>{mocks.process.mockResolvedValue({accepted:false});expect((await POST(request('{"update_id":1}'))).status).toBe(200);expect(mocks.flush).not.toHaveBeenCalled()});
+it('returns retryable status while a persisted reply remains pending',async()=>{mocks.process.mockResolvedValue({accepted:true,duplicate:true});mocks.database.mockResolvedValue([{count:1n}]);expect((await POST(request('{"update_id":1}'))).status).toBe(503);mocks.database.mockResolvedValue([{count:0n}]);expect((await POST(request('{"update_id":1}'))).status).toBe(200)});
+it('owner-only pairing and disconnect actions reject unauthenticated callers',async()=>{mocks.owner.mockRejectedValue(Error('Unauthorized'));await expect(createTelegramPairing()).rejects.toThrow('Unauthorized');await expect(disconnectTelegram()).rejects.toThrow('Unauthorized');await expect(readTelegramStatus()).rejects.toThrow('Unauthorized');await expect(retryTelegramReplies()).rejects.toThrow('Unauthorized')});

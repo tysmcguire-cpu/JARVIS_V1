@@ -18,7 +18,12 @@
     "db:verify": "tsx scripts/verify-database.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:tracking": "tsx scripts/configure-tracking.ts",
-    "db:verify-tracking": "tsx scripts/verify-tracking.ts"
+    "db:verify-tracking": "tsx scripts/verify-tracking.ts",
+    "db:telegram": "tsx scripts/configure-telegram.ts",
+    "telegram:poll": "node --conditions=react-server --import tsx scripts/telegram-poll.ts",
+    "telegram:replies": "node --conditions=react-server --import tsx scripts/telegram-poll.ts --replies-only",
+    "db:verify-telegram": "tsx scripts/verify-telegram.ts",
+    "telegram:identify": "node --conditions=react-server --import tsx scripts/telegram-identify.ts"
   },
   "engines": {
     "node": ">=22.12"

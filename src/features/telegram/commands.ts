@@ -1,0 +1,16 @@
+export const helpText=`JARVIS commands (use | between fields):
+/start PAIRING_CODE — pair from Settings
+/help · /status · /undo
+/task Title | YYYY-MM-DD | normal/high/low
+/remind Exact task title | YYYY-MM-DD | HH:MM
+/note Title | Content | Tag
+/idea Title | Details
+/expense 12.34 | Exact account | Exact category | Description | YYYY-MM-DD
+/income 12.34 | Exact account | Exact category | Description | YYYY-MM-DD
+/tasks search · /notes search · /projects search
+/balance
+Dates are explicit; times use your workspace timezone. /undo removes your last unchanged Telegram-created record (within 24 hours). Reminders are stored; delivery arrives in Phase 6. Natural-language questions and AI arrive in Phase 5. Telegram bot chats are not end-to-end encrypted.`;
+export type ParsedCommand={name:string;args:string;parts:string[]};
+export function parseCommand(text:string):ParsedCommand {const match=/^\/([a-z]+)(?:@[A-Za-z0-9_]+)?(?:\s+([\s\S]*))?$/i.exec(text.trim());if(!match)return {name:'unknown',args:'',parts:[]};const args=(match[2]??'').trim();return {name:match[1].toLowerCase(),args,parts:args.split('|').map(s=>s.trim())}}
+export class CommandError extends Error{}
+export function requireParts(parts:string[],minimum:number,maximum=minimum){if(parts.length<minimum||parts.length>maximum||parts.some(p=>!p))throw new CommandError('Please use the fields shown in /help, separated by |. Dates must be YYYY-MM-DD.');}

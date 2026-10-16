@@ -9,6 +9,8 @@ datasource db {
 }
 
 model User {
+  telegramIdentity          TelegramIdentity?
+  telegramMessages          TelegramMessage[]
   id                        String              @id @db.Uuid
   singleton                 Boolean             @unique @default(true)
   displayName               String              @default("Owner") @db.VarChar(100)
@@ -516,4 +518,40 @@ model Note {
 
   @@unique([id, userId])
   @@index([userId, updatedAt])
+}
+
+model TelegramIdentity {
+  userId           String    @id @db.Uuid
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  botId            String    @db.VarChar(30)
+  telegramUserId   String    @db.VarChar(30)
+  chatId           String    @db.VarChar(30)
+  pairedAt         DateTime? @db.Timestamptz(6)
+  pairingHash      String?   @db.VarChar(64)
+  pairingExpiresAt DateTime? @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(6)
+}
+
+model TelegramMessage {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  botId         String    @db.VarChar(30)
+  updateId      BigInt
+  command       String    @db.VarChar(30)
+  reply         String    @db.VarChar(4096)
+  entity        String?   @db.VarChar(30)
+  recordId      String?   @db.Uuid
+  recordVersion DateTime? @db.Timestamptz(6)
+  undone        Boolean   @default(false)
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now()) @db.Timestamptz(6)
+  leaseUntil    DateTime? @db.Timestamptz(6)
+  canceledAt    DateTime? @db.Timestamptz(6)
+  deliveredAt   DateTime? @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([userId, botId, updateId])
+  @@index([userId, createdAt])
+  @@index([userId, deliveredAt, nextAttemptAt])
 }

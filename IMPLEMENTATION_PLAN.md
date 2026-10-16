@@ -1,6 +1,6 @@
 # Implementation plan
 
-The complete JARVIS_SPEC.md is authoritative. Phase 1 is complete. The owner authorized Phase 2 core tracking in this workspace on October 15, 2026. Historical Foundation notes below describe their original scope.
+The complete JARVIS_SPEC.md is authoritative. Phases 1 and 2 are implemented. The owner authorized continuing the build on this primary computer on October 15, 2026; current work is Phase 3 Telegram. Historical Foundation notes below describe their original scope.
 
 ## Architecture review and decisions
 - Next.js App Router with server components, TypeScript, Tailwind and shadcn-style accessible UI primitives. Feature directories isolate domain logic from routing.
@@ -108,3 +108,28 @@ Validation results are recorded after the final checks below. Phase 3 has not be
 - Live Foundation verification: passed using this computer's inherited restricted login.
 - Live tracking verification: passed for all 24 tables plus audit INSERT and isolation, in an intentionally rolled-back transaction. No sample data saved to the real owner.
 - Desktop screenshots reviewed. Local development server serves the updated app on port 3000. No deployment or external connectors added.
+
+## Phase 3 — Telegram implementation
+
+- [x] Owner allowlist plus one-time, 10-minute pairing code generated only by the signed-in owner.
+- [x] Text commands: start/help/status/undo, expense/income, tasks, stored reminders, notes/ideas, record searches and manual balances. Reuse Phase 2 field validation and exact money.
+- [x] Owner-scoped TelegramIdentity/TelegramMessage schema, RLS, operation audit and narrowly granted runtime permissions.
+- [x] Atomic update-ID deduplication and writes, per-owner command serialization, stale-edit-safe undo, durable reply outbox with leases/retries and manual requeue.
+- [x] Independently authenticated bounded webhook route and local polling runner. Telegram is disabled by default; no hosting/tunnel/webhook created.
+- [x] Settings Telegram tab, connection status, explicit disconnect and pairing controls, isolated demo and single-viewport layout.
+- [x] Local credential/ID setup helper and TELEGRAM.md. The helper matches a random owner-sent marker; it never chooses or pairs an identity automatically.
+- [x] Apply migration and runtime grants; verify live state CRUD/isolation with a rolled-back transaction, without contacting Telegram or persisting samples.
+- [ ] Supply real bot token/approved IDs locally, run polling, pair the actual owner, and verify real commands, website persistence, undo and retry/restart behavior.
+
+Telegram implementation is ready for activation; live integration is not claimed. Phase 4 has not started. The local app remains usable without Telegram credentials. Final executed check results follow after validation.
+
+### Executed Phase 3 implementation checks
+
+- Prisma generation and migration: passed; Telegram runtime grants applied without credential changes.
+- ESLint and TypeScript: passed.
+- Vitest: 58 tests passed, including restricted-role PostgreSQL command execution, exact expense/income amounts, atomic rollback/retry, update deduplication, undo/version checks, owner isolation, webhook secret/body validation and mock delivery retries.
+- Browser suite: 30 scenarios passed across three desktop sizes; current Settings and Telegram layout also rechecked at 1024×600 after the final styling update. Screenshots visually reviewed.
+- Production build and two production boundary tests: passed.
+- Live Telegram state storage: CRUD/isolation verified in a deliberately rolled-back transaction; no pairing/messages saved and no bot contacted.
+- CLI guard: polling refuses to start without explicit credentials/allowlist; identification-marker generation runs locally without network access.
+- Live bot acceptance remains pending the owner's local token, selected IDs, pairing and actual command verification. Master specification unchanged.

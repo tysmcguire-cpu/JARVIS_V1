@@ -16,3 +16,7 @@ Phase 4 connector contract must cover authorize, refresh, paginate/fetch, normal
 | OpenAI (Phase 5) | Server-only API key and cost controls | Requested grounded analysis only |
 
 Exact scopes and provider approval requirements must be rechecked against official documentation when connectors are implemented. No real account access, paid API use or deployment is authorized now. Telegram is not assumed end-to-end encrypted. Later notifications require durable workers independent of browser sessions.
+
+## Telegram implementation status
+
+Phase 3 command handling and local setup are implemented; see TELEGRAM.md. TELEGRAM_ENABLED defaults to false, the bot token and approved IDs are missing, and no bot connection/webhook is claimed. Local polling is the primary mode on this computer. It requires no hosting or tunnel. The webhook endpoint is prepared for a separately authorized HTTPS deployment. No API call or message to a real bot was made during implementation.
