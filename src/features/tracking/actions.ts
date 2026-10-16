@@ -1,9 +1,9 @@
 'use server';
 import { revalidatePath } from 'next/cache';
-import { requireOwner } from '@/features/auth/server';
+import { requireOwner,withOwnerRequest } from '@/features/auth/server';
 import { entityFor } from './config';
 import { readWorkspace, removeRecord, writeRecord } from './repository';
-export async function loadTracking(key:string, query:unknown) { await requireOwner(); return readWorkspace(key,query); }
+export async function loadTracking(key:string, query:unknown) { return withOwnerRequest(()=>readWorkspace(key,query)); }
 export async function saveTracking(key:string,input:unknown,id?:string,updatedAt?:string) {
   await requireOwner();
   try { await writeRecord(key,input,id,updatedAt); revalidatePath('/'+entityFor(key).module);return {ok:true,message:'Record saved.'}; }

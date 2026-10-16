@@ -3,17 +3,18 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { findModule } from '@/features/shell/navigation';
 import { currencies, entities, entityFor, formatMoney, moneyInput, type Field, type RecordRow, type WorkspaceData } from './config';
 import { demoWorkspace, syntheticRecords } from './demo';
-import { deleteTracking, loadTracking, saveTracking, searchLinkedChoices } from './actions';
+import { deleteTracking, saveTracking, searchLinkedChoices } from './actions';
 import { validateRecord } from './validation';
 const initialQuery=()=>({page:1,search:'',status:'',sort:'updatedAt',direction:'desc',month:new Date().toISOString().slice(0,7)});
 export function TrackingWorkspace({module,demo,initial}:{module:string;demo:boolean;initial?:WorkspaceData}) {
   const tabs=entities.filter(e=>e.module===module);const [key,setKey]=useState(tabs[0].key);const entity=entityFor(key);
   const [query,setQuery]=useState(initialQuery);const [fixtures,setFixtures]=useState(syntheticRecords);const [data,setData]=useState<WorkspaceData|undefined>(initial);
   const [pending,startTransition]=useTransition();const [message,setMessage]=useState('');const [error,setError]=useState(false);const [editor,setEditor]=useState<RecordRow|null|undefined>();const [deleting,setDeleting]=useState<RecordRow>();const [values,setValues]=useState<Record<string,string>>({});const [fieldPage,setFieldPage]=useState(0);const [view,setView]=useState('records');
-  const generation=useRef(0);const dialog=useRef<HTMLDialogElement>(null);const trigger=useRef<HTMLElement|null>(null);
+  const generation=useRef(0);const controller=useRef<AbortController|null>(null);const dialog=useRef<HTMLDialogElement>(null);const trigger=useRef<HTMLElement|null>(null);
+  useEffect(()=>()=>{generation.current++;controller.current?.abort()},[]);
   const shown=demo?demoWorkspace(key,fixtures,query):data;
   useEffect(()=>{if(editor!==undefined||deleting){trigger.current=document.activeElement as HTMLElement;dialog.current?.showModal();}else{dialog.current?.close();trigger.current?.focus();}},[editor,deleting]);
-  const load=(nextKey=key,nextQuery=query)=>{const request=++generation.current;startTransition(async()=>{try{const next=await loadTracking(nextKey,nextQuery);if(request===generation.current)setData(next);}catch{if(request===generation.current){setError(true);setMessage('Could not load records. Try Reload.');}}});};
+  const load=(nextKey=key,nextQuery=query)=>{const request=++generation.current;controller.current?.abort();const abort=new AbortController();controller.current=abort;startTransition(async()=>{try{const response=await fetch('/api/tracking/read',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:nextKey,query:nextQuery}),signal:abort.signal,cache:'no-store'});if(!response.ok)throw Error('Unavailable');const next:WorkspaceData=await response.json();if(request===generation.current){setData(next);setError(false);setMessage('');}}catch{if(request===generation.current&&!abort.signal.aborted){setError(true);setMessage('Could not load records. Try Reload.');}}});};
   const changeQuery=(patch:Partial<typeof query>)=>{const next={...query,...patch};setQuery(next);if(!demo)load(key,next);};
   function open(row:RecordRow|null) {setMessage('');setFieldPage(0);setEditor(row);setValues(Object.fromEntries(entity.fields.map(f=>[f.name,row?(f.type==='money'?moneyInput(row[f.name]):row[f.name]):f.type==='currency'?'USD':f.type==='select'?f.options![0]:f.type==='number'||f.type==='money'?'0':f.type==='date'?new Date().toISOString().slice(0,10):''])));}
   function report(ok:boolean,text:string){setError(!ok);setMessage(text);}

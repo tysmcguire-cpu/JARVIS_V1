@@ -1,0 +1,33 @@
+import {entityFor} from './config';
+import {readQuery} from './validation';
+// All interpolated identifiers come from the static entity catalog; values are bound.
+export function workspaceQuery(key:string,input:unknown){
+ const entity=entityFor(key),query=readQuery(input),params:unknown[]=[];
+ const bind=(value:unknown)=>{params.push(value);return '$'+params.length};
+ const owner=bind(null)+'::uuid'; // Replaced with the verified owner by the repository.
+ let where=`"userId"=${owner}`;
+ if(query.search)where+=` AND title ILIKE ${bind('%'+query.search.replace(/[\\%_]/g,'\\$&')+'%')}`;
+ if(query.status&&entity.fields.some(f=>f.name==='status'))where+=` AND status=${bind(query.status)}`;
+ const date=entity.fields.find(f=>f.type==='date'),sort=query.sort==='date'?date?.name??'updatedAt':query.sort;
+ const requestedPage=bind(query.page),month=bind(query.month+'-01');
+ const ctes=[`filtered AS NOT MATERIALIZED(SELECT * FROM "${key}" WHERE ${where})`,`counts AS(SELECT count(*)::int AS total FROM filtered)`,`paging AS(SELECT total,LEAST(${requestedPage}::int,GREATEST(1,ceil(total/4.0)::int)) AS page FROM counts)`,`page_rows AS MATERIALIZED(SELECT * FROM filtered ORDER BY "${sort}" ${query.direction==='asc'?'ASC':'DESC'},id LIMIT 4 OFFSET (SELECT (page-1)*4 FROM paging))`];
+ const fields=['id',...entity.fields.map(f=>f.name)];
+ const rowValues=fields.flatMap(f=>[`'${f}'`,`r."${f}"::text`]);rowValues.push(`'updatedAt'`,`to_char(r."updatedAt" AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`);
+ const parent=entity.fields.some(f=>f.name==='accountId')?{table:'FinancialAccount',field:'accountId'}:entity.fields.some(f=>f.name==='budgetId')?{table:'Budget',field:'budgetId'}:null;
+ if(parent)rowValues.push(`'currency'`,`(SELECT currency FROM "${parent.table}" p WHERE p.id=r."${parent.field}" AND p."userId"=${owner})`);
+ const targets=[...new Set(entity.fields.filter(f=>f.target).map(f=>f.target!))],options:string[]=[],truncated:string[]=[];
+ for(const target of targets){
+ const related=entity.fields.filter(f=>f.target===target).map(f=>`p.id IN(SELECT "${f.name}" FROM page_rows)`).join(' OR ');
+ ctes.push(`base_${target} AS MATERIALIZED(SELECT id,title FROM "${target}" WHERE "userId"=${owner} ORDER BY title,id LIMIT 501)`);
+ options.push(`'${target}'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(o) ORDER BY title,id),'[]'::jsonb) FROM(SELECT * FROM(SELECT * FROM base_${target} ORDER BY title,id LIMIT 500) first_choices UNION ALL SELECT p.id,p.title FROM "${target}" p WHERE p."userId"=${owner} AND (${related}) AND p.id NOT IN(SELECT id FROM base_${target} ORDER BY title,id LIMIT 500)) o)`);
+ truncated.push(`(SELECT count(*)>500 FROM base_${target})`);
+ }
+ const attributes=[`'rows'`,`(SELECT COALESCE(jsonb_agg(jsonb_build_object(${rowValues.join(',')}) ORDER BY r."${sort}" ${query.direction==='asc'?'ASC':'DESC'},r.id),'[]'::jsonb) FROM page_rows r)`,`'total'`,`(SELECT total FROM paging)`,`'page'`,`(SELECT page FROM paging)`,`'pageSize'`,'4',`'options'`,`jsonb_build_object(${options.join(',')})`,`'relationsTruncated'`,truncated.length?'('+truncated.join(' OR ')+')':'false',`'statuses'`,entity.fields.some(f=>f.name==='status')?`(SELECT COALESCE(jsonb_agg(to_jsonb(s)),'[]'::jsonb) FROM(SELECT status AS label,count(*)::int AS value FROM filtered GROUP BY status ORDER BY status) s)`:`'[]'::jsonb`,`'calendar'`,date?`(SELECT COALESCE(jsonb_agg(to_jsonb(d) ORDER BY date,title),'[]'::jsonb) FROM(SELECT "${date.name}"::text AS date,title FROM filtered WHERE "${date.name}">=${month}::date AND "${date.name}"<(${month}::date+interval '1 month') ORDER BY "${date.name}",id LIMIT 200) d)`:`'[]'::jsonb`];
+ if(entity.module==='finances'){
+ attributes.push(`'balances'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(b)),'[]'::jsonb) FROM(SELECT a.currency,sum(a."openingBalance"+COALESCE(t.net,0))::text AS balance FROM "FinancialAccount" a LEFT JOIN(SELECT t."accountId",t."userId",sum(CASE WHEN c.kind='income' THEN t.amount ELSE -t.amount END) AS net FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" WHERE t."userId"=${owner} GROUP BY t."accountId",t."userId") t ON t."accountId"=a.id AND t."userId"=a."userId" WHERE a."userId"=${owner} GROUP BY a.currency ORDER BY a.currency) b)`,`'spending'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(s)),'[]'::jsonb) FROM(SELECT a.currency||' · '||c.title AS label,sum(t.amount)::text AS value FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" WHERE t."userId"=${owner} AND c.kind='expense' GROUP BY a.currency,c.title ORDER BY sum(t.amount) DESC LIMIT 6) s)`);
+ }
+ if(entity.module==='education')attributes.push(`'grade'`,`(SELECT jsonb_build_object('earned',COALESCE(sum("pointsEarned"),0)::text,'possible',COALESCE(sum("pointsPossible"),0)::text) FROM "Grade" WHERE "userId"=${owner})`);
+ if(key==='BudgetCategory')attributes.push(`'budgetSpending'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(s)),'[]'::jsonb) FROM(SELECT r.title,b.currency,COALESCE(sum(CASE WHEN a.currency=b.currency THEN t.amount ELSE 0 END),0)::text AS spent FROM page_rows r JOIN "Budget" b ON b.id=r."budgetId" AND b."userId"=${owner} LEFT JOIN "Transaction" t ON t."userId"=${owner} AND t."categoryId"=r."categoryId" AND t.date BETWEEN b."startDate" AND b."endDate" LEFT JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=${owner} GROUP BY r.id,r.title,b.currency ORDER BY r.title,r.id) s)`);
+ // Bind month even for undated entities so PostgreSQL can infer every parameter type.
+ return {sql:`WITH ${ctes.join(',')} SELECT jsonb_build_object(${attributes.join(',')}) AS data WHERE ${month}::date IS NOT NULL`,params,entity};
+}

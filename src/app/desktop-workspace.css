@@ -61,3 +61,5 @@ html, body { height: 100%; overflow: hidden; }
   .desktop-size-notice { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 18px; height: 100dvh; padding: 30px; background: radial-gradient(ellipse, #10275b, #030d19 70%); color: #a8d5e7; }
   .desktop-size-notice > span { font: 9px var(--interface-mono); letter-spacing: 2px; color: #58d9ed; }.desktop-size-notice h1 { font-size: 30px; }.desktop-size-notice p { max-width: 380px; font-size: 13px; line-height: 1.7; }
 }
+
+.nav-item{position:relative}.navigation-pending{position:absolute;width:5px;height:5px;border-radius:50%;right:4px;top:4px;background:#67e8f9;opacity:0;pointer-events:none}.navigation-pending[data-pending=true]{opacity:1;box-shadow:0 0 9px #67e8f9}

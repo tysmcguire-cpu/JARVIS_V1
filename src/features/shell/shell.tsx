@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import {NavigationLink as Link} from "@/features/shell/navigation-link";
 import { Activity, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, ChevronLeft, CircleHelp, Command, FolderKanban, LayoutDashboard, Menu, NotebookPen, Settings, ShieldCheck, Sparkles, Target, Wallet, X } from "lucide-react";
 import { navigation, type ModuleSlug } from "./navigation";
 import { signOut } from "@/features/auth/actions";

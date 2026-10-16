@@ -3,13 +3,13 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { entities } from '@/features/tracking/config';
-let database:PGlite;
+let database:PGlite;let reads=0;
 const owner='a2c92111-c2a3-4ab2-91dc-3d1abc84cc33';
 vi.mock('server-only',()=>({}));
 vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:async(callback:(tx:unknown,id:string)=>Promise<unknown>)=>database.transaction(async transaction=>{
  await transaction.exec(`SET LOCAL ROLE runtime;SET LOCAL request.jwt.claim.sub='${owner}'`);
  const adapter={
- $queryRawUnsafe:async(sql:string,...args:unknown[])=>(await transaction.query(sql,args)).rows,
+ $queryRawUnsafe:async(sql:string,...args:unknown[])=>{reads++;return (await transaction.query(sql,args)).rows},
  $executeRawUnsafe:async(sql:string,...args:unknown[])=>(await transaction.query(sql,args)).affectedRows,
  auditLog:{create:async({data}:{data:{userId:string;action:string;outcome:string}})=>transaction.query('INSERT INTO "AuditLog"(id,"userId",action,outcome)VALUES($1,$2,$3,$4)',[randomUUID(),data.userId,data.action,data.outcome])}
  };return callback(adapter,owner);
@@ -25,4 +25,6 @@ describe('actual tracking repository against PostgreSQL',()=>{
  await writeRecord('FinancialAccount',{title:'USD account',currency:'USD',openingBalance:'100.00'});const account=(await readWorkspace('FinancialAccount',{})).rows[0];await writeRecord('Category',{title:'Food',kind:'expense'});const category=(await readWorkspace('Category',{})).rows[0];await writeRecord('Transaction',{title:'Lunch',accountId:account.id,categoryId:category.id,amount:'0.30',date:'2026-10-15'});await expect(writeRecord('FinancialAccount',{title:'USD account',currency:'EUR',openingBalance:'100.00'},account.id,account.updatedAt)).rejects.toThrow('currency');expect(await readLinkedChoices('Transaction','accountId','USD')).toHaveLength(1);await expect(readLinkedChoices('Transaction','userId','')).rejects.toThrow('Invalid');let view=await readWorkspace('Transaction',{month:'2026-10'});expect(view.summary).toContainEqual({label:'Account balance',value:'USD 99.70'});expect(view.calendar).toHaveLength(1);await writeRecord('Budget',{title:'October',currency:'USD',startDate:'2026-10-01',endDate:'2026-10-31'});const budget=(await readWorkspace('Budget',{})).rows[0];await writeRecord('BudgetCategory',{title:'Food limit',budgetId:budget.id,categoryId:category.id,limitAmount:'20.00'});view=await readWorkspace('BudgetCategory',{});expect(view.summary).toContainEqual({label:'Spent · Food limit',value:'USD 0.30'});await expect(removeRecord('FinancialAccount',account.id,account.updatedAt)).rejects.toThrow();
  });
  it('paginates and bounds queries without trusting identifiers',async()=>{for(let i=0;i<5;i++)await writeRecord('Note',{title:'Sample '+i,content:'','tag':''});const page=await readWorkspace('Note',{page:2,sort:'title',direction:'asc'});expect(page.total).toBe(5);expect(page.rows).toHaveLength(1);await expect(readWorkspace('User',{})).rejects.toThrow('Unknown');});
+ it('loads every record type in one round trip and clamps out-of-range pages',async()=>{for(const entity of entities){reads=0;const result=await readWorkspace(entity.key,{page:999});expect(reads).toBe(1);expect(result.page).toBeLessThanOrEqual(Math.max(1,Math.ceil(result.total/4)));expect(result.rows.length).toBeLessThanOrEqual(4)}});
+ it('retains selected links beyond the bounded choice list',async()=>{await database.query('INSERT INTO "Category"(id,"userId",title,kind,"updatedAt") SELECT gen_random_uuid(),$1,\'Synthetic choice \'||lpad(n::text,4,\'0\'),\'expense\',now() FROM generate_series(1,502) n',[owner]);const linked=(await database.query<{id:string}>('INSERT INTO "Category"(id,"userId",title,kind,"updatedAt")VALUES(gen_random_uuid(),$1,\'ZZZ selected beyond 500\',\'expense\',now())RETURNING id',[owner])).rows[0].id;const account=(await readWorkspace('FinancialAccount',{})).rows[0].id;await writeRecord('Transaction',{title:'Linked beyond limit',accountId:account,categoryId:linked,amount:'0.10',date:'2026-10-16'});const view=await readWorkspace('Transaction',{search:'Linked beyond'});expect(view.relationsTruncated).toBe(true);expect(view.options.Category.some(c=>c.id===linked)).toBe(true);expect(view.rows[0].currency).toBe('USD')});
 });

@@ -1,6 +1,6 @@
 "use client";
 import { useState, type CSSProperties } from "react";
-import Link from "next/link";
+import {NavigationLink as Link} from "@/features/shell/navigation-link";
 import { ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, FolderKanban, Network, NotebookPen, Pause, Play, Settings, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
 import { FlowingCore } from "@/components/ui/flowing-core";
 import { navigation } from "@/features/shell/navigation";

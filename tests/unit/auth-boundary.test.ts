@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("next/navigation", () => ({ redirect: (url: string) => { throw new Error(`redirect:${url}`); } }));
 vi.mock("@/lib/env", () => ({ getAuthConfig: () => mocks.configured ? {} : null }));
 vi.mock("@/lib/supabase/server", () => ({ createAuthClient: async () => ({ auth: mocks }) }));
-import { requireOwner } from "../../src/features/auth/server";
+import { requireOwner,withOwnerRequest } from "../../src/features/auth/server";
 import { signIn, signOut } from "../../src/features/auth/actions";
 
 beforeEach(() => {
@@ -16,6 +16,9 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe("server owner boundary", () => {
+  it('shares verification only inside an explicitly verified request and rechecks the next request',async()=>{
+    mocks.getUser.mockResolvedValue({data:{user:{id:ownerId}},error:null});await withOwnerRequest(async()=>{expect((await requireOwner()).id).toBe(ownerId);expect((await requireOwner()).id).toBe(ownerId)});expect(mocks.getUser).toHaveBeenCalledTimes(1);mocks.getUser.mockResolvedValue({data:{user:null},error:{code:'revoked'}});await expect(withOwnerRequest(async()=>requireOwner())).rejects.toThrow('unauthorized');expect(mocks.getUser).toHaveBeenCalledTimes(2);
+  });
   it("does not call Supabase without complete configuration", async () => {
     mocks.configured = false;
     await expect(requireOwner()).rejects.toThrow("redirect:/login?status=configuration");

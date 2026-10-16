@@ -1,61 +1,24 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { withOwnerDatabase } from '@/lib/owner-db';
-import { entities, entityFor, formatMoney, type RecordRow, type WorkspaceData } from './config';
-import { readQuery, recordId, validateRecord } from './validation';
+import { entities, entityFor, formatMoney, type WorkspaceData } from './config';
+import { recordId, validateRecord } from './validation';
+import {workspaceQuery} from './read-query';
 const quoted = (name: string) => `"${name}"`; // Names come exclusively from the static entity definitions.
-function serialize(row: Record<string, unknown>): RecordRow { return Object.fromEntries(Object.entries(row).map(([key,value]) => [key, value instanceof Date ? value.toISOString().slice(0,key === 'updatedAt' ? 24 : 10) : String(value ?? '')])) as RecordRow; }
-export async function readWorkspace(key: string, input: unknown): Promise<WorkspaceData> {
-  const entity = entityFor(key); const query = readQuery(input); const pageSize = 4;
-  return withOwnerDatabase(async (tx, ownerId) => {
-    const params: unknown[] = [ownerId]; let where = '"userId"=$1::uuid';
-    if (query.search) { params.push(`%${query.search.replace(/[\\%_]/g,'\\$&')}%`); where += ` AND "title" ILIKE $${params.length}`; }
-    if (query.status && entity.fields.some(f => f.name === 'status')) { params.push(query.status); where += ` AND "status"=$${params.length}`; }
-    const dateField = entity.fields.find(f => f.type === 'date');
-    const sort = query.sort === 'date' ? dateField?.name ?? 'updatedAt' : query.sort;
-    const count = await tx.$queryRawUnsafe<{count: bigint}[]>(`SELECT count(*) FROM ${quoted(key)} WHERE ${where}`, ...params);
-    const total = Number(count[0].count); const page = Math.min(query.page, Math.max(1,Math.ceil(total/pageSize)));
-    const records = await tx.$queryRawUnsafe<Record<string,unknown>[]>(`SELECT * FROM ${quoted(key)} WHERE ${where} ORDER BY ${quoted(sort)} ${query.direction === 'asc'?'ASC':'DESC'}, "id" LIMIT ${pageSize} OFFSET ${(page-1)*pageSize}`, ...params);
-    const options: WorkspaceData['options'] = {}; let relationsTruncated = false;
-    for (const target of new Set(entity.fields.filter(f => f.target).map(f => f.target!))) {
-      const rows = await tx.$queryRawUnsafe<{id:string; title:string}[]>(`SELECT "id", "title" FROM ${quoted(target)} WHERE "userId"=$1::uuid ORDER BY "title", "id" LIMIT 501`,ownerId);
-      if(rows.length > 500) relationsTruncated = true; options[target]=rows.slice(0,500);
-      // Always include links of the current records even beyond the first 500 options.
-      const ids = entity.fields.filter(f => f.target === target).flatMap(f => records.map(r=>String(r[f.name])));
-      for (const id of new Set(ids)) if(!options[target].some(r=>r.id===id)) {
-        const linked = await tx.$queryRawUnsafe<{id:string;title:string}[]>(`SELECT "id", "title" FROM ${quoted(target)} WHERE "userId"=$1::uuid AND "id"=$2::uuid`,ownerId,id); options[target].push(...linked);
-      }
-    }
-    for(const row of records) {
-      const target=entity.fields.some(f=>f.name==='accountId')?'FinancialAccount':entity.fields.some(f=>f.name==='budgetId')?'Budget':null;
-      if(target) {const parentId=row[target==='Budget'?'budgetId':'accountId'];const parent=await tx.$queryRawUnsafe<{currency:string}[]>(`SELECT currency FROM "${target}" WHERE id=$1::uuid AND "userId"=$2::uuid`,parentId,ownerId);row.currency=parent[0]?.currency;}
-    }
-    const summary: WorkspaceData['summary']=[{label:'Matching records',value:String(total)}]; let chart: WorkspaceData['chart']=[];
-    if(entity.fields.some(f=>f.name==='status')) {
-      const statuses = await tx.$queryRawUnsafe<{label:string;value:bigint}[]>(`SELECT "status" AS label, count(*) AS value FROM ${quoted(key)} WHERE ${where} GROUP BY "status" ORDER BY "status"`,...params); chart=statuses.map(r=>({label:r.label,value:Number(r.value)}));
-      summary.push({label:'Completed',value:String(chart.find(c=>c.label==='done')?.value??0)});
-    }
-    if(entity.module==='finances') {
-      const balances=await tx.$queryRawUnsafe<{currency:string;balance:bigint}[]>(`SELECT a.currency, sum(a."openingBalance" + COALESCE(t.net,0))::bigint AS balance FROM "FinancialAccount" a LEFT JOIN (SELECT t."accountId",t."userId",sum(CASE WHEN c.kind='income' THEN t.amount ELSE -t.amount END) AS net FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" WHERE t."userId"=$1::uuid GROUP BY t."accountId",t."userId") t ON t."accountId"=a.id AND t."userId"=a."userId" WHERE a."userId"=$1::uuid GROUP BY a.currency ORDER BY a.currency`,ownerId);
-      summary.push(...balances.map(r=>({label:'Account balance',value:formatMoney(r.balance,r.currency)})));
-      const spending = await tx.$queryRawUnsafe<{label:string;value:bigint}[]>(`SELECT a.currency || ' · ' || c.title AS label, sum(t.amount)::bigint AS value FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" WHERE t."userId"=$1::uuid AND c.kind='expense' GROUP BY a.currency,c.title ORDER BY sum(t.amount) DESC LIMIT 6`,ownerId);
-      chart=spending.map(r=>({label:r.label+' · '+formatMoney(r.value,r.label.slice(0,3)),value:Number(r.value)/100}));
-    }
-    if(entity.module==='education') {
-      const grade=await tx.$queryRawUnsafe<{earned:bigint|null;possible:bigint|null}[]>('SELECT sum("pointsEarned")::bigint AS earned,sum("pointsPossible")::bigint AS possible FROM "Grade" WHERE "userId"=$1::uuid',ownerId);
-      if(grade[0].possible)summary.push({label:'Recorded points (unweighted)',value:`${(Number(grade[0].earned)/Number(grade[0].possible)*100).toFixed(1)}%`});
-    }
-    if(key==='Goal')chart=records.map(r=>({label:String(r.title),value:Math.min(100,Number(r.current)/Number(r.target)*100)}));
-    if(key==='BudgetCategory') {
-      for(const record of records) {
-        const spent=await tx.$queryRawUnsafe<{spent:bigint;currency:string}[]>(`SELECT b.currency,COALESCE(sum(CASE WHEN a.currency=b.currency THEN t.amount ELSE 0 END),0)::bigint AS spent FROM "Budget" b LEFT JOIN "Transaction" t ON t."userId"=b."userId" AND t."categoryId"=$3::uuid AND t.date BETWEEN b."startDate" AND b."endDate" LEFT JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=b."userId" WHERE b.id=$2::uuid AND b."userId"=$1::uuid GROUP BY b.currency`,ownerId,record.budgetId,record.categoryId);
-        summary.push({label:`Spent · ${String(record.title)}`,value:formatMoney(spent[0]?.spent??0n,spent[0]?.currency??'USD')});
-      }
-    }
-    const calendar: WorkspaceData['calendar']=[];
-    if(dateField) { const dated=await tx.$queryRawUnsafe<{date:Date;title:string}[]>(`SELECT ${quoted(dateField.name)} AS date,title FROM ${quoted(key)} WHERE ${where} AND ${quoted(dateField.name)} >= $${params.length+1}::date AND ${quoted(dateField.name)} < ($${params.length+1}::date + interval '1 month') ORDER BY ${quoted(dateField.name)},id LIMIT 200`,...params,query.month+'-01');calendar.push(...dated.map(r=>({date:r.date.toISOString().slice(0,10),title:r.title}))); }
-    return {rows:records.map(serialize),total,page,pageSize,options,relationsTruncated,summary:summary.slice(0,5),chart,calendar};
-  });
+type ReadResult=Omit<WorkspaceData,"summary"|"chart"> & {statuses:{label:string;value:number}[];balances?:{currency:string;balance:string}[];spending?:{label:string;value:string}[];grade?:{earned:string;possible:string};budgetSpending?:{title:string;currency:string;spent:string}[]};
+export async function readWorkspace(key:string,input:unknown):Promise<WorkspaceData>{
+ const {sql,params,entity}=workspaceQuery(key,input);
+ return withOwnerDatabase(async(tx,owner)=>{
+  params[0]=owner;const [{data}]=await tx.$queryRawUnsafe<{data:ReadResult}[]>(sql,...params);
+  const summary:WorkspaceData["summary"]=[{label:"Matching records",value:String(data.total)}];let chart:WorkspaceData["chart"]=data.statuses;
+  if(entity.fields.some(f=>f.name==="status"))summary.push({label:"Completed",value:String(data.statuses.find(s=>s.label==="done")?.value??0)});
+  if(data.balances)summary.push(...data.balances.map(r=>({label:"Account balance",value:formatMoney(BigInt(r.balance),r.currency)})));
+  if(data.spending)chart=data.spending.map(r=>({label:r.label+" · "+formatMoney(BigInt(r.value),r.label.slice(0,3)),value:Number(r.value)/100}));
+  if(data.grade&&BigInt(data.grade.possible)>0n)summary.push({label:"Recorded points (unweighted)",value:(Number(data.grade.earned)/Number(data.grade.possible)*100).toFixed(1)+"%"});
+  if(key==="Goal")chart=data.rows.map(r=>({label:r.title,value:Math.min(100,Number(r.current)/Number(r.target)*100)}));
+  if(data.budgetSpending)summary.push(...data.budgetSpending.map(r=>({label:"Spent · "+r.title,value:formatMoney(BigInt(r.spent),r.currency)})));
+  return {rows:data.rows,total:data.total,page:data.page,pageSize:4,options:data.options,relationsTruncated:data.relationsTruncated,calendar:data.calendar,summary:summary.slice(0,5),chart};
+ });
 }
 export async function writeRecord(key: string, input: unknown, id?: string, expectedUpdatedAt?: string) {
   const entity=entityFor(key); const values=validateRecord(key,input); if(id)recordId.parse(id);

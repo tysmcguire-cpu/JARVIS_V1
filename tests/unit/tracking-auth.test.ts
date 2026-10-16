@@ -1,7 +1,7 @@
 import { it,expect,vi,beforeEach } from 'vitest';
 const mocks=vi.hoisted(()=>({owner:vi.fn(),read:vi.fn(),write:vi.fn(),remove:vi.fn(),choices:vi.fn(),transaction:vi.fn()}));
 vi.mock('server-only',()=>({}));vi.mock('next/cache',()=>({revalidatePath:vi.fn()}));
-vi.mock('@/features/auth/server',()=>({requireOwner:mocks.owner}));
+vi.mock('@/features/auth/server',()=>({requireOwner:mocks.owner,withOwnerRequest:async(work:()=>Promise<unknown>)=>{await mocks.owner();return work()}}));
 vi.mock('@/features/tracking/repository',()=>({readWorkspace:mocks.read,writeRecord:mocks.write,removeRecord:mocks.remove,readLinkedChoices:mocks.choices}));
 vi.mock('@/lib/db',()=>({db:{$transaction:mocks.transaction}}));
 import {loadTracking,saveTracking,deleteTracking,searchLinkedChoices} from '@/features/tracking/actions';

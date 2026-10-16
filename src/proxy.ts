@@ -33,8 +33,10 @@ export async function proxy(request: NextRequest) {
       }
     }
   });
-  const { data, error } = await client.auth.getUser();
-  if (privateRoute && (error || !isOwner(data.user?.id, config.JARVIS_OWNER_ID))) {
+  // Signature/expiry-verified preflight; every private page and data operation still
+  // uses fresh getUser verification in requireOwner (including revoked sessions).
+  const { data, error } = await client.auth.getClaims();
+  if (privateRoute && (error || !isOwner(data?.claims.sub, config.JARVIS_OWNER_ID))) {
     const denied = NextResponse.redirect(new URL("/login?status=unauthorized", request.url));
     response.cookies.getAll().forEach(cookie => denied.cookies.set(cookie));
     denied.headers.set("Cache-Control", "private, no-store");
