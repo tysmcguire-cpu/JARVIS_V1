@@ -1,5 +1,6 @@
 // Local-only command loop. Explicitly invoked by the owner; never starts with Next.js.
-process.loadEnvFile('.env');
+import {loadEnvironment} from './load-environment';
+loadEnvironment();
 async function main(){
  const {getTelegramConfig}=await import('../src/features/telegram/config');const config=getTelegramConfig();if(!config)throw Error('Configure TELEGRAM_ENABLED, bot token and approved IDs in .env first.');
  const {telegramRequest,TelegramDeliveryError}=await import('../src/features/telegram/transport');const {processUpdate,flushReplies}=await import('../src/features/telegram/service');
