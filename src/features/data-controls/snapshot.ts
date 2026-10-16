@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {entities} from '@/features/tracking/config';
 import type {Prisma} from '@prisma/client';
 import {answerSchema,validAnswer} from '@/features/assistant/contract';
+import {defaultRuleSettings,ruleSettingsSchema,type Kind} from '@/features/notifications/rules';
 export const snapshotTables=['User','UserSettings','FinancialAccount','Category','CsvImportBatch','CsvImportKey',...entities.filter(e=>!['FinancialAccount','Category'].includes(e.key)).map(e=>e.key),'ApiConnection','ExternalRecord','SyncLog','TelegramIdentity','TelegramMessage','AiConversation','AiSourceReference','NotificationRule','NotificationJob','NotificationDelivery','AuditLog'] as const;
 export const maxSnapshotBytes=16*1024*1024;
 const excluded:Record<string,string[]>={ApiConnection:['tokenCiphertext','cursor','leaseToken','leaseUntil'],TelegramIdentity:['pairingHash','pairingExpiresAt'],TelegramMessage:['leaseUntil'],NotificationJob:['leaseToken','leaseUntil']};
@@ -20,6 +21,7 @@ export async function exportSnapshot(tx:Tx,owner:string){
 export function parseSnapshot(text:string,owner:string){if(Buffer.byteLength(text,'utf8')>maxSnapshotBytes)throw Error('Snapshot too large');const snapshot=snapshotSchema.parse(JSON.parse(text));if(snapshot.ownerId!==owner)throw Error('Snapshot owner mismatch');if(snapshotTables.some(t=>!Array.isArray(snapshot.tables[t]))||Object.keys(snapshot.tables).some(t=>!snapshotTables.includes(t as typeof snapshotTables[number])))throw Error('Snapshot table mismatch');
  for(const table of snapshotTables)for(const row of snapshot.tables[table]){if((table==='User'?row.id:row.userId)!==owner)throw Error('Snapshot row owner mismatch');if((excluded[table]??[]).some(f=>f in row))throw Error('Snapshot contains excluded credentials');}
  for(const row of snapshot.tables.NotificationJob)z.object({title:z.string().max(300),text:z.string().max(1200),href:z.enum(['/assistant','/education','/calendar','/projects','/career','/finances']),asOf:z.iso.datetime(),sourceUpdatedAt:z.iso.datetime(),coverage:z.string().max(1000)}).strict().parse(row.payload);
+ for(const row of snapshot.tables.NotificationRule){const kind=z.enum(['weekly','deadline','financial','morning','reminder']).parse(row.kind) as Kind;ruleSettingsSchema.shape[kind].parse({...defaultRuleSettings({weeklyReviewDay:0,deadlineReminders:true})[kind],...(z.record(z.string(),z.unknown()).parse(row.config??{}))});}
  for(const row of snapshot.tables.AiConversation)if(row.status==='complete')validAnswer(answerSchema.parse(row.answer));
  for(const row of snapshot.tables.ExternalRecord)z.string().url().startsWith('https://').parse(row.sourceUrl);
  if(snapshot.tables.User.length!==1||snapshot.tables.UserSettings.length>1)throw Error('Snapshot identity mismatch');return snapshot;
@@ -27,7 +29,7 @@ export function parseSnapshot(text:string,owner:string){if(Buffer.byteLength(tex
 // CLI-only restore, never a model tool or server action. The caller must stop
 // workers and explicitly approve replacement; the transaction supplies rollback.
 export async function restoreSnapshot(tx:Tx,owner:string,snapshot:Snapshot){parseSnapshot(JSON.stringify(snapshot),owner);await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',owner+':notifications');await tx.$executeRawUnsafe('DELETE FROM "User" WHERE id=$1::uuid',owner);
- for(const table of snapshotTables){const rows=snapshot.tables[table].map(row=>{const result={...row};if(table==='UserSettings')result.notificationTelegramEnabled=false;if(table==='ApiConnection'){result.status='disconnected';result.retryAt=null;}if(table==='TelegramIdentity')result.pairedAt=null;if(table==='TelegramMessage'&&!result.deliveredAt)result.canceledAt=new Date().toISOString();if(table==='NotificationRule'){result.lastScannedAt=new Date().toISOString();result.version=Number(result.version)+1;}if(table==='NotificationJob')result.status='canceled';return result});if(!rows.length)continue;
+ for(const table of snapshotTables){const rows=snapshot.tables[table].map(row=>{const result={...row};if(table==='UserSettings')result.notificationTelegramEnabled=false;if(table==='ApiConnection'){result.status='disconnected';result.retryAt=null;}if(table==='TelegramIdentity')result.pairedAt=null;if(table==='TelegramMessage'&&!result.deliveredAt)result.canceledAt=new Date().toISOString();if(table==='NotificationRule'){result.config??={};result.lastScannedAt=new Date().toISOString();result.version=Number(result.version)+1;}if(table==='NotificationJob')result.status='canceled';return result});if(!rows.length)continue;
  await tx.$executeRawUnsafe(`INSERT INTO "${table}" SELECT * FROM jsonb_populate_recordset(null::"${table}",$1::jsonb)`,JSON.stringify(rows));
  }
 }

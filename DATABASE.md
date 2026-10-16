@@ -1,5 +1,7 @@
 # Database design
 
+Notification frequency extension: `20261017000000_notification_frequency` adds strict-object JSON config to NotificationRule, allows the independent reminder kind, and indexes NotificationJob owner/entity/source lookups. Server schemas allow only bounded cadence/channel/source choices. Existing preferences remain defaults. Export includes the config; restore validates it and supplies legacy defaults for older backups without that column.
+
 Phase 6 adds NotificationRule, NotificationJob and NotificationDelivery with forced RLS, owner-bound references, deduplication, version invalidation and delivery-attempt uniqueness. The security migration also forces foundation-table RLS and revokes browser-role access to User/UserSettings/AuditLog, closing a Data API bypass of application MFA. Restricted runtime grants were applied; `pnpm db:verify-release` passed live with verification changes rolled back. Export/restore covers all 39 application tables; Supabase Auth and environmental secrets are excluded. See RECOVERY.md.
 
 Phase 5 adds AiConversation/AiSourceReference with owner-bound compound foreign keys, RLS and browser-role revocation. Deleting a conversation cascades its sources. Audit request events enforce the website hourly guard after history deletion. Runtime has narrow CRUD grants; `db:verify-assistant` rolls back its verification fixtures.

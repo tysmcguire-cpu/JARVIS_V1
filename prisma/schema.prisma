@@ -105,6 +105,7 @@ model UserSettings {
 }
 
 model NotificationRule {
+  config         Json              @default("{}")
   id             String            @id @default(uuid()) @db.Uuid
   userId         String            @db.Uuid
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -148,6 +149,7 @@ model NotificationJob {
 
   @@unique([userId, dedupeKey])
   @@unique([id, userId])
+  @@index([userId, entity, recordId])
   @@index([userId, status, nextAttemptAt], map: "NotificationJob_due")
 }
 
