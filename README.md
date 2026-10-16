@@ -1,6 +1,6 @@
 # JARVIS
 
-Private, single-owner personal operating system. Foundation and Phase 2 core tracking: desktop application shell, Supabase owner sign-in, owner-scoped manual tracking across finances, academics, calendar/tasks, career, projects, goals/habits and notes, plus an isolated synthetic preview. Desktop-only, minimum 1024×600, with pagination and forms fitting one viewport. Supabase is configured locally. Telegram is configured locally; owner pairing, status replies and note sync are verified. AI, external connectors and notification delivery remain later phases; nothing is deployed.
+Private, single-owner personal operating system. Foundation and Phase 2 core tracking: desktop application shell, Supabase owner sign-in, owner-scoped manual tracking across finances, academics, calendar/tasks, career, projects, goals/habits and notes, plus an isolated synthetic preview. Desktop-only, minimum 1024×600, with pagination and forms fitting one viewport. Supabase is configured locally. Telegram is configured locally; owner pairing, status replies and note sync are verified. Read-only connector adapters and financial CSV import are implemented; provider activation needs separately approved credentials. AI and notification delivery remain later phases; nothing is deployed.
 
 JARVIS_SPEC.md contains the complete original requirements. Read IMPLEMENTATION_PLAN.md for architecture decisions, phase gates and verification status. See ARCHITECTURE.md, DATABASE.md, SECURITY.md, INTEGRATIONS.md and DEPLOYMENT.md before configuring real services.
 
@@ -10,7 +10,7 @@ Install Node.js 22.12+ (24 LTS recommended), Git and pnpm 11. Open this folder i
 
 ```powershell
 pnpm install --frozen-lockfile
-Copy-Item .env.example .env
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
 pnpm db:generate
 ```
 
@@ -73,3 +73,9 @@ The existing Supabase project is migrated for Phase 2. On the other computer, co
 ## Telegram on the primary computer
 
 This computer is the primary development workspace. Phase 3 command processing, protected pairing, Settings controls, local polling and a secure webhook endpoint are implemented. Telegram is enabled and paired locally. See TELEGRAM.md for BotFather setup, safe numeric-ID identification and pairing; never send bot tokens in chat. `pnpm telegram:poll` runs locally without a public tunnel. The app can continue running at localhost:3000 without Telegram. Real owner pairing, status replies and note synchronization are verified; live undo and restart/retry checks remain.
+
+## Integrations and financial CSV
+
+Open Settings → Integrations and CSV. CSV import supports account/category choice, column/date/sign mapping, paginated preview, duplicate review and atomic confirmation. It writes internal records without connecting a bank. Create the destination account and categories in Finances first.
+
+The five read-only adapters and synthetic tests are implemented, but no Calendar/Gmail/GitHub/Canvas/Drive account is connected. Authorization requires an owner-controlled credential-encryption key, approved provider token and resource selection. Google tokens come from an existing approved OAuth project. Synced snapshots do not overwrite manual tracking. See INTEGRATIONS_PHASE4.md for scope, key custody and limits. CSV needs no provider token or encryption key.

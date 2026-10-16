@@ -33,3 +33,9 @@ The 20261016000000_core_tracking migration adds the 24 models listed in `entitie
 ## Phase 3 Telegram state
 
 TelegramIdentity stores the approved owner/bot/chat tuple, hashed expiring pairing challenge and paired timestamp. TelegramMessage stores bounded replies, unique per-owner/bot/update receipt, undo target/version and reply retry/lease/cancellation state. Incoming text and bot tokens are not stored. Forced owner RLS and owner foreign keys apply. `pnpm db:telegram` grants only the required state-table CRUD; audit INSERT remains prefix/owner restricted. Live state verification rolls back its synthetic CRUD and does not call Telegram. See TELEGRAM.md before activating the bot.
+
+## Phase 4 integration storage
+
+The migration adds ApiConnection, SyncLog, ExternalRecord, CsvImportBatch and CsvImportKey plus optional transaction provenance. Compound owner links, uniqueness, hash/count/credential checks, indexes and forced RLS apply. Browser roles have no direct table access. Runtime setup is pnpm db:integrations; pnpm db:verify-integrations checks live CRUD, linking, cascades and isolation with a rolled-back transaction, without retaining fixtures or contacting providers.
+
+CSV retention/provenance and key backup are described in INTEGRATIONS_PHASE4.md. Currency/category updates lock parent rows so a concurrent import cannot invalidate its reviewed classification. Owner transactions have a bounded 15-second timeout for this workflow.

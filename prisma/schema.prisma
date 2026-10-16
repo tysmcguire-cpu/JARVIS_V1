@@ -9,6 +9,11 @@ datasource db {
 }
 
 model User {
+  apiConnections            ApiConnection[]
+  syncLogs                  SyncLog[]
+  externalRecords           ExternalRecord[]
+  csvBatches                CsvImportBatch[]
+  csvKeys                   CsvImportKey[]
   telegramIdentity          TelegramIdentity?
   telegramMessages          TelegramMessage[]
   id                        String              @id @db.Uuid
@@ -74,6 +79,8 @@ model AuditLog {
 }
 
 model FinancialAccount {
+  csvBatches                        CsvImportBatch[]
+  csvKeys                           CsvImportKey[]
   id                                String             @id @default(uuid()) @db.Uuid
   userId                            String             @db.Uuid
   user                              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -106,6 +113,8 @@ model Category {
 }
 
 model Transaction {
+  csvBatchId       String?          @db.Uuid
+  csvBatch         CsvImportBatch?  @relation(fields: [csvBatchId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
   id               String           @id @default(uuid()) @db.Uuid
   userId           String           @db.Uuid
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -554,4 +563,100 @@ model TelegramMessage {
   @@unique([userId, botId, updateId])
   @@index([userId, createdAt])
   @@index([userId, deliveredAt, nextAttemptAt])
+}
+
+model ApiConnection {
+  selection       Json             @default("{}")
+  leaseToken      String?          @db.Uuid
+  leaseUntil      DateTime?        @db.Timestamptz(6)
+  consentedAt     DateTime?        @db.Timestamptz(6)
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider        String           @db.VarChar(30)
+  mode            String           @db.VarChar(10)
+  status          String           @default("disconnected") @db.VarChar(20)
+  tokenCiphertext String?          @db.Text
+  cursor          String?          @db.VarChar(500)
+  lastSyncAt      DateTime?        @db.Timestamptz(6)
+  retryAt         DateTime?        @db.Timestamptz(6)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(6)
+  records         ExternalRecord[]
+  logs            SyncLog[]
+
+  @@unique([id, userId])
+  @@unique([userId, provider, mode])
+}
+
+model SyncLog {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectionId String        @db.Uuid
+  connection   ApiConnection @relation(fields: [connectionId, userId], references: [id, userId], onDelete: Cascade, onUpdate: NoAction)
+  status       String        @db.VarChar(20)
+  recordCount  Int           @default(0)
+  errorCode    String?       @db.VarChar(40)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+
+  @@index([userId, connectionId, createdAt])
+}
+
+model ExternalRecord {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @db.Uuid
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectionId    String        @db.Uuid
+  connection      ApiConnection @relation(fields: [connectionId, userId], references: [id, userId], onDelete: Cascade, onUpdate: NoAction)
+  externalId      String        @db.VarChar(200)
+  kind            String        @db.VarChar(30)
+  payload         Json
+  sourceUrl       String        @db.VarChar(500)
+  sourceUpdatedAt DateTime      @db.Timestamptz(6)
+  fetchedAt       DateTime      @default(now()) @db.Timestamptz(6)
+  deleted         Boolean       @default(false)
+
+  @@unique([userId, connectionId, externalId])
+  @@index([userId, connectionId, fetchedAt])
+}
+
+model CsvImportBatch {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId      String           @db.Uuid
+  account        FinancialAccount @relation(fields: [accountId, userId], references: [id, userId], onDelete: Cascade, onUpdate: NoAction)
+  digest         String           @db.VarChar(64)
+  filename       String           @db.VarChar(120)
+  currency       String           @db.Char(3)
+  plan           Json
+  rowCount       Int
+  duplicateCount Int
+  importedCount  Int              @default(0)
+  skippedCount   Int              @default(0)
+  importedAt     DateTime?        @db.Timestamptz(6)
+  expiresAt      DateTime         @db.Timestamptz(6)
+  createdAt      DateTime         @default(now()) @db.Timestamptz(6)
+  keys           CsvImportKey[]
+  transactions   Transaction[]
+
+  @@unique([id, userId])
+  @@unique([userId, accountId, digest])
+  @@index([userId, createdAt])
+}
+
+model CsvImportKey {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountId   String           @db.Uuid
+  account     FinancialAccount @relation(fields: [accountId, userId], references: [id, userId], onDelete: Cascade, onUpdate: NoAction)
+  batchId     String           @db.Uuid
+  batch       CsvImportBatch   @relation(fields: [batchId, userId], references: [id, userId], onDelete: Cascade, onUpdate: NoAction)
+  externalKey String           @db.VarChar(64)
+  payloadHash String           @db.VarChar(64)
+  createdAt   DateTime         @default(now()) @db.Timestamptz(6)
+
+  @@unique([userId, accountId, externalKey])
 }

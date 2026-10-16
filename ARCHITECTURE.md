@@ -55,3 +55,11 @@ Record reads are paginated, sorting/search bounded, linked option search limited
 Incoming text is never retained. Operation results and undo metadata are persisted with bot/update-ID uniqueness. Domain writes, operation audit and update receipt share one transaction, serialized by an owner advisory lock. Reply delivery occurs after commit with leases and retry deadlines. Restarting polling replays unacknowledged updates safely. Provider delivery cannot be exactly once after an ambiguous network result, but storage operations remain deduplicated.
 
 Only `/api/telegram/webhook` bypasses browser-session proxy checks; the route independently fails closed with no Telegram config/secret, validates JSON body size and never exposes provider/DB error details. No public host or webhook registration exists. `telegram:poll` and `telegram:replies` are explicit local processes, not background jobs automatically started by Next.js.
+
+## Phase 4 sources and CSV
+
+The integrations feature separates bounded parsing, reusable sync/normalization, synthetic providers, fixed-endpoint HTTP adapters, encrypted grants and owner repositories. Network calls run outside database transactions. Refreshed credentials are committed before reads; page upserts are idempotent and cursor advancement waits for completion. Renewable leases prevent replaced/disconnected workers from persisting results. Canvas reconciles missing IDs only after a complete selected-course snapshot.
+
+CsvImportBatch stores validated, expiring server plans. Confirmation rechecks account currency, category types, receipts and new duplicates. A parameterized CTE inserts new source keys and matching transactions, followed by counts/audit in the same transaction. Bank IDs deduplicate overlapping exports; no-ID files use exact-file/row identity and explicit review. Receipts survive transaction edits/deletion. Optional Transaction.csvBatchId links provenance.
+
+Source snapshots never overwrite manual records and render only as text. AES-GCM envelopes authenticate owner/connection/provider context. No encryption key or custody service is chosen automatically. Status responses omit credentials. Telegram pairing/polling survived the local client restart.

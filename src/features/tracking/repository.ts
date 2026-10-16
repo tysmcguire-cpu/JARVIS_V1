@@ -65,7 +65,7 @@ export async function writeRecord(key: string, input: unknown, id?: string, expe
       if(!found.length)throw Error('A linked record is unavailable.');
     }
     if(key==='BudgetCategory') {
-      const category=await tx.$queryRawUnsafe<{kind:string}[]>('SELECT kind FROM "Category" WHERE id=$1::uuid AND "userId"=$2::uuid',values.categoryId,ownerId);
+      const category=await tx.$queryRawUnsafe<{kind:string}[]>('SELECT kind FROM "Category" WHERE id=$1::uuid AND "userId"=$2::uuid FOR UPDATE',values.categoryId,ownerId);
       if(category[0]?.kind!=='expense')throw Error('Budget limits require an expense category.');
     }
     if(key==='RecurringExpense') {
@@ -73,7 +73,7 @@ export async function writeRecord(key: string, input: unknown, id?: string, expe
       if(category[0]?.kind!=='expense')throw Error('Recurring expenses require an expense category.');
     }
     if (id && key === 'FinancialAccount') {
-      const changed=await tx.$queryRawUnsafe<{currency:string}[]>('SELECT currency FROM "FinancialAccount" WHERE id=$1::uuid AND "userId"=$2::uuid',id,ownerId);
+      const changed=await tx.$queryRawUnsafe<{currency:string}[]>('SELECT currency FROM "FinancialAccount" WHERE id=$1::uuid AND "userId"=$2::uuid FOR UPDATE',id,ownerId);
       const used=await tx.$queryRawUnsafe<{present:boolean}[]>('SELECT EXISTS(SELECT 1 FROM "Transaction" WHERE "accountId"=$1::uuid AND "userId"=$2::uuid UNION ALL SELECT 1 FROM "RecurringExpense" WHERE "accountId"=$1::uuid AND "userId"=$2::uuid) AS present',id,ownerId);
       if(changed[0] && changed[0].currency!==values.currency && used[0].present)throw Error('Remove linked transactions and recurring expenses before changing the account currency.');
     }

@@ -1,0 +1,14 @@
+import {describe,it,expect} from 'vitest';
+import {parseCsv,normalizeCsv,suggestedMapping} from '@/features/integrations/csv';
+const basic='date,description,amount,currency,id\n2026-10-15,Synthetic expense,-0.10,USD,one\n2026-10-16,Synthetic income,0.20,USD,two\n';
+const mapping=suggestedMapping(parseCsv(basic)[0]);
+describe('bounded financial CSV normalization',()=>{
+ it('preserves exact minor units, signs, IDs and currency',()=>{const rows=normalizeCsv(basic,mapping,'USD');expect(rows.map(r=>r.amount)).toEqual(['10','20']);expect(rows.map(r=>r.kind)).toEqual(['expense','income']);expect(rows[0].externalId).toBe('one')});
+ it('parses BOM, quoted delimiters, escaped quotations and CRLF multiline values',()=>{const rows=parseCsv('\uFEFFdate,description,amount\r\n2026-10-15,"Synthetic ""quoted"",\r\ntext",-1.25\r\n');expect(rows[1][1]).toBe('Synthetic "quoted",\r\ntext')});
+ it('requires explicit date format and supports valid slash dates',()=>{expect(()=>normalizeCsv(basic.replace('2026-10-15','10/15/2026'),mapping,'USD')).toThrow();const csv='date,description,amount\n15/10/2026,Synthetic,-1.00';expect(normalizeCsv(csv,{...suggestedMapping(parseCsv(csv)[0]),dateFormat:'dmy'},'USD')[0].date).toBe('2026-10-15')});
+ it('supports declared debit/credit type columns and quoted thousands',()=>{const csv='date,description,amount,type\n2026-10-15,Synthetic,"1,234.50",debit';const map={...suggestedMapping(parseCsv(csv)[0]),amountMode:'explicit'};expect(normalizeCsv(csv,map,'USD')[0]).toMatchObject({amount:'123450',kind:'expense'})});
+ it.each(['date,description,amount\n2026-10-15,"unclosed,-1.00','date,description,amount\n2026-10-15,Synthetic','date,date,amount\n2026-10-15,Synthetic,1','date,description,amount\n2026-10-15,"closed"bad,1'])('rejects malformed CSV',csv=>expect(()=>parseCsv(csv)).toThrow());
+ it('rejects invalid dates, negative explicit expenses, zero amounts and currency mismatches',()=>{expect(()=>normalizeCsv(basic.replace('2026-10-15','2026-02-30'),mapping,'USD')).toThrow();expect(()=>normalizeCsv(basic,{...mapping,amountMode:'expense'},'USD')).toThrow();expect(()=>normalizeCsv(basic.replace('-0.10','0.00'),mapping,'USD')).toThrow();expect(()=>normalizeCsv(basic,mapping,'CAD')).toThrow()});
+ it('rejects duplicate bank IDs without collapsing legitimate identical rows without IDs',()=>{expect(()=>normalizeCsv(basic.replace(',two',',one'),mapping,'USD')).toThrow();const csv='date,description,amount\n2026-10-15,Synthetic,-1\n2026-10-15,Synthetic,-1';expect(normalizeCsv(csv,suggestedMapping(parseCsv(csv)[0]),'USD')).toHaveLength(2)});
+ it('bounds files, columns and transaction counts',()=>{expect(()=>parseCsv('x'.repeat(262145))).toThrow();expect(()=>parseCsv(Array.from({length:33},(_,i)=>'h'+i).join(',')+'\n'+Array(33).fill('a').join(','))).toThrow();expect(()=>parseCsv('date,description,amount\n'+Array(201).fill('2026-10-15,Synthetic,-1').join('\n'))).toThrow()});
+});

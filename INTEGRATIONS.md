@@ -1,5 +1,11 @@
 # Integrations
 
+Current status: Supabase and the owner-paired Telegram bot are configured locally. Phase 4 adds financial CSV imports and five read-only provider adapters, with synthetic tests, encrypted authorization and source review. No Calendar, Gmail, GitHub app connector, Canvas or Drive account has been connected during implementation. Git credentials are not reused by the app.
+
+See [the Phase 4 setup and operating guide](INTEGRATIONS_PHASE4.md) for current CSV, authorization, key-custody and sync instructions. Financial CSV does not need a provider token or encryption key. Real provider authorization remains disabled until key custody is chosen and the local encryption key is configured.
+
+## Historical Foundation and Phase 3 planning notes
+
 No external integrations are active. Supabase configuration is the only external prerequisite for Foundation owner authentication and persistence. Local synthetic preview has no account dependencies.
 
 Phase 4 connector contract must cover authorize, refresh, paginate/fetch, normalize, incremental cursor, owner-scoped idempotent upsert, retry/backoff, rate limits, health and disconnect. Implement deterministic mock providers first. Store encrypted tokens server-side only after key management is decided. Never scrape or bypass permissions.

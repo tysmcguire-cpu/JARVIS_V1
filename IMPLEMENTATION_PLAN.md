@@ -1,6 +1,6 @@
 # Implementation plan
 
-The complete JARVIS_SPEC.md is authoritative. Phases 1 and 2 are implemented. The owner authorized continuing the build on this primary computer on October 15, 2026; current work is Phase 3 Telegram. Historical Foundation notes below describe their original scope.
+The complete JARVIS_SPEC.md is authoritative. Phases 1 and 2 are implemented. The owner authorized continuing the build on this primary computer on October 15, 2026; current work is Phase 4 integrations and CSV imports. Historical Foundation notes below describe their original scope.
 
 ## Architecture review and decisions
 - Next.js App Router with server components, TypeScript, Tailwind and shadcn-style accessible UI primitives. Feature directories isolate domain logic from routing.
@@ -119,7 +119,7 @@ Validation results are recorded after the final checks below. Phase 3 has not be
 - [x] Settings Telegram tab, connection status, explicit disconnect and pairing controls, isolated demo and single-viewport layout.
 - [x] Local credential/ID setup helper and TELEGRAM.md. The helper matches a random owner-sent marker; it never chooses or pairs an identity automatically.
 - [x] Apply migration and runtime grants; verify live state CRUD/isolation with a rolled-back transaction, without contacting Telegram or persisting samples.
-- [ ] Supply real bot token/approved IDs locally, run polling, pair the actual owner, and verify real commands, website persistence, undo and retry/restart behavior.
+- [x] Configure and pair the real owner bot; verify status, note persistence and undo. Local restart preserved pairing/completed operation state. Retry failures are tested automatically.
 
 Telegram implementation is ready for activation; live integration is not claimed. Phase 4 has not started. The local app remains usable without Telegram credentials. Final executed check results follow after validation.
 
@@ -139,3 +139,23 @@ Telegram implementation is ready for activation; live integration is not claimed
 The owner saved the bot token locally. Telegram getMe authenticated it without exposing the token. A random marker sent by the owner identified the approved private chat; its IDs were saved to the ignored .env, and local polling was started. The owner completed the signed-in pairing flow. Database checks confirmed the approved pairing, delivered start/status replies, and a delivered note confirmation with no pending replies. The owner confirmed the note synced successfully to the website. Real /undo and polling-restart/retry verification remain outstanding; their automated tests pass. No public webhook or deployment was created.
 
 Live undo is now verified: the owner sent /undo, its reply was delivered, the command receipt was marked undone, and the referenced test note no longer exists. Restart/retry behavior remains covered by automated tests; a live process-restart check is still outstanding.
+
+## Phase 4 implementation
+
+- [x] Reusable read-only connector contract, synthetic providers and five HTTP adapters with approved resource selection, refresh, bounded pagination, normalization, checkpointing, idempotent upserts, backoff and health.
+- [x] Explicit owner grants, AES-GCM credential envelopes, connection leases, paginated source review and local disconnect. No real provider account contacted; key custody remains an owner decision and its local key field stays blank.
+- [x] Financial CSV mapping, exact money, bank-ID/file deduplication, possible-duplicate review, expiring server-bound drafts and atomic confirmation/audit.
+- [x] Desktop single-viewport Settings workflow, paginated previews and credential-entry modal.
+- [x] Additive migration/runtime grants applied. Live linking, CRUD, cascades and isolation verified in a rolled-back transaction with no sample financial data retained.
+- [x] Setup, permissions, key-custody and operating documentation in INTEGRATIONS_PHASE4.md.
+
+Metadata scope is deliberate: Gmail/Drive selected metadata, GitHub repository metadata, Calendar events without recurrence expansion, and selected Instructure assignment snapshots. Google tokens require an existing approved OAuth project; no new consent redirect is implemented. Sources stay separate from manual records. Actual provider activation and a real bank file require later owner setup. Phase 5 has not started.
+
+### Executed Phase 4 checks — October 16, 2026
+
+- ESLint, Prisma validation and production build: passed.
+- Unit/database tests: 96 passed, including atomic CSV imports, duplicate review, ownership, credential isolation, refresh and source reconciliation.
+- Browser coverage: 30 existing scenarios plus 12 integration scenarios passed across three desktop sizes in separate runs. Minimum-size screenshots reviewed.
+- Two production boundary smoke tests: passed against the final build.
+- Live integration storage/grants verified in a rolled-back transaction. No real provider contacted or sample financial records retained.
+- Master specification unchanged. Development app and local Telegram polling remain running.

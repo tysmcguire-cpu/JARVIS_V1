@@ -47,7 +47,7 @@ export function OrbitalDashboard({ demo }: { demo: boolean }) {
           </Link>; })}
         </nav>
       </div>
-      <div className="console-bottomline"><span><Network size={12} /> 10 WORKSPACE DESTINATIONS</span><span>NO DOMAIN INTEGRATIONS CONNECTED</span><div className="signal-decoration" aria-hidden="true">{Array.from({ length: 27 }, (_, i) => <i key={i} style={{ "--signal-height": `${5 + (i * 7 % 19)}px`, animationDelay: `${i * .1}s` } as CSSProperties} />)}</div></div>
+      <div className="console-bottomline"><span><Network size={12} /> 10 WORKSPACE DESTINATIONS</span><span>MANUAL TRACKING / CONNECTOR CONTROLS</span><div className="signal-decoration" aria-hidden="true">{Array.from({ length: 27 }, (_, i) => <i key={i} style={{ "--signal-height": `${5 + (i * 7 % 19)}px`, animationDelay: `${i * .1}s` } as CSSProperties} />)}</div></div>
     </section>
     <p className="hub-footnote">{demo ? "Synthetic preview. Explore tracking with temporary sample records; reload to reset." : "Your workspace is private. Manual tracking is available. Configure Telegram in Settings; AI and notification delivery follow later."}</p>
   </div>;
