@@ -1,5 +1,7 @@
 # Database design
 
+Phase 6 adds NotificationRule, NotificationJob and NotificationDelivery with forced RLS, owner-bound references, deduplication, version invalidation and delivery-attempt uniqueness. The security migration also forces foundation-table RLS and revokes browser-role access to User/UserSettings/AuditLog, closing a Data API bypass of application MFA. Restricted runtime grants were applied; `pnpm db:verify-release` passed live with verification changes rolled back. Export/restore covers all 39 application tables; Supabase Auth and environmental secrets are excluded. See RECOVERY.md.
+
 Phase 5 adds AiConversation/AiSourceReference with owner-bound compound foreign keys, RLS and browser-role revocation. Deleting a conversation cascades its sources. Audit request events enforce the website hourly guard after history deletion. Runtime has narrow CRUD grants; `db:verify-assistant` rolls back its verification fixtures.
 
 Foundation contains User, UserSettings and AuditLog. UUID identity equals Supabase auth.users.id. The reviewed migration adds the auth foreign key, a unique singleton flag with a true-only check, notification time/day/currency checks and RLS. Exactly one application owner row can exist. No public registration or browser inserts into User are allowed.

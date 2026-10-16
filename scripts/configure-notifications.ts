@@ -1,0 +1,4 @@
+import {PrismaClient} from '@prisma/client';
+process.loadEnvFile('.env');const admin=new PrismaClient({datasources:{db:{url:process.env.DIRECT_URL}}});
+async function configure(){const owner=await admin.user.findUnique({where:{id:process.env.JARVIS_OWNER_ID}});if(!owner||owner.synthetic)throw Error('Owner mismatch');for(const table of ['NotificationRule','NotificationJob','NotificationDelivery'])await admin.$executeRawUnsafe(`GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE public."${table}" TO jarvis_app`);await admin.$executeRawUnsafe('GRANT UPDATE ON public."UserSettings" TO jarvis_app');await admin.$executeRawUnsafe('GRANT DELETE ON public."User" TO jarvis_app');console.info('Notification/data-control runtime permissions configured. No messages, export, deletion or backup performed.');}
+configure().catch(()=>{console.error('Notification permission setup failed; private details suppressed.');process.exitCode=1}).finally(()=>admin.$disconnect());

@@ -46,7 +46,7 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  }
  if(name==='status'){
    const pending=await tx.$queryRawUnsafe<{count:bigint}[]>('SELECT count(*) FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "deliveredAt" IS NULL AND "canceledAt" IS NULL',owner,config.botId);
-   return {reply:`Owner paired. Database available. ${pending[0].count} pending replies. Manual commands and local /ask analysis enabled; OpenAI and notification delivery are not active.`};
+   return {reply:`Owner paired. Database available. ${pending[0].count} pending replies. Manual commands and local /ask analysis enabled. Notification schedules and delivery status are in JARVIS Notifications.`};
  }
  if(name==='undo'){
    const previous=await tx.$queryRawUnsafe<{id:string;entity:string;recordId:string;recordVersion:Date}[]>('SELECT id,entity,"recordId","recordVersion" FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "updateId"<$3 AND entity IS NOT NULL AND undone=false AND "createdAt">now()-interval \'24 hours\' ORDER BY "updateId" DESC,id DESC LIMIT 1 FOR UPDATE',owner,config.botId,BigInt(updateId));
@@ -71,7 +71,7 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  else if(name==='remind'){requireParts(parts,3);const taskId=await exactParent(tx,owner,'Task',parts[0]);outcome=await insert(tx,owner,'Reminder',{title:('Reminder: '+parts[0]).slice(0,200),taskId,dueDate:parts[1],time:parts[2]});}
  else if(name==='expense'||name==='income'){requireParts(parts,5);const accountId=await exactParent(tx,owner,'FinancialAccount',parts[1]);const categoryId=await exactParent(tx,owner,'Category',parts[2],name);outcome=await insert(tx,owner,'Transaction',{title:parts[3],amount:parts[0],accountId,categoryId,date:parts[4]});}
  else return {reply:'Please use a command from /help. For a task: /task Title | YYYY-MM-DD | normal. AI interpretation is not connected.'};
- await audit(tx,owner,'create.'+outcome.entity);return {...outcome,reply:`Saved ${outcome.entity==='Transaction'?name:outcome.entity?.toLowerCase()} successfully.${name==='remind'?' Reminder stored; automatic delivery arrives in Phase 6.':''} Use /undo to remove it if unchanged.`};
+ await audit(tx,owner,'create.'+outcome.entity);return {...outcome,reply:`Saved ${outcome.entity==='Transaction'?name:outcome.entity?.toLowerCase()} successfully.${name==='remind'?' Reminder stored; delivery follows Notification Center settings and a running worker.':''} Use /undo to remove it if unchanged.`};
 }
 async function audit(tx:Tx,ownerId:string,action:string){await tx.$executeRawUnsafe('INSERT INTO "AuditLog"(id,"userId",action,outcome) VALUES($1::uuid,$2::uuid,$3,\'success\')',randomUUID(),ownerId,'telegram.'+action)}
 export async function processUpdate(input:unknown,config:TelegramConfig){

@@ -15,6 +15,7 @@ export async function signIn(form: FormData) {
     await client.auth.signOut();
     redirect("/login?status=invalid");
   }
+  if(process.env.JARVIS_REQUIRE_MFA==='true'||data.user?.factors?.some(f=>f.status==='verified'))redirect('/mfa');
   redirect("/");
 }
 export async function signOut() {

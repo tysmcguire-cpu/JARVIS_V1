@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const ownerId = "a2c92111-c2a3-4ab2-91dc-3d1abc84cc33";
-const mocks = vi.hoisted(() => ({ getUser: vi.fn(), signInWithPassword: vi.fn(), signOut: vi.fn(), configured: true }));
+const mocks = vi.hoisted(() => ({ getUser: vi.fn(), getClaims:vi.fn(), signInWithPassword: vi.fn(), signOut: vi.fn(), configured: true }));
 vi.mock("server-only", () => ({}));
 vi.mock("next/navigation", () => ({ redirect: (url: string) => { throw new Error(`redirect:${url}`); } }));
 vi.mock("@/lib/env", () => ({ getAuthConfig: () => mocks.configured ? {} : null }));
@@ -11,11 +11,13 @@ import { signIn, signOut } from "../../src/features/auth/actions";
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.configured = true;
+  vi.stubEnv('JARVIS_REQUIRE_MFA','false');
   vi.stubEnv("JARVIS_OWNER_ID", ownerId);
   mocks.signOut.mockResolvedValue({ error: null });
 });
 afterEach(() => vi.unstubAllEnvs());
 describe("server owner boundary", () => {
+  it('requires AAL2 for verified factors and for mandatory enrollment, failing closed on claim errors',async()=>{mocks.getUser.mockResolvedValue({data:{user:{id:ownerId,factors:[{id:'factor',status:'verified'}]}},error:null});mocks.getClaims.mockResolvedValue({data:{claims:{sub:ownerId,aal:'aal1'}},error:null});await expect(requireOwner()).rejects.toThrow('redirect:/mfa');mocks.getClaims.mockResolvedValue({data:{claims:{sub:ownerId,aal:'aal2'}},error:null});expect((await requireOwner()).id).toBe(ownerId);mocks.getClaims.mockResolvedValue({data:null,error:{code:'invalid'}});await expect(requireOwner()).rejects.toThrow('redirect:/mfa');mocks.getUser.mockResolvedValue({data:{user:{id:ownerId}},error:null});vi.stubEnv('JARVIS_REQUIRE_MFA','true');await expect(requireOwner()).rejects.toThrow('redirect:/mfa');});
   it('shares verification only inside an explicitly verified request and rechecks the next request',async()=>{
     mocks.getUser.mockResolvedValue({data:{user:{id:ownerId}},error:null});await withOwnerRequest(async()=>{expect((await requireOwner()).id).toBe(ownerId);expect((await requireOwner()).id).toBe(ownerId)});expect(mocks.getUser).toHaveBeenCalledTimes(1);mocks.getUser.mockResolvedValue({data:{user:null},error:{code:'revoked'}});await expect(withOwnerRequest(async()=>requireOwner())).rejects.toThrow('unauthorized');expect(mocks.getUser).toHaveBeenCalledTimes(2);
   });

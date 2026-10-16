@@ -13,8 +13,8 @@ const modules = [
   { slug: "projects", icon: FolderKanban, detail: "Ideas, milestones & pursuits", phase: "02", side: "left", x: 17, y: 85 },
   { slug: "goals", icon: Target, detail: "Personal goals, habits & progress", phase: "02", side: "right", x: 83, y: 17 },
   { slug: "notes", icon: NotebookPen, detail: "Notes & your knowledge base", phase: "02", side: "right", x: 88, y: 34 },
-  { slug: "assistant", icon: Sparkles, detail: "Grounded analysis · planned", phase: "05", side: "right", x: 90, y: 51 },
-  { slug: "notifications", icon: Bell, detail: "Reminders & reviews · planned", phase: "06", side: "right", x: 88, y: 68 },
+  { slug: "assistant", icon: Sparkles, detail: "Grounded analysis & source references", phase: "05", side: "right", x: 90, y: 51 },
+  { slug: "notifications", icon: Bell, detail: "Schedules, reminders & delivery", phase: "06", side: "right", x: 88, y: 68 },
   { slug: "settings", icon: Settings, detail: "Your preferences & connection status", phase: "01", side: "right", x: 83, y: 85 }
 ] as const;
 
@@ -43,12 +43,12 @@ export function OrbitalDashboard({ demo }: { demo: boolean }) {
         </div>
         <nav className="orbital-modules" aria-label="Workspace modules">
           {modules.map((module, index) => { const Icon = module.icon; return <Link key={module.slug} href={href(module.slug)} aria-label={`Open ${label(module.slug)}`} className={`orbit-module orbit-${module.side} ${selected === module.slug ? "module-selected" : ""}`} style={{ "--module-x": `${module.x}%`, "--module-y": `${module.y}%`, "--module-delay": `${index * 45}ms` } as CSSProperties} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) setPaused(true); }} onMouseEnter={() => setSelected(module.slug)} onMouseLeave={() => setSelected(null)} onFocus={() => setSelected(module.slug)} onBlur={() => setSelected(null)}>
-            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><span className="orbit-module-index">{String(index + 1).padStart(2, "0")} / {module.phase === "01" ? "FOUNDATION" : module.phase === "02" ? "CORE TRACKING" : `PLANNED · PHASE ${module.phase}`}</span><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span><span className="module-trace" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
+            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><span className="orbit-module-index">{String(index + 1).padStart(2, "0")} / {module.phase === "01" ? "FOUNDATION" : module.phase === "02" ? "CORE TRACKING" : `PHASE ${module.phase}`}</span><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span><span className="module-trace" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
           </Link>; })}
         </nav>
       </div>
       <div className="console-bottomline"><span><Network size={12} /> 10 WORKSPACE DESTINATIONS</span><span>MANUAL TRACKING / CONNECTOR CONTROLS</span><div className="signal-decoration" aria-hidden="true">{Array.from({ length: 27 }, (_, i) => <i key={i} style={{ "--signal-height": `${5 + (i * 7 % 19)}px`, animationDelay: `${i * .1}s` } as CSSProperties} />)}</div></div>
     </section>
-    <p className="hub-footnote">{demo ? "Synthetic preview. Explore tracking with temporary sample records; reload to reset." : "Your workspace is private. Manual tracking is available. Configure Telegram in Settings; AI and notification delivery follow later."}</p>
+    <p className="hub-footnote">{demo ? "Synthetic preview. Explore tracking with temporary sample records; reload to reset." : "Your workspace is private. Manual tracking is available. Manage connectors in Settings, grounded analysis in Assistant and delivery in Notifications."}</p>
   </div>;
 }

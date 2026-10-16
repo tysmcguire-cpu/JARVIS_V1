@@ -9,6 +9,9 @@ datasource db {
 }
 
 model User {
+  notificationRules         NotificationRule[]
+  notificationJobs          NotificationJob[]
+  notificationDeliveries    NotificationDelivery[]
   aiConversations           AiConversation[]
   aiSources                 AiSourceReference[]
   apiConnections            ApiConnection[]
@@ -18,12 +21,12 @@ model User {
   csvKeys                   CsvImportKey[]
   telegramIdentity          TelegramIdentity?
   telegramMessages          TelegramMessage[]
-  id                        String              @id @db.Uuid
-  singleton                 Boolean             @unique @default(true)
-  displayName               String              @default("Owner") @db.VarChar(100)
-  synthetic                 Boolean             @default(false)
-  createdAt                 DateTime            @default(now()) @db.Timestamptz(6)
-  updatedAt                 DateTime            @updatedAt @db.Timestamptz(6)
+  id                        String                 @id @db.Uuid
+  singleton                 Boolean                @unique @default(true)
+  displayName               String                 @default("Owner") @db.VarChar(100)
+  synthetic                 Boolean                @default(false)
+  createdAt                 DateTime               @default(now()) @db.Timestamptz(6)
+  updatedAt                 DateTime               @updatedAt @db.Timestamptz(6)
   settings                  UserSettings?
   auditLogs                 AuditLog[]
   trackingFinancialAccount  FinancialAccount[]
@@ -84,20 +87,84 @@ model AiSourceReference {
 }
 
 model UserSettings {
-  userId                 String   @id @db.Uuid
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  timezone               String   @default("America/Chicago") @db.VarChar(100)
-  currency               String   @default("USD") @db.Char(3)
-  weeklyReviewEnabled    Boolean  @default(true)
-  weeklyReviewDay        Int      @default(0)
-  weeklyReviewTime       String   @default("18:00") @db.VarChar(5)
-  deadlineReminders      Boolean  @default(true)
-  financialAlerts        Boolean  @default(true)
-  morningBriefingEnabled Boolean  @default(false)
-  morningBriefingTime    String   @default("08:00") @db.VarChar(5)
-  unsolicitedAiEnabled   Boolean  @default(false)
-  createdAt              DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt              DateTime @updatedAt @db.Timestamptz(6)
+  notificationTelegramEnabled Boolean  @default(false)
+  userId                      String   @id @db.Uuid
+  user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timezone                    String   @default("America/Chicago") @db.VarChar(100)
+  currency                    String   @default("USD") @db.Char(3)
+  weeklyReviewEnabled         Boolean  @default(true)
+  weeklyReviewDay             Int      @default(0)
+  weeklyReviewTime            String   @default("18:00") @db.VarChar(5)
+  deadlineReminders           Boolean  @default(true)
+  financialAlerts             Boolean  @default(true)
+  morningBriefingEnabled      Boolean  @default(false)
+  morningBriefingTime         String   @default("08:00") @db.VarChar(5)
+  unsolicitedAiEnabled        Boolean  @default(false)
+  createdAt                   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt                   DateTime @updatedAt @db.Timestamptz(6)
+}
+
+model NotificationRule {
+  id             String            @id @default(uuid()) @db.Uuid
+  userId         String            @db.Uuid
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind           String            @db.VarChar(20)
+  version        Int               @default(1)
+  thresholdMinor BigInt?
+  currency       String            @default("USD") @db.Char(3)
+  leadDays       Int               @default(1)
+  time           String            @default("09:00") @db.VarChar(5)
+  lastScannedAt  DateTime?         @db.Timestamptz(6)
+  createdAt      DateTime          @default(now()) @db.Timestamptz(6)
+  jobs           NotificationJob[]
+
+  @@unique([userId, kind])
+  @@unique([id, userId])
+}
+
+model NotificationJob {
+  id            String                 @id @default(uuid()) @db.Uuid
+  userId        String                 @db.Uuid
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ruleId        String                 @db.Uuid
+  rule          NotificationRule       @relation(fields: [ruleId, userId], references: [id, userId], onDelete: Cascade)
+  ruleVersion   Int
+  dedupeKey     String                 @db.VarChar(200)
+  payload       Json
+  entity        String?                @db.VarChar(40)
+  recordId      String?                @db.Uuid
+  dueDate       DateTime?              @db.Date
+  status        String                 @default("queued") @db.VarChar(20)
+  attempts      Int                    @default(0)
+  maxAttempts   Int                    @default(5)
+  scheduledAt   DateTime               @db.Timestamptz(6)
+  nextAttemptAt DateTime               @db.Timestamptz(6)
+  expiresAt     DateTime               @db.Timestamptz(6)
+  leaseToken    String?                @db.Uuid
+  leaseUntil    DateTime?              @db.Timestamptz(6)
+  readAt        DateTime?              @db.Timestamptz(6)
+  createdAt     DateTime               @default(now()) @db.Timestamptz(6)
+  deliveries    NotificationDelivery[]
+
+  @@unique([userId, dedupeKey])
+  @@unique([id, userId])
+  @@index([userId, status, nextAttemptAt], map: "NotificationJob_due")
+}
+
+model NotificationDelivery {
+  id        String          @id @default(uuid()) @db.Uuid
+  userId    String          @db.Uuid
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String          @db.Uuid
+  job       NotificationJob @relation(fields: [jobId, userId], references: [id, userId], onDelete: Cascade)
+  channel   String          @db.VarChar(20)
+  attempt   Int
+  outcome   String          @db.VarChar(20)
+  code      String?         @db.VarChar(40)
+  createdAt DateTime        @default(now()) @db.Timestamptz(6)
+
+  @@unique([jobId, channel, attempt])
+  @@index([userId, jobId], map: "NotificationDelivery_owner")
 }
 
 model AuditLog {

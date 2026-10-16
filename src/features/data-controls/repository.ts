@@ -1,0 +1,5 @@
+import 'server-only';
+import {withOwnerDatabase} from '@/lib/owner-db';
+import {exportSnapshot} from './snapshot';
+export async function ownerExport(){return withOwnerDatabase(async(tx,owner)=>{await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',owner+':export');const [count]=await tx.$queryRawUnsafe<{count:string}[]>('SELECT count(*)::text AS count FROM "AuditLog" WHERE "userId"=$1::uuid AND action=\'security.export\' AND "createdAt">now()-interval \'1 hour\'',owner);if(Number(count.count)>=10)throw Error('Export rate limit reached');const snapshot=await exportSnapshot(tx,owner);await tx.auditLog.create({data:{userId:owner,action:'security.export',outcome:'success'}});return snapshot})}
+export async function deleteOwnerAppData(confirmation:unknown){if(confirmation!=='DELETE MY JARVIS DATA')throw Error('Type the exact confirmation');return withOwnerDatabase(async(tx,owner)=>{await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',owner+':notifications');const changed=await tx.$executeRawUnsafe('DELETE FROM "User" WHERE id=$1::uuid',owner);if(changed!==1)throw Error('Owner data unavailable')})}

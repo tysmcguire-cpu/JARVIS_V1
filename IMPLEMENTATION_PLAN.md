@@ -1,6 +1,15 @@
 # Implementation plan
 
-The complete JARVIS_SPEC.md is authoritative. Phases 1–4 are implemented. The owner authorized continuing Phase 5 on this primary computer on October 16, 2026. Historical notes below describe their original scope.
+The complete JARVIS_SPEC.md is authoritative. All six implementation phases are built locally. The owner authorized continuing through all phases on this primary computer on October 16, 2026. External activation, actual owner recovery rehearsal and hosted acceptance remain setup gates in OWNER_SETUP.md. Historical notes below describe their original scope and do not override this current status.
+
+## Phase 6 completion — October 16, 2026
+
+- Durable owner-scoped notifications, weekly/morning reviews, deadlines/reminders and exact expense thresholds; in-app inbox, paginated preferences/details and optional separately enabled Telegram worker. Deduplication, rule invalidation, fenced leases and bounded retries are tested. No scheduled external delivery was activated.
+- MFA enrollment/verification UI and owner-subject aal2 enforcement, foundation browser-role revocation, private account export/delete routes, bounded snapshots and authenticated encrypted CLI backup/transactional restore. Synthetic recovery passed; no private owner export/restore/deletion was performed.
+- Expanded optional OpenAI composition with separate summary-sharing consent, immutable local facts and validated retrieved citations. No paid call or new provider activation occurred.
+- Slow navigation/filter reads fixed through batched SQL, request-local authentication reuse, intent prefetch and abortable private reads. Signed-in optimized filter measured 845ms versus approximately 2.4 seconds before.
+- Final verification: 142 unit/database tests; 54 browser scenarios in the full run plus three additional pagination scenarios across desktop sizes; three production boundary checks; build, lint, TypeScript, Prisma validation and client-secret scan passed. Live Supabase release permissions/isolation verification passed with fixture writes rolled back. Minimum-viewport notification screenshot reviewed. Master specification unchanged.
+- OWNER_SETUP.md, NOTIFICATIONS.md and RECOVERY.md record remaining credentials, optional activation, key custody and deployment decisions. All implementation phases are complete locally; live OpenAI/provider delivery, actual owner MFA/recovery acceptance and hosted production acceptance are not claimed.
 
 ## Architecture review and decisions
 - Next.js App Router with server components, TypeScript, Tailwind and shadcn-style accessible UI primitives. Feature directories isolate domain logic from routing.

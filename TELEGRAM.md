@@ -1,6 +1,8 @@
 # Telegram — Phase 3
 
-Implementation is ready; live activation is not verified until the owner supplies a bot token, explicitly selects their IDs, pairs the chat, and tests a real command. This computer is the primary local workspace. No public hosting or tunnel is required for local polling. Telegram remains disabled by default.
+The existing local bot is configured and owner-paired; status, note synchronization and undo were verified. This computer is the primary workspace. No public hosting or tunnel is required for local polling. New installations remain disabled by default. The setup below is for initial activation/recovery; do not replace the existing token unnecessarily.
+
+Phase 6 adds optional notification delivery, separately disabled until the owner opts in and starts its worker; see NOTIFICATIONS.md. The command poller now backs off on temporary network/database failures, suppresses private error details, stops for rejected credentials and repeated polling conflicts, and supports cancellation of long polls. Never run two pollers for one bot. Historical acceptance notes retain the tests performed at that time.
 
 ## Local setup
 

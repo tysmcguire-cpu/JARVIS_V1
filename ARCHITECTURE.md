@@ -1,6 +1,6 @@
 # Architecture
 
-Phase 5 adds filter-driven grounded analysis with static read-only queries, exact finance aggregates and requested local recommendations. Optional OpenAI Responses function calling selects only title search/view; domain/dates/permission stay owner-controlled. No record contents or history go to the model. Conversation/source snapshots commit atomically. See ASSISTANT.md.
+Current implementation includes all six phases. Assistant uses static read-only queries and exact finance aggregates. Optional OpenAI interpretation shares the consented question; separately consented composition shares bounded factual summaries, preserves immutable facts and validates source references. Full notes/history are excluded. Conversation/source snapshots commit atomically. Phase 6 adds owner-scoped notification jobs/attempts with fenced leases, a separate explicit worker, MFA enforcement and transactional recovery controls. See ASSISTANT.md, NOTIFICATIONS.md and RECOVERY.md.
 
 JARVIS_SPEC.md is the primary source of truth. IMPLEMENTATION_PLAN.md records scope and phase gates.
 

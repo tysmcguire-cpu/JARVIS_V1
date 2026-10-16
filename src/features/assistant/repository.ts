@@ -4,7 +4,7 @@ import {z} from 'zod';
 import {withOwnerDatabase} from '@/lib/owner-db';
 import {askSchema,type Answer,type Entry} from './contract';
 import {analyze} from './analysis';
-import {interpretQuestion,aiReady} from './provider';
+import {interpretQuestion,composeGroundedAnswer,aiReady} from './provider';
 import {storeReferences} from './storage';
 const uuid=z.string().uuid();
 export async function history(pageInput:unknown=1){const page=z.number().int().min(1).max(10000).parse(pageInput);return withOwnerDatabase(async(tx,owner)=>{
@@ -22,7 +22,9 @@ export async function ask(input:unknown):Promise<Entry>{
  });
  try{
  const query=request.interpret?await interpretQuestion(request.question,request.query):request.query;
- await withOwnerDatabase(async(tx,owner)=>{const answer=await analyze(tx,owner,query);if(request.interpret)answer.engine='OpenAI question interpretation + local validated tools';
+ const evidence=await withOwnerDatabase((tx,owner)=>analyze(tx,owner,{...query,recommendations:request.compose?false:query.recommendations}));
+ const answer=request.compose?await composeGroundedAnswer(request.question,evidence,query.recommendations):evidence;if(request.interpret&&!request.compose)answer.engine='OpenAI question interpretation + local validated tools';
+ await withOwnerDatabase(async(tx,owner)=>{
  const changed=await tx.$executeRawUnsafe('UPDATE "AiConversation" SET answer=$3::jsonb,query=$4::jsonb,status=\'complete\' WHERE id=$1::uuid AND "userId"=$2::uuid AND status=\'pending\'',id,owner,JSON.stringify(answer),JSON.stringify(query));if(!changed)throw Error('Conversation unavailable');
  await storeReferences(tx,owner,id,answer.sources);
  await tx.auditLog.create({data:{userId:owner,action:'assistant.ask',outcome:'success'}});

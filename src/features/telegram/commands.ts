@@ -10,7 +10,7 @@ export const helpText=`JARVIS commands (use | between fields):
 /tasks search · /notes search · /projects search
 /balance
 /ask domain | YYYY-MM-DD | YYYY-MM-DD | optional title search — local grounded analysis
-Dates are explicit; times use your workspace timezone. /undo removes your last unchanged Telegram-created record (within 24 hours). Reminders are stored; delivery arrives in Phase 6. /ask uses bounded local tools, not OpenAI. Domains: finances, education, calendar, career, projects, goals, notes, sources, weekly. Telegram bot chats are not end-to-end encrypted.`;
+Dates are explicit; times use your workspace timezone. /undo removes your last unchanged Telegram-created record (within 24 hours). Reminder delivery follows Notification Center settings and a running worker. /ask uses bounded local tools, not OpenAI. Domains: finances, education, calendar, career, projects, goals, notes, sources, weekly. Telegram bot chats are not end-to-end encrypted.`;
 export type ParsedCommand={name:string;args:string;parts:string[]};
 export function parseCommand(text:string):ParsedCommand {const match=/^\/([a-z]+)(?:@[A-Za-z0-9_]+)?(?:\s+([\s\S]*))?$/i.exec(text.trim());if(!match)return {name:'unknown',args:'',parts:[]};const args=(match[2]??'').trim();return {name:match[1].toLowerCase(),args,parts:args.split('|').map(s=>s.trim())}}
 export class CommandError extends Error{}

@@ -22,7 +22,7 @@ test("synthetic shell, navigation and settings work on all viewports", async ({ 
   await page.screenshot({ path: `test-results/${testInfo.project.name}-dashboard.png`, fullPage: true, animations: "disabled" });
   await page.getByRole("navigation", { name: "Workspace modules" }).getByRole("link", { name: "Open Settings", exact: true }).click();
   await expect(page).toHaveURL(/\/demo\/settings$/, { timeout: 20000 });
-  await expect(page.getByRole("heading", { name: "Initial notification defaults" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Notification preferences" })).toBeVisible();
   await expect(page.getByText("Disabled · inactive time 08:00")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
