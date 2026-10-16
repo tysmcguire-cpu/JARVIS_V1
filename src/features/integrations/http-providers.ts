@@ -2,15 +2,17 @@ import 'server-only';
 import {z} from 'zod';
 import {ConnectorAuthError,ConnectorRateLimit,type Credentials,type ProviderId,type ReadOnlyConnector,type SourceRecord} from './contract';
 import {validateSource} from './normalization';
+import {createCanvasFeedConnector} from './canvas-feed';
 import {createAppleCalendarConnector} from './apple-calendar';
 export class ConnectorCursorExpired extends Error{constructor(){super('Source cursor expired. Reset and fully resynchronize the staged source.')}}
-export type AuthorizedGrant={approved:true;credentials:Credentials;resources:string[];googleClient?:{id:string;secret:string};canvasOrigin?:string;appleUsername?:string};
+export type AuthorizedGrant={approved:true;credentials:Credentials;resources:string[];googleClient?:{id:string;secret:string};canvasOrigin?:string;appleUsername?:string;canvasTransport?:'feed';syncIntervalMinutes?:number};
 const object=(v:unknown)=>z.record(z.string(),z.unknown()).parse(v);
 const text=(v:unknown,fallback='')=>typeof v==='string'?v:fallback;
 const timestamp=(v:unknown)=>new Date(z.string().datetime({offset:true}).parse(v)).toISOString();
 async function boundedJson(response:Response):Promise<unknown>{const reader=response.body?.getReader();if(!reader)throw Error('Empty provider response.');let size=0;const chunks:Uint8Array[]=[];while(true){const item=await reader.read();if(item.done)break;size+=item.value.byteLength;if(size>2097152){await reader.cancel();throw Error('Provider response exceeded the size limit.')}chunks.push(item.value)}try{return JSON.parse(Buffer.concat(chunks).toString('utf8'))}catch{throw Error('Invalid provider response.')}}
 async function get(url:URL,credentials:Credentials,fetcher:typeof fetch){let response:Response;try{response=await fetcher(url,{method:'GET',headers:{Authorization:'Bearer '+credentials.accessToken,Accept:url.hostname==='api.github.com'?'application/vnd.github+json':'application/json',...(url.hostname==='api.github.com'?{'X-GitHub-Api-Version':'2026-03-10','User-Agent':'JARVIS-read-only'}:{})},redirect:'error',signal:AbortSignal.timeout(15000),cache:'no-store'})}catch{throw Error('Provider request unavailable.')}if(response.status===429||response.status===403&&response.headers.get('x-ratelimit-remaining')==='0'){const reset=Number(response.headers.get('x-ratelimit-reset'));const seconds=Number(response.headers.get('retry-after'))||(reset?reset-Math.floor(Date.now()/1000):60);throw new ConnectorRateLimit(Math.min(3600,Math.max(1,seconds)))}if(response.status===401||response.status===403)throw new ConnectorAuthError();if(response.status===410)throw new ConnectorCursorExpired();if(!response.ok)throw Error('Provider request failed.');return {body:await boundedJson(response),headers:response.headers};}
 export function createReadOnlyConnector(provider:ProviderId,grant:AuthorizedGrant,fetcher:typeof fetch=fetch):ReadOnlyConnector{
+ if(provider==='canvas'&&grant.canvasTransport==='feed')return createCanvasFeedConnector(grant,fetcher);
  if(provider==='apple-calendar')return createAppleCalendarConnector(grant,fetcher);
  if(!['google-calendar','gmail','github','canvas','google-drive'].includes(provider))throw Error('Unknown provider.');
  if(grant?.approved!==true||!grant.resources?.length||grant.resources.length>20||!grant.resources.every(r=>typeof r==='string'&&r.length>0&&r.length<=200))throw Error('Explicit approval and selected resources are required.');

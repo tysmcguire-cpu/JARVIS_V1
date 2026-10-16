@@ -3,6 +3,8 @@ import {loadEnvironment} from './load-environment';
 loadEnvironment();
 
 async function main() {
+  const {canvasFeedTick} = await import('../src/features/integrations/canvas-feed-worker');
+  const feeds = !!process.env.JARVIS_OWNER_ID;
   const {notificationTick} = await import('../src/features/notifications/worker');
   const {getTelegramConfig} = await import('../src/features/telegram/config');
   const {flushReplies} = await import('../src/features/telegram/service');
@@ -10,7 +12,7 @@ async function main() {
   const notifications = process.env.JARVIS_NOTIFICATIONS_ENABLED === 'true';
   const telegram = getTelegramConfig();
   const replies = !!telegram && !!process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!notifications && !replies) throw Error('No background task enabled');
+  if (!notifications && !replies && !feeds) throw Error('No background task enabled');
   const controller = new AbortController();
   process.once('SIGTERM', () => controller.abort());
   process.once('SIGINT', () => controller.abort());
@@ -21,6 +23,7 @@ async function main() {
       // A stalled task fails the supervised service rather than silently missing schedules.
       const watchdog = setTimeout(() => {console.error('Background processing stalled; restarting service.');process.exit(1)}, 120000);
       let failed = false;
+      try {if (feeds) await canvasFeedTick()} catch {failed = true}
       try {if (notifications) await notificationTick()} catch {failed = true}
       try {if (replies && !controller.signal.aborted) await flushReplies(telegram!)} catch {failed = true}
       clearTimeout(watchdog);

@@ -50,3 +50,5 @@ The web also needs Telegram configuration for its pairing/status controls. Set N
 Rollback: stop hosted workers before restarting a local poller. Do not roll back database migrations destructively or replace owner data without a reviewed backup/recovery operation. A passing local build is not a hosted acceptance result.
 
 Sources: https://render.com/docs/deploy-nextjs-app, https://render.com/docs/background-workers, https://render.com/docs/configure-environment-variables, https://render.com/pricing.
+
+Canvas feed scheduling uses the existing hosted:start background child whenever the server owner allowlist is configured. Only connections explicitly authorized for 15/60/360-minute refresh are fetched; manual-only is the default. This is independent of notification and Telegram enablement and adds no paid service or environment secret. See CANVAS_FEED.md. Do not start another local scheduler against the same owner database while the hosted scheduler is active.

@@ -22,3 +22,5 @@ Use Settings → Data controls for a private JSON export or the explicitly confi
 142 unit/database tests passed; 54 browser scenarios passed together and three additional pagination scenarios passed separately across desktop sizes. The production build, three production security checks, lint, TypeScript, Prisma validation and client-secret scan passed. Live Supabase release permissions/isolation checks passed with verification writes rolled back. The master specification is unchanged.
 
 The measured signed-in filter interaction improved from approximately 2.4 seconds to 0.85 seconds in the optimized local build. Actual latency still depends on the database connection and requested data. See `PERFORMANCE.md`.
+
+Canvas owner setup: use the private Calendar Feed option described in CANVAS_FEED.md. It needs no API token and no Google/Apple calendar account. Manual refresh is the default; optional automatic refresh runs on the existing Render service. Keep the feed URL out of chat and paste it only into JARVIS's password field. Real feed acceptance is pending your setup.

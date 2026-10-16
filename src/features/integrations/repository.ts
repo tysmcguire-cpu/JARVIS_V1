@@ -6,7 +6,7 @@ import {providers,synchronize,type Credentials,type ProviderId} from './contract
 import {createMockConnector} from './mock-provider';
 import {encryptToken,decryptToken} from './encryption';
 export async function integrationStatus(){return withOwnerDatabase(async(tx,ownerId)=>{
- const connections=await tx.$queryRawUnsafe<{id:string;provider:string;mode:string;status:string;lastSyncAt:Date|null;retryAt:Date|null}[]>('SELECT id,provider,mode,status,"lastSyncAt","retryAt" FROM "ApiConnection" WHERE "userId"=$1::uuid ORDER BY provider,mode',ownerId);
+ const connections=await tx.$queryRawUnsafe<{id:string;provider:string;mode:string;status:string;lastSyncAt:Date|null;retryAt:Date|null;syncIntervalMinutes:number}[]>(`SELECT id,provider,mode,status,"lastSyncAt","retryAt",CASE WHEN selection->>'canvasTransport'='feed' THEN COALESCE((selection->>'syncIntervalMinutes')::int,0) ELSE 0 END AS "syncIntervalMinutes" FROM "ApiConnection" WHERE "userId"=$1::uuid ORDER BY provider,mode`,ownerId);
  const imports=await tx.$queryRawUnsafe<{id:string;filename:string;importedCount:number;skippedCount:number;importedAt:Date}[]>('SELECT id,filename,"importedCount","skippedCount","importedAt" FROM "CsvImportBatch" WHERE "userId"=$1::uuid AND "importedAt" IS NOT NULL ORDER BY "importedAt" DESC LIMIT 4',ownerId);
  return {encryptionReady:/^[a-fA-F0-9]{64}$/.test(process.env.JARVIS_CONNECTOR_ENCRYPTION_KEY??''),connections:connections.map(c=>({...c,lastSyncAt:c.lastSyncAt?.toISOString()??null,retryAt:c.retryAt?.toISOString()??null})),imports:imports.map(i=>({...i,importedAt:i.importedAt.toISOString()}))};
 });}

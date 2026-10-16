@@ -75,3 +75,15 @@ it('preserves an independently enabled reminder when migrating legacy defaults a
  const after=await notificationState();expect(after.preferences.deadlineReminders).toBe(false);expect(after.preferences.rules!.reminder.enabled).toBe(true);
  expect((await database.query<{version:number}>(`SELECT version FROM "NotificationRule" WHERE "userId"=$1 AND kind='reminder'`,[owner])).rows[0].version).toBe(version);
 });
+it('queues Canvas feed assignment deadlines in the owner timezone and cancels changed or disconnected sources',async()=>{
+ const {jobStillValid,readSettings}=await import('@/features/notifications/engine');
+ let state=await notificationState();state={...state,preferences:{...state.preferences,deadlineReminders:true,notificationTelegramEnabled:true}};state.preferences.rules!.deadline.telegram=true;state.preferences.rules!.deadline.entities=['Assignment'];state.preferences.rules!.deadline.repeat='once';await saveNotificationPreferences(state.preferences);
+ const connection=(await database.query<{id:string}>(`INSERT INTO "ApiConnection"(id,"userId",provider,mode,status,selection,"consentedAt","updatedAt")VALUES(gen_random_uuid(),$1,'canvas','live','healthy','{"canvasTransport":"feed","syncIntervalMinutes":60}',now(),now())RETURNING id`,[owner])).rows[0].id;
+ const record=(await database.query<{id:string}>(`INSERT INTO "ExternalRecord"(id,"userId","connectionId","externalId",kind,payload,"sourceUrl","sourceUpdatedAt")VALUES(gen_random_uuid(),$1,$2,'synthetic-feed-deadline','Assignment','{"title":"Synthetic Canvas deadline","dueAt":"2026-10-20T01:00:00.000Z"}','https://canvas.tamu.edu/calendar','2026-10-18T12:00:00Z')RETURNING id`,[owner,connection])).rows[0].id;
+ const date=new Date('2026-10-18T23:00:00Z');await run(tx=>scheduleNotifications(tx,owner,date));
+ const job=(await database.query<Parameters<typeof jobStillValid>[2]>(`SELECT * FROM "NotificationJob" WHERE entity='ExternalRecord' AND "recordId"=$1`,[record])).rows[0];expect(job).toBeTruthy();expect(job.dueDate!.toISOString().slice(0,10)).toBe('2026-10-19');expect(job.payload.text).toContain('Canvas assignment');
+ expect(await run(async tx=>jobStillValid(tx,owner,job,await readSettings(tx,owner),date))).toBe(true);
+ expect(await run(tx=>scheduleNotifications(tx,owner,date))).toBe(0);
+ await database.query(`UPDATE "ExternalRecord" SET payload=jsonb_set(payload,'{dueAt}','"2026-10-22T01:00:00.000Z"') WHERE id=$1`,[record]);expect(await run(async tx=>jobStillValid(tx,owner,job,await readSettings(tx,owner),date))).toBe(false);
+ await database.query(`UPDATE "ExternalRecord" SET payload=jsonb_set(payload,'{dueAt}','"2026-10-20T01:00:00.000Z"') WHERE id=$1`,[record]);await database.query(`UPDATE "ApiConnection" SET status='disconnected' WHERE id=$1`,[connection]);expect(await run(async tx=>jobStillValid(tx,owner,job,await readSettings(tx,owner),date))).toBe(false);
+});

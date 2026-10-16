@@ -4,8 +4,10 @@ import {readFileSync} from 'node:fs';
 import {entities} from '@/features/tracking/config';
 import {parseCsv,suggestedMapping} from '@/features/integrations/csv';
 let database:PGlite;const owner='a2c92111-c2a3-4ab2-91dc-3d1abc84cc33',other='b2c92111-c2a3-4ab2-91dc-3d1abc84cc33',account='11111111-1111-4111-8111-111111111111',expense='22222222-2222-4222-8222-222222222222',income='33333333-3333-4333-8333-333333333333';let activeOwner=owner;
-vi.mock('server-only',()=>({}));
+vi.mock('server-only',()=>({}));vi.mock('@/lib/db',()=>({db:{}}));
 vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:async(run:(tx:unknown,owner:string)=>Promise<unknown>)=>database.transaction(async tx=>{await tx.exec(`SET LOCAL ROLE runtime;SET LOCAL request.jwt.claim.sub='${activeOwner}'`);return run({$queryRawUnsafe:async(sql:string,...args:unknown[])=>(await tx.query(sql,args)).rows,$executeRawUnsafe:async(sql:string,...args:unknown[])=>(await tx.query(sql,args)).affectedRows,auditLog:{create:async({data}:{data:{userId:string;action:string;outcome:string}})=>tx.query('INSERT INTO "AuditLog"(id,"userId",action,outcome)VALUES(gen_random_uuid(),$1,$2,$3)',[data.userId,data.action,data.outcome])}},activeOwner)})}));
+import {refreshDueCanvasFeeds} from '@/features/integrations/canvas-feed-worker';
+import {withOwnerDatabase} from '@/lib/owner-db';
 import {previewImport,confirmImport} from '@/features/integrations/csv-repository';
 import {registerConnection,synchronizeConnection} from '@/features/integrations/live-service';
 import {synchronizeSyntheticProvider,sourceRecords,disconnectIntegration} from '@/features/integrations/repository';
@@ -51,6 +53,21 @@ it('keeps optional Google and Apple calendar connections independent and stores 
  fetcher.mockResolvedValueOnce(page(''));expect(await synchronizeConnection(apple.id)).toMatchObject({ok:true,count:0});expect((await sourceRecords(apple.id)).rows).toHaveLength(0);
  await disconnectIntegration(apple.id);expect((await database.query<{status:string}>('SELECT status FROM "ApiConnection" WHERE id=$1',[google.id])).rows[0].status).toBe('authorized');
  await expect(registerConnection({approved:true,provider:'gmail',credentials:{accessToken:'synthetic',expiresAt:Number.MAX_SAFE_INTEGER},resources:['message']})).rejects.toThrow();vi.unstubAllGlobals();
+});
+
+
+it('stores a private Canvas feed encrypted, refreshes only when due, retains failed snapshots and stops after disconnect',async()=>{
+ vi.stubEnv('JARVIS_CONNECTOR_ENCRYPTION_KEY','a'.repeat(64));const url='https://canvas.tamu.edu/feeds/calendars/user_synthetic-private-feed.ics';
+ const ics=(title='Synthetic feed assignment')=>'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:event-assignment-991\r\nDTSTAMP;TZID=UTC:20261017T120000\r\nDTSTART;TZID=UTC:20261020T010000\r\nSUMMARY:'+title+'\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+ const fetcher=vi.fn<typeof fetch>(async()=>new Response(ics()));vi.stubGlobal('fetch',fetcher);
+ try{
+ const connection=await registerConnection({approved:true,provider:'canvas',canvasTransport:'feed',syncIntervalMinutes:60,resources:['calendar-feed'],credentials:{accessToken:url,expiresAt:Number.MAX_SAFE_INTEGER}});
+ const saved=(await database.query<{tokenCiphertext:string;selection:unknown}>('SELECT "tokenCiphertext",selection FROM "ApiConnection" WHERE id=$1',[connection.id])).rows[0];expect(saved.tokenCiphertext).not.toContain('synthetic-private-feed');expect(JSON.stringify(saved.selection)).not.toContain(url);expect(fetcher).not.toHaveBeenCalled();
+ expect(await refreshDueCanvasFeeds(withOwnerDatabase)).toBe(1);expect(fetcher).toHaveBeenCalledTimes(1);expect((await sourceRecords(connection.id)).rows[0].payload.dueAt).toBe('2026-10-20T01:00:00.000Z');expect(await refreshDueCanvasFeeds(withOwnerDatabase)).toBe(0);
+ await database.query(`UPDATE "ApiConnection" SET "lastSyncAt"=now()-interval '2 hours' WHERE id=$1`,[connection.id]);fetcher.mockImplementation(async()=>new Response('invalid feed'));expect(await refreshDueCanvasFeeds(withOwnerDatabase)).toBe(1);expect((await sourceRecords(connection.id)).total).toBe(1);expect(await refreshDueCanvasFeeds(withOwnerDatabase)).toBe(0);
+ await database.query('UPDATE "ApiConnection" SET "retryAt"=NULL WHERE id=$1',[connection.id]);fetcher.mockImplementation(async()=>new Response('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n'));expect(await refreshDueCanvasFeeds(withOwnerDatabase)).toBe(1);expect((await sourceRecords(connection.id)).total).toBe(0);
+ await disconnectIntegration(connection.id);expect(await refreshDueCanvasFeeds(withOwnerDatabase)).toBe(0);await expect(synchronizeConnection(connection.id)).rejects.toThrow('Authorize');
+ }finally{vi.unstubAllGlobals()}
 });
 
 it('keeps bank import receipts after a transaction is deleted and cascades owner deletion',async()=>{await database.exec('DELETE FROM "Transaction"');const preview=await previewImport(request(csv));expect(preview.imported).toBe(true);expect((await database.query('SELECT * FROM "CsvImportKey"')).rows.length).toBeGreaterThan(0);await database.query('DELETE FROM auth.users WHERE id=$1',[owner]);expect((await database.query('SELECT * FROM "CsvImportBatch"')).rows).toHaveLength(0);expect((await database.query('SELECT * FROM "CsvImportKey"')).rows).toHaveLength(0)});

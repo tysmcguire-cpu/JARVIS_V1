@@ -6,7 +6,7 @@ import {supervise} from './supervise';
 loadEnvironment();
 const require = createRequire(import.meta.url);
 const children = [spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'start', '--hostname', '0.0.0.0'], {stdio:'inherit'})];
-const background = process.env.JARVIS_NOTIFICATIONS_ENABLED === 'true'
+const background = !!process.env.JARVIS_OWNER_ID || process.env.JARVIS_NOTIFICATIONS_ENABLED === 'true'
   || (process.env.TELEGRAM_ENABLED === 'true' && !!process.env.TELEGRAM_WEBHOOK_SECRET);
 if (background) children.push(spawn(process.execPath, ['--conditions=react-server', '--import', 'tsx', 'scripts/hosted-worker.ts'], {stdio:'inherit'}));
 const stop = supervise(children, code => process.exit(code));
