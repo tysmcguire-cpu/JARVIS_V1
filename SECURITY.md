@@ -1,5 +1,7 @@
 # Security model and configuration
 
+Assistant tools use allowlisted identifiers and bound values. Record text never becomes SQL, code, tool instructions or arbitrary links. Every action/repository authenticates; RLS isolates conversation/source storage. Optional OpenAI interpretation shares only the consented question, sets store:false and exposes no write tool. API key/model/enablement are server-only. Request audit events survive history deletion. See ASSISTANT.md for coverage/retention limits.
+
 Single owner only: manually create the Auth user, disable signups/anonymous auth, configure JARVIS_OWNER_ID server-side. Supabase verifies credentials and applies its managed authentication rate limits. Confirm project rate limits before exposure; do not replace them with an in-memory limiter that fails across serverless instances. Foundation adds no custom public mutation API. Future APIs/webhooks require durable shared rate limiting.
 
 Use a strong unique password and configure Supabase recovery/email delivery privately. A public signup or password reset flow is intentionally absent. The owner confirmed real login, stored Settings, logout and login again. Automated server-boundary tests verify rejection of wrong passwords, second users and invalid/revoked provider responses without creating extra Auth accounts. Long-duration live refresh/expiry/revocation, additional real accounts and MFA are Phase 6 release hardening checks, not claimed as executed now.

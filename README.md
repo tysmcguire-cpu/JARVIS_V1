@@ -76,6 +76,8 @@ This computer is the primary development workspace. Phase 3 command processing, 
 
 ## Integrations and financial CSV
 
+The Assistant is available for local grounded analysis and on-demand weekly reviews. Optional OpenAI question interpretation stays disabled until API key/model/billing are configured locally. See ASSISTANT.md for scope, privacy, setup and Telegram `/ask`. Record contents remain local; it is not a general conversational chatbot.
+
 Open Settings → Integrations and CSV. CSV import supports account/category choice, column/date/sign mapping, paginated preview, duplicate review and atomic confirmation. It writes internal records without connecting a bank. Create the destination account and categories in Finances first.
 
 The five read-only adapters and synthetic tests are implemented, but no Calendar/Gmail/GitHub/Canvas/Drive account is connected. Authorization requires an owner-controlled credential-encryption key, approved provider token and resource selection. Google tokens come from an existing approved OAuth project. Synced snapshots do not overwrite manual tracking. See INTEGRATIONS_PHASE4.md for scope, key custody and limits. CSV needs no provider token or encryption key.

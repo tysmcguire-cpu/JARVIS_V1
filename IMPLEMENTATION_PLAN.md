@@ -1,6 +1,6 @@
 # Implementation plan
 
-The complete JARVIS_SPEC.md is authoritative. Phases 1 and 2 are implemented. The owner authorized continuing the build on this primary computer on October 15, 2026; current work is Phase 4 integrations and CSV imports. Historical Foundation notes below describe their original scope.
+The complete JARVIS_SPEC.md is authoritative. Phases 1–4 are implemented. The owner authorized continuing Phase 5 on this primary computer on October 16, 2026. Historical notes below describe their original scope.
 
 ## Architecture review and decisions
 - Next.js App Router with server components, TypeScript, Tailwind and shadcn-style accessible UI primitives. Feature directories isolate domain logic from routing.
@@ -159,3 +159,16 @@ Metadata scope is deliberate: Gmail/Drive selected metadata, GitHub repository m
 - Two production boundary smoke tests: passed against the final build.
 - Live integration storage/grants verified in a rolled-back transaction. No real provider contacted or sample financial records retained.
 - Master specification unchanged. Development app and local Telegram polling remain running.
+
+## Phase 5 — grounded assistant, October 16, 2026
+
+- [x] Owner-scoped conversation/source snapshots, compound ownership, RLS and restricted runtime grants. Live CRUD/cascade/isolation/rate-budget reads verified in a rolled-back transaction.
+- [x] Validated read-only tools for financial totals, academic deadlines, schedule overlaps, career/projects/goals/notes, imported title review and on-demand weekly reviews.
+- [x] Exact separate currency calculations; labelled facts/calculations and explicitly requested local-rule recommendations with sources/freshness. Missing data/truncation disclosed.
+- [x] Optional OpenAI strict single-tool question interpretation; questions only, no records/history sent, store:false, per-request consent, owner-controlled model/enablement and durable website request guard.
+- [x] Paginated desktop assistant/history/source/coverage UI and source-linked local Telegram /ask. Demo isolated; no paid AI call or unsolicited message made.
+- [x] Unit/database/auth/injection tests, browser checks and production build. See ASSISTANT.md.
+
+Scope: local mode is filter-driven; OpenAI interprets a title search/view only. General conversational reasoning, model-written recommendations, live OpenAI acceptance and scheduled review delivery are not implemented or claimed. API key/model/billing remain owner setup. Phase 6 has not started.
+
+Executed verification: 112 unit/database tests passed; lint, TypeScript, Prisma generation/validation, production build and two production boundary tests passed. The browser regression run passed 47/48 scenarios; the existing laptop tracking-dialog scenario passed on an isolated rerun without changes to tracking code. Six new assistant scenarios passed across three desktop profiles; minimum-size screenshot reviewed. Master specification unchanged.

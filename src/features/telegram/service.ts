@@ -7,6 +7,9 @@ import { formatMoney } from '@/features/tracking/config';
 import { approvedUpdate, hashCode, type TelegramConfig } from './config';
 import { CommandError, helpText, parseCommand, requireParts } from './commands';
 import { sendReply, TelegramDeliveryError } from './transport';
+import {analyze} from '@/features/assistant/analysis';
+import {querySchema} from '@/features/assistant/contract';
+import {storeReferences} from '@/features/assistant/storage';
 type Tx=Prisma.TransactionClient;
 export async function withBotDatabase<T>(config:TelegramConfig,run:(tx:Tx)=>Promise<T>):Promise<T>{return db.$transaction(async tx=>{
  await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub',${config.ownerId},true)`;
@@ -35,9 +38,15 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  }
  if(!identity[0].pairedAt)return {reply:'Pair first: generate a code in JARVIS Settings, then send /start CODE here.'};
  if(name==='help')return {reply:helpText};
+ if(name==='ask'){
+ requireParts(parts,3,4);let query;try{query=querySchema.parse({domain:parts[0],start:parts[1],end:parts[2],search:parts[3]??'',view:'summary',recommendations:false})}catch{throw new CommandError('Use /ask domain | YYYY-MM-DD | YYYY-MM-DD | optional title search. Domains: finances, education, calendar, career, projects, goals, notes, sources, weekly. Maximum 366 days.');}
+ const answer=await analyze(tx,owner,query);const id=randomUUID();await tx.$executeRawUnsafe('INSERT INTO "AiConversation"(id,"userId",question,query,answer,status)VALUES($1::uuid,$2::uuid,$3,$4::jsonb,$5::jsonb,\'complete\')',id,owner,('/ask '+args).slice(0,1000),JSON.stringify(query),JSON.stringify(answer));
+ await storeReferences(tx,owner,id,answer.sources);
+ return {reply:answer.claims.slice(0,2).map(c=>{const s=answer.sources.find(s=>s.id===c.sourceIds[0])!;return `${c.kind.toUpperCase()}: ${c.text}\nSource: ${s.label}; updated ${s.updatedAt}; retrieved ${s.fetchedAt}`}).join('\n\n')+`\n\nLocal analysis of stored records; missing/unsynced data unknown. ${answer.claims.length} result(s). Open JARVIS Assistant history for all sources and coverage. No OpenAI call made.`};
+ }
  if(name==='status'){
    const pending=await tx.$queryRawUnsafe<{count:bigint}[]>('SELECT count(*) FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "deliveredAt" IS NULL AND "canceledAt" IS NULL',owner,config.botId);
-   return {reply:`Owner paired. Database available. ${pending[0].count} pending replies. Manual commands enabled; AI and notification delivery are not active.`};
+   return {reply:`Owner paired. Database available. ${pending[0].count} pending replies. Manual commands and local /ask analysis enabled; OpenAI and notification delivery are not active.`};
  }
  if(name==='undo'){
    const previous=await tx.$queryRawUnsafe<{id:string;entity:string;recordId:string;recordVersion:Date}[]>('SELECT id,entity,"recordId","recordVersion" FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "updateId"<$3 AND entity IS NOT NULL AND undone=false AND "createdAt">now()-interval \'24 hours\' ORDER BY "updateId" DESC,id DESC LIMIT 1 FOR UPDATE',owner,config.botId,BigInt(updateId));

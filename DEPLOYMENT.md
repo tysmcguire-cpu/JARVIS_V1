@@ -1,5 +1,7 @@
 # Deployment readiness
 
+Assistant local analysis needs the migrated/granted database. Keep JARVIS_AI_ENABLED=false until API billing, model access and question sharing are approved. Configure OPENAI_API_KEY/OPENAI_MODEL only as server secrets. No deployment or paid AI call was performed by Phase 5. Apply assistant migrations/grants before a future approved deployment.
+
 No deployment has been performed or authorized. The Next.js Node runtime is Vercel-compatible; Prisma and server-only dependencies must remain in server code. Never use a static export for authenticated routes.
 
 Before a future approved deployment: run frozen dependency install, generate Prisma client, validate schema, deploy reviewed migrations with DIRECT_URL, run all tests/build, verify Supabase owner configuration and least-privilege runtime connection, set environment secrets in the host and confirm demo returns 404 in production. Do not enable demo as a hosted preview.

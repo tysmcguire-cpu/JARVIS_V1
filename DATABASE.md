@@ -1,5 +1,7 @@
 # Database design
 
+Phase 5 adds AiConversation/AiSourceReference with owner-bound compound foreign keys, RLS and browser-role revocation. Deleting a conversation cascades its sources. Audit request events enforce the website hourly guard after history deletion. Runtime has narrow CRUD grants; `db:verify-assistant` rolls back its verification fixtures.
+
 Foundation contains User, UserSettings and AuditLog. UUID identity equals Supabase auth.users.id. The reviewed migration adds the auth foreign key, a unique singleton flag with a true-only check, notification time/day/currency checks and RLS. Exactly one application owner row can exist. No public registration or browser inserts into User are allowed.
 
 UserSettings has a cascading owner foreign key, unique owner key, timestamps and initial notification defaults. AuditLog has an owner/time index and contains only action/outcome, with no credential or message payload. Actual sign-in attempts are recorded by Supabase Auth audit logs; application domain audit emission begins with domain mutations. Future audit retention must be decided before deletion features.

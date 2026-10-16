@@ -25,7 +25,9 @@
     "db:verify-telegram": "tsx scripts/verify-telegram.ts",
     "telegram:identify": "node --conditions=react-server --import tsx scripts/telegram-identify.ts",
     "db:integrations": "tsx scripts/configure-integrations.ts",
-    "db:verify-integrations": "tsx scripts/verify-integrations.ts"
+    "db:verify-integrations": "tsx scripts/verify-integrations.ts",
+    "db:assistant": "tsx scripts/configure-assistant.ts",
+    "db:verify-assistant": "tsx scripts/verify-assistant.ts"
   },
   "engines": {
     "node": ">=22.12"

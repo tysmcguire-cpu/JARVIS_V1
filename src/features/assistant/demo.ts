@@ -1,0 +1,4 @@
+import type {Entry,Query} from './contract';
+export function demoAnswer(question:string,query:Query):Entry{
+ const asOf='2026-10-16T12:00:00.000Z',id='synthetic-source';return {id:'synthetic',question,createdAt:asOf,answer:{engine:'Synthetic preview · no AI or owner data',asOf,sources:[{id,label:'Synthetic project fixture',href:'/projects',updatedAt:asOf,fetchedAt:asOf,origin:'manual',detail:'Demonstration fixture only. No real project or connected account.'}],claims:[{kind:'fact',text:'Synthetic project “Portfolio refresh” is active.',sourceIds:[id]},...(query.recommendations?[{kind:'recommendation' as const,text:'Consider defining the next portfolio milestone. This is a synthetic example.',sourceIds:[id]}]:[])],limitations:['Synthetic preview only. Filters do not query owner data.','No network request or record write occurs in demo mode.']}};
+}

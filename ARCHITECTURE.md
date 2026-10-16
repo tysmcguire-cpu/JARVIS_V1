@@ -1,5 +1,7 @@
 # Architecture
 
+Phase 5 adds filter-driven grounded analysis with static read-only queries, exact finance aggregates and requested local recommendations. Optional OpenAI Responses function calling selects only title search/view; domain/dates/permission stay owner-controlled. No record contents or history go to the model. Conversation/source snapshots commit atomically. See ASSISTANT.md.
+
 JARVIS_SPEC.md is the primary source of truth. IMPLEMENTATION_PLAN.md records scope and phase gates.
 
 The application is a modular monolith: Next.js App Router handles rendering and server actions; feature folders own business logic. Supabase provides identity and PostgreSQL; Prisma is server-only. No custom API, AI, Telegram, scheduled workers or external connectors exist in Foundation.
