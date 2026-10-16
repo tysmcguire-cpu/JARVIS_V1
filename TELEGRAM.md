@@ -1,5 +1,9 @@
 # Telegram — Phase 3
 
+## Hosted webhook activation — October 16, 2026
+
+Current transport is the existing paid Render web service at `https://jarvis-yfki.onrender.com/api/telegram/webhook`. The owner saved the existing bot/allowlist configuration and a locally generated webhook secret in Render and redeployed. Live probes verified unauthenticated requests return 401 and correctly authenticated empty updates return 200 without accessing records. The local poller was stopped before setWebhook registration. Telegram confirmed the exact endpoint, message-only updates, one connection, zero pending updates and no reported delivery error. No pending updates were dropped and no additional paid service was created. End-to-end hosted command/reply acceptance awaits the owner's /status message. Keep local polling stopped while this webhook is registered. Historical local setup notes below are retained for reference.
+
 The existing local bot is configured and owner-paired; status, note synchronization and undo were verified. This computer is the primary workspace. No public hosting or tunnel is required for local polling. New installations remain disabled by default. The setup below is for initial activation/recovery; do not replace the existing token unnecessarily.
 
 Phase 6 adds optional notification delivery, separately disabled until the owner opts in and starts its worker; see NOTIFICATIONS.md. The command poller now backs off on temporary network/database failures, suppresses private error details, stops for rejected credentials and repeated polling conflicts, and supports cancellation of long polls. Never run two pollers for one bot. Historical acceptance notes retain the tests performed at that time.
