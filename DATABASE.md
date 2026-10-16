@@ -23,3 +23,9 @@ Phase 2: FinancialAccount → Transaction → Category; Budget → BudgetCategor
 Phase 3: TelegramIdentity and TelegramMessage with approved unique chat/user bindings and unique update ID for deduplication. Phase 4: ApiConnection (encrypted token material), SyncLog and external ID/connection uniqueness. Phase 5: AiConversation, AiMessage and SourceReference with provenance and freshness. Phase 6: NotificationRule, Job and Delivery with unique idempotency keys, status, attempts and scheduled/run timestamps.
 
 No speculative domain tables are migrated before their validation rules are implemented. Later migrations must include RLS, constraints, indexes, owner isolation and synthetic seeds. Backup, export, restore and deletion workflows remain Phase 6 gates.
+
+## Phase 2 deployed storage
+
+The 20261016000000_core_tracking migration adds the 24 models listed in `entities.json`, their owner/parent foreign keys, field checks, unique budget/category and habit/day pairs, indexes and forced RLS. Run `pnpm db:tracking` after migrations to grant narrow domain CRUD and audit INSERT to the existing jarvis_app role; inherited machine logins obtain the same permissions. It changes no passwords and grants no writes to User or UserSettings. Do not rerun original provisioning with unknown jarvis_app credentials.
+
+`pnpm db:verify` still checks Foundation identity/settings and their write denial, accepting runtime roles that are members of jarvis_app. `pnpm db:verify-tracking` checks each domain's owner CRUD and audit INSERT in a rolled-back transaction, plus unscoped/second-identity isolation. No sample records persist. `pnpm db:seed` now seeds all domain types, but remains guarded against production and any existing real owner; it is unnecessary for the real project or browser demo.

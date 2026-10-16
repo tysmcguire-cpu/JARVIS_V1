@@ -1,0 +1,768 @@
+[
+  {
+    "key": "FinancialAccount",
+    "module": "finances",
+    "label": "Accounts",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Account name",
+        "type": "text"
+      },
+      {
+        "name": "currency",
+        "label": "Currency",
+        "type": "currency"
+      },
+      {
+        "name": "openingBalance",
+        "label": "Opening balance",
+        "type": "money"
+      }
+    ]
+  },
+  {
+    "key": "Category",
+    "module": "finances",
+    "label": "Categories",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Category name",
+        "type": "text"
+      },
+      {
+        "name": "kind",
+        "label": "Type",
+        "type": "select",
+        "options": [
+          "expense",
+          "income"
+        ]
+      }
+    ]
+  },
+  {
+    "key": "Transaction",
+    "module": "finances",
+    "label": "Transactions",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Description",
+        "type": "text"
+      },
+      {
+        "name": "accountId",
+        "label": "Account",
+        "type": "relation",
+        "target": "FinancialAccount"
+      },
+      {
+        "name": "categoryId",
+        "label": "Category",
+        "type": "relation",
+        "target": "Category"
+      },
+      {
+        "name": "amount",
+        "label": "Amount",
+        "type": "money"
+      },
+      {
+        "name": "date",
+        "label": "Date",
+        "type": "date"
+      }
+    ]
+  },
+  {
+    "key": "Budget",
+    "module": "finances",
+    "label": "Budgets",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Budget name",
+        "type": "text"
+      },
+      {
+        "name": "currency",
+        "label": "Currency",
+        "type": "currency"
+      },
+      {
+        "name": "startDate",
+        "label": "Start date",
+        "type": "date"
+      },
+      {
+        "name": "endDate",
+        "label": "End date",
+        "type": "date"
+      }
+    ]
+  },
+  {
+    "key": "BudgetCategory",
+    "module": "finances",
+    "label": "Budget limits",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Label",
+        "type": "text"
+      },
+      {
+        "name": "budgetId",
+        "label": "Budget",
+        "type": "relation",
+        "target": "Budget"
+      },
+      {
+        "name": "categoryId",
+        "label": "Category",
+        "type": "relation",
+        "target": "Category"
+      },
+      {
+        "name": "limitAmount",
+        "label": "Limit",
+        "type": "money"
+      }
+    ]
+  },
+  {
+    "key": "RecurringExpense",
+    "module": "finances",
+    "label": "Recurring expenses",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Description",
+        "type": "text"
+      },
+      {
+        "name": "accountId",
+        "label": "Account",
+        "type": "relation",
+        "target": "FinancialAccount"
+      },
+      {
+        "name": "categoryId",
+        "label": "Category",
+        "type": "relation",
+        "target": "Category"
+      },
+      {
+        "name": "amount",
+        "label": "Amount",
+        "type": "money"
+      },
+      {
+        "name": "dueDate",
+        "label": "Next due",
+        "type": "date"
+      },
+      {
+        "name": "frequency",
+        "label": "Frequency",
+        "type": "select",
+        "options": [
+          "weekly",
+          "monthly",
+          "yearly"
+        ]
+      }
+    ]
+  },
+  {
+    "key": "Course",
+    "module": "education",
+    "label": "Courses",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Course name",
+        "type": "text"
+      },
+      {
+        "name": "code",
+        "label": "Course code",
+        "type": "text"
+      },
+      {
+        "name": "term",
+        "label": "Term",
+        "type": "text"
+      },
+      {
+        "name": "instructor",
+        "label": "Instructor",
+        "type": "text"
+      }
+    ]
+  },
+  {
+    "key": "Assignment",
+    "module": "education",
+    "label": "Assignments",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Assignment",
+        "type": "text"
+      },
+      {
+        "name": "courseId",
+        "label": "Course",
+        "type": "relation",
+        "target": "Course"
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "planned",
+          "active",
+          "done"
+        ]
+      },
+      {
+        "name": "pointsPossible",
+        "label": "Points possible",
+        "type": "number",
+        "max": 1000000
+      }
+    ]
+  },
+  {
+    "key": "Exam",
+    "module": "education",
+    "label": "Exams",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Exam",
+        "type": "text"
+      },
+      {
+        "name": "courseId",
+        "label": "Course",
+        "type": "relation",
+        "target": "Course"
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "planned",
+          "active",
+          "done"
+        ]
+      },
+      {
+        "name": "pointsPossible",
+        "label": "Points possible",
+        "type": "number",
+        "max": 1000000
+      }
+    ]
+  },
+  {
+    "key": "Grade",
+    "module": "education",
+    "label": "Grades",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Assessment",
+        "type": "text"
+      },
+      {
+        "name": "courseId",
+        "label": "Course",
+        "type": "relation",
+        "target": "Course"
+      },
+      {
+        "name": "pointsEarned",
+        "label": "Points earned",
+        "type": "number",
+        "max": 1000000
+      },
+      {
+        "name": "pointsPossible",
+        "label": "Points possible",
+        "type": "number",
+        "max": 1000000
+      },
+      {
+        "name": "date",
+        "label": "Date",
+        "type": "date"
+      }
+    ]
+  },
+  {
+    "key": "StudySession",
+    "module": "education",
+    "label": "Study sessions",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Topic",
+        "type": "text"
+      },
+      {
+        "name": "courseId",
+        "label": "Course",
+        "type": "relation",
+        "target": "Course"
+      },
+      {
+        "name": "date",
+        "label": "Date",
+        "type": "date"
+      },
+      {
+        "name": "minutes",
+        "label": "Minutes",
+        "type": "number",
+        "max": 1440
+      }
+    ]
+  },
+  {
+    "key": "Event",
+    "module": "calendar",
+    "label": "Events",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Event",
+        "type": "text"
+      },
+      {
+        "name": "startDate",
+        "label": "Start date",
+        "type": "date"
+      },
+      {
+        "name": "endDate",
+        "label": "End date",
+        "type": "date"
+      },
+      {
+        "name": "startTime",
+        "label": "Start time",
+        "type": "time"
+      },
+      {
+        "name": "endTime",
+        "label": "End time",
+        "type": "time"
+      },
+      {
+        "name": "location",
+        "label": "Location",
+        "type": "text"
+      }
+    ]
+  },
+  {
+    "key": "Task",
+    "module": "calendar",
+    "label": "Tasks",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Task",
+        "type": "text"
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "planned",
+          "active",
+          "done"
+        ]
+      },
+      {
+        "name": "priority",
+        "label": "Priority",
+        "type": "select",
+        "options": [
+          "normal",
+          "high",
+          "low"
+        ]
+      }
+    ]
+  },
+  {
+    "key": "Reminder",
+    "module": "calendar",
+    "label": "Reminders",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Reminder",
+        "type": "text"
+      },
+      {
+        "name": "taskId",
+        "label": "Task",
+        "type": "relation",
+        "target": "Task"
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      },
+      {
+        "name": "time",
+        "label": "Time",
+        "type": "time"
+      }
+    ]
+  },
+  {
+    "key": "CareerApplication",
+    "module": "career",
+    "label": "Applications",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Role",
+        "type": "text"
+      },
+      {
+        "name": "company",
+        "label": "Company",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "saved",
+          "applied",
+          "interview",
+          "offer",
+          "rejected",
+          "withdrawn"
+        ]
+      },
+      {
+        "name": "date",
+        "label": "Application date",
+        "type": "date"
+      },
+      {
+        "name": "url",
+        "label": "Posting URL",
+        "type": "url"
+      }
+    ]
+  },
+  {
+    "key": "Contact",
+    "module": "career",
+    "label": "Contacts",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Contact name",
+        "type": "text"
+      },
+      {
+        "name": "applicationId",
+        "label": "Application",
+        "type": "relation",
+        "target": "CareerApplication"
+      },
+      {
+        "name": "email",
+        "label": "Email",
+        "type": "email"
+      },
+      {
+        "name": "organization",
+        "label": "Organization",
+        "type": "text"
+      }
+    ]
+  },
+  {
+    "key": "FollowUp",
+    "module": "career",
+    "label": "Follow-ups",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Follow-up",
+        "type": "text"
+      },
+      {
+        "name": "applicationId",
+        "label": "Application",
+        "type": "relation",
+        "target": "CareerApplication"
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "planned",
+          "active",
+          "done"
+        ]
+      }
+    ]
+  },
+  {
+    "key": "Project",
+    "module": "projects",
+    "label": "Projects",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Project name",
+        "type": "text"
+      },
+      {
+        "name": "description",
+        "label": "Description",
+        "type": "longtext"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "planned",
+          "active",
+          "done"
+        ]
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      }
+    ]
+  },
+  {
+    "key": "Milestone",
+    "module": "projects",
+    "label": "Milestones",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Milestone",
+        "type": "text"
+      },
+      {
+        "name": "projectId",
+        "label": "Project",
+        "type": "relation",
+        "target": "Project"
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "planned",
+          "active",
+          "done"
+        ]
+      }
+    ]
+  },
+  {
+    "key": "ProjectActivity",
+    "module": "projects",
+    "label": "Activity",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Activity",
+        "type": "text"
+      },
+      {
+        "name": "projectId",
+        "label": "Project",
+        "type": "relation",
+        "target": "Project"
+      },
+      {
+        "name": "date",
+        "label": "Date",
+        "type": "date"
+      },
+      {
+        "name": "description",
+        "label": "Details",
+        "type": "longtext"
+      }
+    ]
+  },
+  {
+    "key": "Goal",
+    "module": "goals",
+    "label": "Goals",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Goal",
+        "type": "text"
+      },
+      {
+        "name": "target",
+        "label": "Target",
+        "type": "number",
+        "max": 1000000
+      },
+      {
+        "name": "current",
+        "label": "Current progress",
+        "type": "number",
+        "max": 1000000
+      },
+      {
+        "name": "unit",
+        "label": "Unit",
+        "type": "text"
+      },
+      {
+        "name": "dueDate",
+        "label": "Due date",
+        "type": "date"
+      },
+      {
+        "name": "status",
+        "label": "Status",
+        "type": "select",
+        "options": [
+          "planned",
+          "active",
+          "done"
+        ]
+      }
+    ]
+  },
+  {
+    "key": "Habit",
+    "module": "goals",
+    "label": "Habits",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Habit",
+        "type": "text"
+      },
+      {
+        "name": "goalId",
+        "label": "Goal",
+        "type": "relation",
+        "target": "Goal"
+      },
+      {
+        "name": "target",
+        "label": "Daily target",
+        "type": "number",
+        "max": 1000000
+      },
+      {
+        "name": "unit",
+        "label": "Unit",
+        "type": "text"
+      }
+    ]
+  },
+  {
+    "key": "HabitEntry",
+    "module": "goals",
+    "label": "Habit log",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Entry",
+        "type": "text"
+      },
+      {
+        "name": "habitId",
+        "label": "Habit",
+        "type": "relation",
+        "target": "Habit"
+      },
+      {
+        "name": "date",
+        "label": "Date",
+        "type": "date"
+      },
+      {
+        "name": "value",
+        "label": "Value",
+        "type": "number",
+        "max": 1000000
+      }
+    ]
+  },
+  {
+    "key": "Note",
+    "module": "notes",
+    "label": "Notes",
+    "fields": [
+      {
+        "name": "title",
+        "label": "Title",
+        "type": "text"
+      },
+      {
+        "name": "content",
+        "label": "Content",
+        "type": "longtext"
+      },
+      {
+        "name": "tag",
+        "label": "Tag",
+        "type": "text"
+      }
+    ]
+  }
+]

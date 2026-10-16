@@ -43,12 +43,12 @@ export function OrbitalDashboard({ demo }: { demo: boolean }) {
         </div>
         <nav className="orbital-modules" aria-label="Workspace modules">
           {modules.map((module, index) => { const Icon = module.icon; return <Link key={module.slug} href={href(module.slug)} aria-label={`Open ${label(module.slug)}`} className={`orbit-module orbit-${module.side} ${selected === module.slug ? "module-selected" : ""}`} style={{ "--module-x": `${module.x}%`, "--module-y": `${module.y}%`, "--module-delay": `${index * 45}ms` } as CSSProperties} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) setPaused(true); }} onMouseEnter={() => setSelected(module.slug)} onMouseLeave={() => setSelected(null)} onFocus={() => setSelected(module.slug)} onBlur={() => setSelected(null)}>
-            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><span className="orbit-module-index">{String(index + 1).padStart(2, "0")} / {module.phase === "01" ? "FOUNDATION" : `PLANNED · PHASE ${module.phase}`}</span><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span><span className="module-trace" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
+            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><span className="orbit-module-index">{String(index + 1).padStart(2, "0")} / {module.phase === "01" ? "FOUNDATION" : module.phase === "02" ? "CORE TRACKING" : `PLANNED · PHASE ${module.phase}`}</span><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span><span className="module-trace" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
           </Link>; })}
         </nav>
       </div>
       <div className="console-bottomline"><span><Network size={12} /> 10 WORKSPACE DESTINATIONS</span><span>NO DOMAIN INTEGRATIONS CONNECTED</span><div className="signal-decoration" aria-hidden="true">{Array.from({ length: 27 }, (_, i) => <i key={i} style={{ "--signal-height": `${5 + (i * 7 % 19)}px`, animationDelay: `${i * .1}s` } as CSSProperties} />)}</div></div>
     </section>
-    <p className="hub-footnote">{demo ? "Synthetic preview. Navigation is functional; future modules are clearly marked as planned." : "Your workspace is private. Tracking modules arrive in Phase 2; AI and notification delivery follow in later phases."}</p>
+    <p className="hub-footnote">{demo ? "Synthetic preview. Explore tracking with temporary sample records; reload to reset." : "Your workspace is private. Manual tracking is available. AI and notification delivery follow in later phases."}</p>
   </div>;
 }

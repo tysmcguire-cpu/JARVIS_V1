@@ -10,7 +10,8 @@ async function verify() {
   const migrations = await admin.$queryRaw<{ count: number }[]>`SELECT count(*)::int AS count FROM public._prisma_migrations WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL`;
   assert(migrations[0].count >= 1);
   const role = await runtime.$queryRaw<{ name: string; bypass: boolean; superuser: boolean }[]>`SELECT current_user AS name, rolbypassrls AS bypass, rolsuper AS superuser FROM pg_roles WHERE rolname=current_user`;
-  assert.equal(role[0].name, "jarvis_app");
+  const membership = await runtime.$queryRaw<{allowed:boolean}[]>`SELECT pg_has_role(current_user, 'jarvis_app', 'MEMBER') AS allowed`;
+  assert(membership[0].allowed);
   assert.equal(role[0].bypass, false);
   assert.equal(role[0].superuser, false);
   assert.equal(await runtime.userSettings.count(), 0);

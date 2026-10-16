@@ -57,7 +57,7 @@ test("orbital controls support keyboard selection, motion preferences and naviga
   await expect(page.locator(".flowing-core canvas")).toHaveAttribute("data-motion", "paused");
   await modules.getByRole("link", { name: "Open Projects", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Projects", exact: true })).toBeVisible();
-  await expect(page.getByText("Planned · Phase 2", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "+ Add projects", exact: true })).toBeVisible();
 });
 
 test("flowing core animates and the workspace enforces the desktop canvas", async ({ page }) => {

@@ -1,6 +1,6 @@
 # JARVIS
 
-Private, single-owner personal operating system. **Foundation only**: desktop application shell, Supabase owner sign-in, PostgreSQL owner/settings storage and an isolated synthetic preview. The owner's latest UI direction is desktop-only, minimum 1024×600, with the complete interface fitting one viewport without scrolling. Domain modules are navigation placeholders, not working tracking tools. Supabase is configured and verified in the owner's local workspace. No financial, AI, Telegram or other domain integrations are connected; nothing is deployed.
+Private, single-owner personal operating system. Foundation and Phase 2 core tracking: desktop application shell, Supabase owner sign-in, owner-scoped manual tracking across finances, academics, calendar/tasks, career, projects, goals/habits and notes, plus an isolated synthetic preview. Desktop-only, minimum 1024×600, with pagination and forms fitting one viewport. Supabase is configured locally. AI, Telegram, external connectors and notification delivery remain later phases; nothing is deployed.
 
 JARVIS_SPEC.md contains the complete original requirements. Read IMPLEMENTATION_PLAN.md for architecture decisions, phase gates and verification status. See ARCHITECTURE.md, DATABASE.md, SECURITY.md, INTEGRATIONS.md and DEPLOYMENT.md before configuring real services.
 
@@ -29,6 +29,8 @@ pnpm db:validate
 pnpm db:migrate
 pnpm db:provision
 pnpm db:verify
+pnpm db:tracking
+pnpm db:verify-tracking
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -54,10 +56,16 @@ Production smoke tests use the completed build on port 3101 and verify demo is b
 
 After the GitHub push, clone https://github.com/tysmcguire-cpu/JARVIS_V1.git outside OneDrive if possible. Install the required Node/pnpm versions, run `pnpm install --frozen-lockfile` and `pnpm db:generate`, then create .env locally. Transfer the existing environment securely, including the generated jarvis_app DATABASE_URL credential, or provision separate approved runtime credentials. Do not paste secrets into chat or Git. Use the same Supabase project to share persisted data; no new owner or seed is needed. Run `pnpm db:verify`, then `pnpm dev` and sign in. Push changes before switching computers, and pull before editing on the other one.
 
-Future phases add data entry, integrations, AI and durable notifications. Do not enter private records into synthetic fixtures.
+Phase 2 adds manual data entry; future phases add integrations, AI and durable notifications. Do not enter private records into synthetic fixtures.
 
 ## Windows troubleshooting
 
 This checkout is inside OneDrive. During verification, OneDrive marked generated .next directories read-only and interrupted a repeat build. Clearing the read-only attributes on that generated directory allowed rebuilding. For reliable ongoing development, keep the working checkout outside synchronized folders; never remove source files to fix build artifacts. The scripts use Webpack because the bundled Windows runtime failed to launch Turbopack's CSS worker.
 
 Phase 1 is committed and pushed to the master branch at https://github.com/tysmcguire-cpu/JARVIS_V1.git. Remote read/write access is verified. The repository-local Git author is configured from the owner's supplied name and email. Local .env credentials and generated output remain excluded.
+
+## Phase 2 use and switching computers
+
+Sign in at `/login`, then open a workspace module. Create parent records first (accounts/categories, courses, applications, projects or goals), then link their children. Use module tabs, Search, sorting, status filters and pagination. Open/edit reveals all fields; multi-page forms check every field on save. Delete requires explicit confirmation and refuses records with dependent children. Concurrent edits require reloading. Notes support up to 8,000 characters. The synthetic `/demo` workspace supports temporary edits isolated from private storage; reloading resets its records.
+
+The existing Supabase project is migrated for Phase 2. On the other computer, commit/push existing code before pulling, then run `pnpm install --frozen-lockfile` and `pnpm db:generate` with the app stopped (Windows locks Prisma engine files while running). Keep that computer's `.env` and original jarvis_app password. Its role already has the new tracking permissions. For a separate development project, follow Foundation provisioning, deploy migrations, run `pnpm db:tracking`, then both verification scripts. Never use the administrative DIRECT_URL as runtime DATABASE_URL. `db:verify-tracking` exercises synthetic CRUD in an intentionally rolled-back transaction; it saves no sample records.

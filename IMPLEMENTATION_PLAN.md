@@ -1,6 +1,6 @@
 # Implementation plan
 
-The complete JARVIS_SPEC.md is authoritative. Scope is Phase 1 only; no Phase 2 work is authorized in this run.
+The complete JARVIS_SPEC.md is authoritative. Phase 1 is complete. The owner authorized Phase 2 core tracking in this workspace on October 15, 2026. Historical Foundation notes below describe their original scope.
 
 ## Architecture review and decisions
 - Next.js App Router with server components, TypeScript, Tailwind and shadcn-style accessible UI primitives. Feature directories isolate domain logic from routing.
@@ -81,3 +81,30 @@ Orbital-dashboard validation passed: 18 unit/auth/database tests, eight desktop/
 Latest explicit owner override: desktop only; all current application screens must fit one viewport without scrolling. The original mobile/iPhone requirement is superseded for the current UI, not silently removed from the preserved master specification. The current shell supports 1024×600 and larger windows; smaller sizes display a desktop-window notice. The central JARVIS mark is surrounded by original flowing cyan/violet canvas filaments and circuitry, with pause, reduced-motion and hidden-tab controls. Current module screens and sign-in also use bounded viewport layouts. Phase 2 remains deferred.
 
 Desktop/flowing-core validation passed: ESLint, TypeScript, 18 unit/auth/database tests, 15 browser tests across 1280×720, 1366×768 and 1920×1080 (also checking minimum 1024×600 bounds), production build and two production security checks. Total automated test count: 35. Dashboard and Settings screenshots were visually reviewed; navigation, keyboard controls, reduced motion, actual changing canvas frames and the minimum-window notice were verified. No Phase 2 functionality was added.
+
+## Phase 2 implementation — October 15, 2026
+
+- [x] Add 24 normalized owner-scoped tracking models, compound ownership foreign keys, RLS, validation constraints and indexes.
+- [x] Financial accounts, categories, transactions, dated budgets/category limits and recurring expenses. Exact integer minor-unit calculations; USD/CAD/EUR/GBP kept separate. Category type determines income versus expense; opening balances may be negative. Currency/type changes are rejected while dependent records exist.
+- [x] Courses, assignments, exams, grades and study sessions. Grade overview reports unweighted recorded points, not an institutional GPA.
+- [x] Events with date/time bounds, tasks and stored reminders; monthly calendars for dated record types.
+- [x] Career applications, contacts and follow-ups; projects, milestones and activity; goals, habits and dated habit entries; notes and tags.
+- [x] Owner-verified CRUD, explicit owner predicates, parameterized SQL, audit records in the same transaction and optimistic concurrency protection. Parent deletion is prevented while dependent records exist.
+- [x] Search, sorting, status filters, four-row pagination, status/spending/progress charts, empty/error/loading feedback and accessible modal forms. Minimum 1024×600 retained; forms paginate fields. Linked choices support server-side title search.
+- [x] Isolated synthetic browser fixtures with temporary edits and an explicit development-only database seed that refuses a real owner.
+- [x] Apply the tracking migration to the existing Supabase project and grant CRUD only on tracking tables plus audit INSERT to jarvis_app (and inherited local logins). Existing credentials and preferences preserved.
+- [x] Verify live CRUD across all 24 tables inside a rolled-back transaction; no synthetic records saved to the real owner.
+
+Operational limits: amounts use two-decimal currencies only; no currency conversion, bank sync, recurring transaction generation, reminders delivery, Telegram, AI or external actions. Calendars show up to 200 matching records per month and report this limit. The account currency determines transaction currency; budget limits use budget currency and exclude transactions in other currencies. Habits allow one recorded value per date, with editing to revise it. Times are entered in the configured workspace timezone.
+
+Validation results are recorded after the final checks below. Phase 3 has not begun.
+
+### Final Phase 2 verification
+
+- Prisma schema validation, ESLint and TypeScript: passed.
+- Vitest: 38 tests passed, including the real SQL repository against embedded PostgreSQL, exact arithmetic, ownership and stale updates.
+- Playwright: 24 browser scenarios passed across three desktop viewports, including every tab and modal field page at 1024×600. One final test was rerun successfully after an output-directory collision with production tests; production now uses a separate output directory.
+- Production build: passed; two production boundary tests passed.
+- Live Foundation verification: passed using this computer's inherited restricted login.
+- Live tracking verification: passed for all 24 tables plus audit INSERT and isolation, in an intentionally rolled-back transaction. No sample data saved to the real owner.
+- Desktop screenshots reviewed. Local development server serves the updated app on port 3000. No deployment or external connectors added.

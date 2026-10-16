@@ -1,0 +1,12 @@
+import { entities, type RecordRow, type WorkspaceData } from './config';
+export function syntheticRecords(): Record<string,RecordRow[]> {
+  const today=new Date().toISOString().slice(0,10); const ids=Object.fromEntries(entities.map((e,i)=>[e.key,`00000000-0000-4000-8000-${String(i+1).padStart(12,'0')}`]));
+  return Object.fromEntries(entities.map(e=>[e.key,[{id:ids[e.key],updatedAt:'2026-10-15T00:00:00.000Z',...Object.fromEntries(e.fields.map(f=>[f.name,f.type==='relation'?ids[f.target!]:f.type==='date'?today:f.type==='time'?(f.name==='endTime'?'11:00':'10:00'):f.type==='currency'?'USD':f.type==='money'?'12500':f.type==='number'?(f.name==='target'||f.name==='pointsPossible'?'100':'25'):f.type==='select'?f.options![0]:f.type==='email'?'sample@example.invalid':f.type==='url'?'https://example.invalid':f.name==='title'?`Synthetic ${e.label.toLowerCase()}`:f.name==='content'?'Synthetic note for exploring the workspace. No private information.':f.name==='kind'?'expense':'Synthetic example']))}]]));
+}
+export function demoWorkspace(key:string,records:Record<string,RecordRow[]>,query:{page:number;search:string;status:string;sort:string;direction:string;month:string}):WorkspaceData {
+  const entity=entities.find(e=>e.key===key)!;const dateField=entity.fields.find(f=>f.type==='date')?.name;
+  const sort=query.sort==='date'?dateField??'updatedAt':query.sort;
+  const rows=records[key].filter(r=>r.title.toLowerCase().includes(query.search.toLowerCase())&&(!query.status||r.status===query.status)).toSorted((a,b)=>(a[sort]??'').localeCompare(b[sort]??'')*(query.direction==='asc'?1:-1));
+  const page=Math.min(query.page,Math.max(1,Math.ceil(rows.length/4)));
+  return {rows:rows.slice((page-1)*4,page*4).map(r=>({...r,currency:r.currency??(r.accountId?records.FinancialAccount.find(a=>a.id===r.accountId)?.currency:r.budgetId?records.Budget.find(b=>b.id===r.budgetId)?.currency:undefined)??'USD'})),total:rows.length,page,pageSize:4,options:Object.fromEntries(entities.map(e=>[e.key,records[e.key].map(r=>({id:r.id,title:r.title}))])),relationsTruncated:false,summary:[{label:'Synthetic records',value:String(rows.length)}],chart:entity.fields.some(f=>f.name==='status')?Object.entries(Object.groupBy(rows,r=>r.status)).map(([label,rs])=>({label,value:rs!.length})):[],calendar:dateField?rows.filter(r=>r[dateField].startsWith(query.month)).slice(0,200).map(r=>({date:r[dateField],title:r.title})):[]};
+}

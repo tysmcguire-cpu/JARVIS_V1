@@ -9,31 +9,55 @@ datasource db {
 }
 
 model User {
-  id          String        @id @db.Uuid
-  singleton   Boolean       @unique @default(true)
-  displayName String        @default("Owner") @db.VarChar(100)
-  synthetic   Boolean       @default(false)
-  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
-  updatedAt   DateTime      @updatedAt @db.Timestamptz(6)
-  settings    UserSettings?
-  auditLogs   AuditLog[]
+  id                        String              @id @db.Uuid
+  singleton                 Boolean             @unique @default(true)
+  displayName               String              @default("Owner") @db.VarChar(100)
+  synthetic                 Boolean             @default(false)
+  createdAt                 DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt                 DateTime            @updatedAt @db.Timestamptz(6)
+  settings                  UserSettings?
+  auditLogs                 AuditLog[]
+  trackingFinancialAccount  FinancialAccount[]
+  trackingCategory          Category[]
+  trackingTransaction       Transaction[]
+  trackingBudget            Budget[]
+  trackingBudgetCategory    BudgetCategory[]
+  trackingRecurringExpense  RecurringExpense[]
+  trackingCourse            Course[]
+  trackingAssignment        Assignment[]
+  trackingExam              Exam[]
+  trackingGrade             Grade[]
+  trackingStudySession      StudySession[]
+  trackingEvent             Event[]
+  trackingTask              Task[]
+  trackingReminder          Reminder[]
+  trackingCareerApplication CareerApplication[]
+  trackingContact           Contact[]
+  trackingFollowUp          FollowUp[]
+  trackingProject           Project[]
+  trackingMilestone         Milestone[]
+  trackingProjectActivity   ProjectActivity[]
+  trackingGoal              Goal[]
+  trackingHabit             Habit[]
+  trackingHabitEntry        HabitEntry[]
+  trackingNote              Note[]
 }
 
 model UserSettings {
-  userId                  String   @id @db.Uuid
-  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  timezone                String   @default("America/Chicago") @db.VarChar(100)
-  currency                String   @default("USD") @db.Char(3)
-  weeklyReviewEnabled     Boolean  @default(true)
-  weeklyReviewDay         Int      @default(0)
-  weeklyReviewTime        String   @default("18:00") @db.VarChar(5)
-  deadlineReminders       Boolean  @default(true)
-  financialAlerts         Boolean  @default(true)
-  morningBriefingEnabled  Boolean  @default(false)
-  morningBriefingTime     String   @default("08:00") @db.VarChar(5)
-  unsolicitedAiEnabled    Boolean  @default(false)
-  createdAt               DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt               DateTime @updatedAt @db.Timestamptz(6)
+  userId                 String   @id @db.Uuid
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timezone               String   @default("America/Chicago") @db.VarChar(100)
+  currency               String   @default("USD") @db.Char(3)
+  weeklyReviewEnabled    Boolean  @default(true)
+  weeklyReviewDay        Int      @default(0)
+  weeklyReviewTime       String   @default("18:00") @db.VarChar(5)
+  deadlineReminders      Boolean  @default(true)
+  financialAlerts        Boolean  @default(true)
+  morningBriefingEnabled Boolean  @default(false)
+  morningBriefingTime    String   @default("08:00") @db.VarChar(5)
+  unsolicitedAiEnabled   Boolean  @default(false)
+  createdAt              DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @db.Timestamptz(6)
 }
 
 model AuditLog {
@@ -45,4 +69,451 @@ model AuditLog {
   createdAt DateTime @default(now()) @db.Timestamptz(6)
 
   @@index([userId, createdAt])
+}
+
+model FinancialAccount {
+  id                                String             @id @default(uuid()) @db.Uuid
+  userId                            String             @db.Uuid
+  user                              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                         DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt                         DateTime           @updatedAt @db.Timestamptz(6)
+  title                             String             @db.VarChar(200)
+  currency                          String             @db.VarChar(200)
+  openingBalance                    BigInt
+  childrenTransactionaccountId      Transaction[]      @relation("Transaction_accountId")
+  childrenRecurringExpenseaccountId RecurringExpense[] @relation("RecurringExpense_accountId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+}
+
+model Category {
+  id                                 String             @id @default(uuid()) @db.Uuid
+  userId                             String             @db.Uuid
+  user                               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                          DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt                          DateTime           @updatedAt @db.Timestamptz(6)
+  title                              String             @db.VarChar(200)
+  kind                               String             @db.VarChar(200)
+  childrenTransactioncategoryId      Transaction[]      @relation("Transaction_categoryId")
+  childrenBudgetCategorycategoryId   BudgetCategory[]   @relation("BudgetCategory_categoryId")
+  childrenRecurringExpensecategoryId RecurringExpense[] @relation("RecurringExpense_categoryId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+}
+
+model Transaction {
+  id               String           @id @default(uuid()) @db.Uuid
+  userId           String           @db.Uuid
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(6)
+  title            String           @db.VarChar(200)
+  accountId        String           @db.Uuid
+  parentaccountId  FinancialAccount @relation("Transaction_accountId", fields: [accountId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  categoryId       String           @db.Uuid
+  parentcategoryId Category         @relation("Transaction_categoryId", fields: [categoryId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  amount           BigInt
+  date             DateTime         @db.Date
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, accountId])
+  @@index([userId, categoryId])
+  @@index([userId, date])
+}
+
+model Budget {
+  id                             String           @id @default(uuid()) @db.Uuid
+  userId                         String           @db.Uuid
+  user                           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                      DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt                      DateTime         @updatedAt @db.Timestamptz(6)
+  title                          String           @db.VarChar(200)
+  currency                       String           @db.VarChar(200)
+  startDate                      DateTime         @db.Date
+  endDate                        DateTime         @db.Date
+  childrenBudgetCategorybudgetId BudgetCategory[] @relation("BudgetCategory_budgetId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, startDate])
+  @@index([userId, endDate])
+}
+
+model BudgetCategory {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(6)
+  title            String   @db.VarChar(200)
+  budgetId         String   @db.Uuid
+  parentbudgetId   Budget   @relation("BudgetCategory_budgetId", fields: [budgetId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  categoryId       String   @db.Uuid
+  parentcategoryId Category @relation("BudgetCategory_categoryId", fields: [categoryId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  limitAmount      BigInt
+
+  @@unique([id, userId])
+  @@unique([userId, budgetId, categoryId])
+  @@index([userId, updatedAt])
+  @@index([userId, budgetId])
+  @@index([userId, categoryId])
+}
+
+model RecurringExpense {
+  id               String           @id @default(uuid()) @db.Uuid
+  userId           String           @db.Uuid
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(6)
+  title            String           @db.VarChar(200)
+  accountId        String           @db.Uuid
+  parentaccountId  FinancialAccount @relation("RecurringExpense_accountId", fields: [accountId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  categoryId       String           @db.Uuid
+  parentcategoryId Category         @relation("RecurringExpense_categoryId", fields: [categoryId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  amount           BigInt
+  dueDate          DateTime         @db.Date
+  frequency        String           @db.VarChar(200)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, accountId])
+  @@index([userId, categoryId])
+  @@index([userId, dueDate])
+}
+
+model Course {
+  id                           String         @id @default(uuid()) @db.Uuid
+  userId                       String         @db.Uuid
+  user                         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                    DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt                    DateTime       @updatedAt @db.Timestamptz(6)
+  title                        String         @db.VarChar(200)
+  code                         String         @db.VarChar(200)
+  term                         String         @db.VarChar(200)
+  instructor                   String         @db.VarChar(200)
+  childrenAssignmentcourseId   Assignment[]   @relation("Assignment_courseId")
+  childrenExamcourseId         Exam[]         @relation("Exam_courseId")
+  childrenGradecourseId        Grade[]        @relation("Grade_courseId")
+  childrenStudySessioncourseId StudySession[] @relation("StudySession_courseId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+}
+
+model Assignment {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+  title          String   @db.VarChar(200)
+  courseId       String   @db.Uuid
+  parentcourseId Course   @relation("Assignment_courseId", fields: [courseId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  dueDate        DateTime @db.Date
+  status         String   @db.VarChar(200)
+  pointsPossible Int
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, courseId])
+  @@index([userId, dueDate])
+  @@index([userId, status])
+}
+
+model Exam {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+  title          String   @db.VarChar(200)
+  courseId       String   @db.Uuid
+  parentcourseId Course   @relation("Exam_courseId", fields: [courseId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  dueDate        DateTime @db.Date
+  status         String   @db.VarChar(200)
+  pointsPossible Int
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, courseId])
+  @@index([userId, dueDate])
+  @@index([userId, status])
+}
+
+model Grade {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+  title          String   @db.VarChar(200)
+  courseId       String   @db.Uuid
+  parentcourseId Course   @relation("Grade_courseId", fields: [courseId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  pointsEarned   Int
+  pointsPossible Int
+  date           DateTime @db.Date
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, courseId])
+  @@index([userId, date])
+}
+
+model StudySession {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+  title          String   @db.VarChar(200)
+  courseId       String   @db.Uuid
+  parentcourseId Course   @relation("StudySession_courseId", fields: [courseId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  date           DateTime @db.Date
+  minutes        Int
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, courseId])
+  @@index([userId, date])
+}
+
+model Event {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  title     String   @db.VarChar(200)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  startTime String   @db.VarChar(200)
+  endTime   String   @db.VarChar(200)
+  location  String   @db.VarChar(200)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, startDate])
+  @@index([userId, endDate])
+}
+
+model Task {
+  id                     String     @id @default(uuid()) @db.Uuid
+  userId                 String     @db.Uuid
+  user                   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime   @updatedAt @db.Timestamptz(6)
+  title                  String     @db.VarChar(200)
+  dueDate                DateTime   @db.Date
+  status                 String     @db.VarChar(200)
+  priority               String     @db.VarChar(200)
+  childrenRemindertaskId Reminder[] @relation("Reminder_taskId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, dueDate])
+  @@index([userId, status])
+}
+
+model Reminder {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
+  title        String   @db.VarChar(200)
+  taskId       String   @db.Uuid
+  parenttaskId Task     @relation("Reminder_taskId", fields: [taskId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  dueDate      DateTime @db.Date
+  time         String   @db.VarChar(200)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, taskId])
+  @@index([userId, dueDate])
+}
+
+model CareerApplication {
+  id                            String     @id @default(uuid()) @db.Uuid
+  userId                        String     @db.Uuid
+  user                          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                     DateTime   @default(now()) @db.Timestamptz(6)
+  updatedAt                     DateTime   @updatedAt @db.Timestamptz(6)
+  title                         String     @db.VarChar(200)
+  company                       String     @db.VarChar(200)
+  status                        String     @db.VarChar(200)
+  date                          DateTime   @db.Date
+  url                           String     @db.VarChar(200)
+  childrenContactapplicationId  Contact[]  @relation("Contact_applicationId")
+  childrenFollowUpapplicationId FollowUp[] @relation("FollowUp_applicationId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, status])
+  @@index([userId, date])
+}
+
+model Contact {
+  id                  String            @id @default(uuid()) @db.Uuid
+  userId              String            @db.Uuid
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime          @updatedAt @db.Timestamptz(6)
+  title               String            @db.VarChar(200)
+  applicationId       String            @db.Uuid
+  parentapplicationId CareerApplication @relation("Contact_applicationId", fields: [applicationId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  email               String            @db.VarChar(200)
+  organization        String            @db.VarChar(200)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, applicationId])
+}
+
+model FollowUp {
+  id                  String            @id @default(uuid()) @db.Uuid
+  userId              String            @db.Uuid
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime          @updatedAt @db.Timestamptz(6)
+  title               String            @db.VarChar(200)
+  applicationId       String            @db.Uuid
+  parentapplicationId CareerApplication @relation("FollowUp_applicationId", fields: [applicationId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  dueDate             DateTime          @db.Date
+  status              String            @db.VarChar(200)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, applicationId])
+  @@index([userId, dueDate])
+  @@index([userId, status])
+}
+
+model Project {
+  id                               String            @id @default(uuid()) @db.Uuid
+  userId                           String            @db.Uuid
+  user                             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                        DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt                        DateTime          @updatedAt @db.Timestamptz(6)
+  title                            String            @db.VarChar(200)
+  description                      String            @db.VarChar(8000)
+  status                           String            @db.VarChar(200)
+  dueDate                          DateTime          @db.Date
+  childrenMilestoneprojectId       Milestone[]       @relation("Milestone_projectId")
+  childrenProjectActivityprojectId ProjectActivity[] @relation("ProjectActivity_projectId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, status])
+  @@index([userId, dueDate])
+}
+
+model Milestone {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @db.Uuid
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+  title           String   @db.VarChar(200)
+  projectId       String   @db.Uuid
+  parentprojectId Project  @relation("Milestone_projectId", fields: [projectId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  dueDate         DateTime @db.Date
+  status          String   @db.VarChar(200)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, projectId])
+  @@index([userId, dueDate])
+  @@index([userId, status])
+}
+
+model ProjectActivity {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @db.Uuid
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+  title           String   @db.VarChar(200)
+  projectId       String   @db.Uuid
+  parentprojectId Project  @relation("ProjectActivity_projectId", fields: [projectId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  date            DateTime @db.Date
+  description     String   @db.VarChar(8000)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, projectId])
+  @@index([userId, date])
+}
+
+model Goal {
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @db.Uuid
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @db.Timestamptz(6)
+  title               String   @db.VarChar(200)
+  target              Int
+  current             Int
+  unit                String   @db.VarChar(200)
+  dueDate             DateTime @db.Date
+  status              String   @db.VarChar(200)
+  childrenHabitgoalId Habit[]  @relation("Habit_goalId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, dueDate])
+  @@index([userId, status])
+}
+
+model Habit {
+  id                        String       @id @default(uuid()) @db.Uuid
+  userId                    String       @db.Uuid
+  user                      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt                 DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt                 DateTime     @updatedAt @db.Timestamptz(6)
+  title                     String       @db.VarChar(200)
+  goalId                    String       @db.Uuid
+  parentgoalId              Goal         @relation("Habit_goalId", fields: [goalId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  target                    Int
+  unit                      String       @db.VarChar(200)
+  childrenHabitEntryhabitId HabitEntry[] @relation("HabitEntry_habitId")
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
+  @@index([userId, goalId])
+}
+
+model HabitEntry {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+  title         String   @db.VarChar(200)
+  habitId       String   @db.Uuid
+  parenthabitId Habit    @relation("HabitEntry_habitId", fields: [habitId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
+  date          DateTime @db.Date
+  value         Int
+
+  @@unique([id, userId])
+  @@unique([userId, habitId, date])
+  @@index([userId, updatedAt])
+  @@index([userId, habitId])
+  @@index([userId, date])
+}
+
+model Note {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  title     String   @db.VarChar(200)
+  content   String   @db.VarChar(8000)
+  tag       String   @db.VarChar(200)
+
+  @@unique([id, userId])
+  @@index([userId, updatedAt])
 }
