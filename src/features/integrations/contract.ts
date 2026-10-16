@@ -1,6 +1,7 @@
 import {validateSource} from './normalization';
-export const providers=[{id:'google-calendar',label:'Google Calendar',kind:'Event'},{id:'gmail',label:'Gmail',kind:'Note'},{id:'github',label:'GitHub',kind:'Project'},{id:'canvas',label:'Canvas LMS',kind:'Assignment'},{id:'google-drive',label:'Google Drive',kind:'Note'}] as const;
-export type ProviderId=typeof providers[number]['id'];
+export const providers=[{id:'google-calendar',label:'Google Calendar',kind:'Event'},{id:'apple-calendar',label:'Apple Calendar (iCloud)',kind:'Event'},{id:'github',label:'GitHub',kind:'Project'},{id:'canvas',label:'Canvas LMS',kind:'Assignment'}] as const;
+// Retain legacy adapter/data types for old snapshots; they are no longer offered.
+export type ProviderId=typeof providers[number]['id']|'gmail'|'google-drive';
 export type SourceRecord={externalId:string;kind:'Event'|'Note'|'Project'|'Assignment';sourceUrl:string;sourceUpdatedAt:string;data:Record<string,string>;deleted?:boolean};
 export type Credentials={accessToken:string;refreshToken?:string;expiresAt:number};
 export interface ReadOnlyConnector {provider:ProviderId;mode:'mock'|'live';authorize():Promise<Credentials>;refresh(credentials:Credentials):Promise<Credentials>;fetchPage(credentials:Credentials,page:string|null,cursor:string|null):Promise<{records:unknown[];nextPage:string|null;cursor:string}>;normalize(record:unknown):SourceRecord;disconnect(credentials:Credentials):Promise<void>}

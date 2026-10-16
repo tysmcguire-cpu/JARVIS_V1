@@ -185,3 +185,9 @@ Metadata scope is deliberate: Gmail/Drive selected metadata, GitHub repository m
 Scope: local mode is filter-driven; OpenAI interprets a title search/view only. General conversational reasoning, model-written recommendations, live OpenAI acceptance and scheduled review delivery are not implemented or claimed. API key/model/billing remain owner setup. Phase 6 has not started.
 
 Executed verification: 112 unit/database tests passed; lint, TypeScript, Prisma generation/validation, production build and two production boundary tests passed. The browser regression run passed 47/48 scenarios; the existing laptop tracking-dialog scenario passed on an isolated rerun without changes to tracking code. Six new assistant scenarios passed across three desktop profiles; minimum-size screenshot reviewed. Master specification unchanged.
+
+## Owner calendar options — October 16, 2026
+
+Gmail and Google Drive are removed from current integration settings and new authorization grants. Google Calendar and private Apple Calendar (iCloud CalDAV) are independent, optional, read-only connections; either or both may be connected later. GitHub, Canvas and CSV imports remain available. Legacy mail/Drive identifiers remain for existing stored history. No calendar account was authorized, discovered or synced during implementation. See CALENDAR_CONNECTIONS.md for consent, credentials, scope and limits.
+
+Verified: 167 unit/database tests, 12 integration browser scenarios across three desktop sizes, lint, production build, three production boundary tests and client secret scan passed. Minimum-size screenshot reviewed. The additive Apple provider constraint migration was applied; live owner isolation was checked with rolled-back synthetic fixtures. Real Apple/Google account acceptance remains pending optional owner setup. The master specification is unchanged.

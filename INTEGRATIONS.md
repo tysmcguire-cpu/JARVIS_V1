@@ -1,5 +1,7 @@
 # Integrations
 
+Current available providers: Google Calendar, Apple Calendar (iCloud), GitHub and Canvas, plus financial CSV imports. Calendar sync is optional; either provider can be configured independently or both can coexist. Gmail and Google Drive were removed from integration settings at the owner's request. No calendar authorization/discovery/sync was performed by the build. See CALENDAR_CONNECTIONS.md for setup, read-only behavior and live acceptance limits. Historical Phase 4 notes below preserve earlier scope.
+
 Current status: Supabase and the owner-paired Telegram bot are configured locally. Phase 4 adds financial CSV imports and five read-only provider adapters, with synthetic tests, encrypted authorization and source review. No Calendar, Gmail, GitHub app connector, Canvas or Drive account has been connected during implementation. Git credentials are not reused by the app.
 
 See [the Phase 4 setup and operating guide](INTEGRATIONS_PHASE4.md) for current CSV, authorization, key-custody and sync instructions. Financial CSV does not need a provider token or encryption key. Real provider authorization remains disabled until key custody is chosen and the local encryption key is configured.

@@ -6,6 +6,8 @@ Latest owner UI override: desktop-only, minimum viewport 1024×600, with the ent
 
 Use synthetic demonstration data only until the owner explicitly configures private data sources. Never invent credentials, connect real financial accounts, perform autonomous external actions, spend money or deploy without authorization. Never claim a check or connection succeeded unless it was executed and verified. Keep secrets server-side and out of Git. Verify the owner independently in every data action or repository; proxy/layout checks alone are insufficient.
 
+Owner integration preference: hide Gmail and Google Drive from integration settings. Calendar sync stays optional; offer independent Google Calendar and Apple Calendar (iCloud) connections so either or both can be used. Do not authorize, discover or sync either account until the owner explicitly chooses to connect it. Keep provider access read-only.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

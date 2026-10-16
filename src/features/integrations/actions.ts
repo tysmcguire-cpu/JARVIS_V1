@@ -13,6 +13,7 @@ export async function cancelCsvImport(id:string){await requireOwner();z.uuid().p
 export async function loadIntegrations(){await requireOwner();return integrationStatus();}
 export async function disconnectConnector(id:string){await requireOwner();return disconnectIntegration(id);}
 export async function saveProviderAuthorization(input:unknown){await requireOwner();try{const {registerConnection}=await import('./live-service');return {ok:true as const,...await registerConnection(input)}}catch(error){return {ok:false as const,message:safeMessage(error)}}}
+export async function discoverAppleCalendarOptions(input:unknown){await requireOwner();try{const {discoverOwnerAppleCalendars}=await import('./apple-discovery');return {ok:true as const,calendars:await discoverOwnerAppleCalendars(input)}}catch{return {ok:false as const,message:'Could not list iCloud calendars. Check your Apple Account email, app-specific password, permissions and discovery limit.'}}}
 export async function syncProvider(id:string){await requireOwner();const {synchronizeConnection}=await import('./live-service');try{return await synchronizeConnection(id)}catch(error){return {ok:false,count:0,message:safeMessage(error)}}}
 export async function loadSourceRecords(id:string,page=1){await requireOwner();const {sourceRecords}=await import('./repository');return sourceRecords(id,page);}
 export async function resetConnectorCursor(id:string){await requireOwner();const {resetSourceCursor}=await import('./repository');return resetSourceCursor(id);}

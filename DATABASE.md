@@ -45,3 +45,7 @@ TelegramIdentity stores the approved owner/bot/chat tuple, hashed expiring pairi
 The migration adds ApiConnection, SyncLog, ExternalRecord, CsvImportBatch and CsvImportKey plus optional transaction provenance. Compound owner links, uniqueness, hash/count/credential checks, indexes and forced RLS apply. Browser roles have no direct table access. Runtime setup is pnpm db:integrations; pnpm db:verify-integrations checks live CRUD, linking, cascades and isolation with a rolled-back transaction, without retaining fixtures or contacting providers.
 
 CSV retention/provenance and key backup are described in INTEGRATIONS_PHASE4.md. Currency/category updates lock parent rows so a concurrent import cannot invalidate its reviewed classification. Owner transactions have a bounded 15-second timeout for this workflow.
+
+## Optional Apple Calendar provider
+
+Migration 20261017010000_apple_calendar extends the ApiConnection provider constraint to apple-calendar while retaining legacy provider identifiers. It is applied to the existing database. Apple credentials (email and app-specific password) use the existing encrypted credential envelope; selected private calendar collection URLs remain owner-scoped connection configuration. No new table, runtime grant or paid service is required. Synthetic Apple connection insertion and cross-owner denial were verified in a rolled-back transaction. No real calendar account was contacted. See CALENDAR_CONNECTIONS.md for read-only snapshot and credential limits.

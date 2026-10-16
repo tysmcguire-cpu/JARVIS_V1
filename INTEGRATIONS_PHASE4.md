@@ -1,5 +1,7 @@
 # Phase 4: sources and CSV imports
 
+Current owner override: Gmail and Google Drive are no longer offered in Settings or new authorization. Calendar connections are optional: Google Calendar, Apple Calendar (iCloud), or both, with separate selected resources and credentials. See CALENDAR_CONNECTIONS.md for private Apple discovery/read-only sync and limits. No calendar has been connected during implementation. The original Phase 4 provider table below is historical; its Gmail/Drive rows are retired UI options retained only in legacy adapter/snapshot compatibility code.
+
 Open Settings → Integrations and CSV. Synthetic provider previews run entirely in memory, without contacting accounts or saving owner records. The live schema and runtime permissions are configured, but no real provider is connected and no bank file was imported during implementation. Telegram continues running independently.
 
 ## Financial CSV workflow
