@@ -62,3 +62,7 @@ Official references: [Bot creation FAQ](https://core.telegram.org/bots/faq), [Te
 The `20261016010000_telegram` migration adds TelegramIdentity and TelegramMessage, forced owner RLS, unique per-owner/bot/update IDs, indexes and validation constraints. `pnpm db:telegram` grants CRUD only on these state tables to the existing restricted runtime role. Neither step contacts Telegram or changes credentials.
 
 `pnpm db:verify-telegram` exercises state CRUD and isolation in a rolled-back transaction and refuses to replace an existing pairing. For an already-paired environment, preserve that state and use the automated tests instead. Unit tests run the real command processor against PostgreSQL with a restricted role and mock outbound delivery. Live bot pairing, real message delivery, cross-website visibility and real retry/restart verification remain the final activation checks.
+
+## Current local activation
+
+The owner has configured the local bot, selected their private chat using the marker, paired it through Settings and confirmed real note synchronization. Status and note replies were verified delivered with no pending replies. Local polling is running on this computer. Real undo and restart/retry acceptance checks are still pending; do not repeat state provisioning or overwrite the existing pairing. Credentials remain local and excluded from Git.

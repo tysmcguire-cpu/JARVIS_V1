@@ -1,6 +1,6 @@
 # JARVIS
 
-Private, single-owner personal operating system. Foundation and Phase 2 core tracking: desktop application shell, Supabase owner sign-in, owner-scoped manual tracking across finances, academics, calendar/tasks, career, projects, goals/habits and notes, plus an isolated synthetic preview. Desktop-only, minimum 1024×600, with pagination and forms fitting one viewport. Supabase is configured locally. Telegram commands are implemented but await local credentials and pairing. AI, external connectors and notification delivery remain later phases; nothing is deployed.
+Private, single-owner personal operating system. Foundation and Phase 2 core tracking: desktop application shell, Supabase owner sign-in, owner-scoped manual tracking across finances, academics, calendar/tasks, career, projects, goals/habits and notes, plus an isolated synthetic preview. Desktop-only, minimum 1024×600, with pagination and forms fitting one viewport. Supabase is configured locally. Telegram is configured locally; owner pairing, status replies and note sync are verified. AI, external connectors and notification delivery remain later phases; nothing is deployed.
 
 JARVIS_SPEC.md contains the complete original requirements. Read IMPLEMENTATION_PLAN.md for architecture decisions, phase gates and verification status. See ARCHITECTURE.md, DATABASE.md, SECURITY.md, INTEGRATIONS.md and DEPLOYMENT.md before configuring real services.
 
@@ -72,4 +72,4 @@ The existing Supabase project is migrated for Phase 2. On the other computer, co
 
 ## Telegram on the primary computer
 
-This computer is the primary development workspace. Phase 3 command processing, protected pairing, Settings controls, local polling and a secure webhook endpoint are implemented. Telegram remains disabled until the owner configures it locally. See TELEGRAM.md for BotFather setup, safe numeric-ID identification and pairing; never send bot tokens in chat. `pnpm telegram:poll` runs locally without a public tunnel. The app can continue running at localhost:3000 without Telegram. No real bot has been verified yet.
+This computer is the primary development workspace. Phase 3 command processing, protected pairing, Settings controls, local polling and a secure webhook endpoint are implemented. Telegram is enabled and paired locally. See TELEGRAM.md for BotFather setup, safe numeric-ID identification and pairing; never send bot tokens in chat. `pnpm telegram:poll` runs locally without a public tunnel. The app can continue running at localhost:3000 without Telegram. Real owner pairing, status replies and note synchronization are verified; live undo and restart/retry checks remain.

@@ -133,3 +133,7 @@ Telegram implementation is ready for activation; live integration is not claimed
 - Live Telegram state storage: CRUD/isolation verified in a deliberately rolled-back transaction; no pairing/messages saved and no bot contacted.
 - CLI guard: polling refuses to start without explicit credentials/allowlist; identification-marker generation runs locally without network access.
 - Live bot acceptance remains pending the owner's local token, selected IDs, pairing and actual command verification. Master specification unchanged.
+
+### Live Telegram activation — October 15, 2026
+
+The owner saved the bot token locally. Telegram getMe authenticated it without exposing the token. A random marker sent by the owner identified the approved private chat; its IDs were saved to the ignored .env, and local polling was started. The owner completed the signed-in pairing flow. Database checks confirmed the approved pairing, delivered start/status replies, and a delivered note confirmation with no pending replies. The owner confirmed the note synced successfully to the website. Real /undo and polling-restart/retry verification remain outstanding; their automated tests pass. No public webhook or deployment was created.
