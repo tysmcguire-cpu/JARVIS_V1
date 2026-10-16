@@ -2,7 +2,7 @@ import 'server-only';
 import {z} from 'zod';
 import {db} from '@/lib/db';
 import type {withOwnerDatabase} from '@/lib/owner-db';
-import {synchronizeWithDatabase} from './live-service';
+import {synchronizeWithDatabase} from './sync-service';
 
 // Background identity comes only from the server allowlist, never a request parameter.
 export async function canvasFeedTick(){
