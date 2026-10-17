@@ -5,7 +5,7 @@ export const entities: Entity[] = definitions;
 export const trackingModules = ['finances', 'education', 'calendar', 'career', 'projects', 'goals', 'notes'];
 export function entityFor(key: string) { const entity = entities.find(e => e.key === key); if (!entity) throw new Error('Unknown record type.'); return entity; }
 export type RecordRow = { id: string; updatedAt: string; [key: string]: string };
-export type WorkspaceData = { rows: RecordRow[]; total: number; page: number; pageSize: number; options: Record<string, {id: string; title: string}[]>; relationsTruncated: boolean; summary: {label: string; value: string}[]; chart: {label: string; value: number}[]; calendar: {date: string; title: string}[] };
+export type WorkspaceData = { rows: RecordRow[]; total: number; page: number; pageSize: number; options: Record<string, {id: string; title: string}[]>; relationsTruncated: boolean; summary: {label: string; value: string}[]; chart: {label: string; value: number}[]; calendar: {id?:string;date: string; title: string;time?:string}[] };
 export const currencies = ['USD', 'CAD', 'EUR', 'GBP'];
 export function parseMoney(input: string): bigint {
   if (!/^-?\d{1,12}(\.\d{1,2})?$/.test(input)) throw new Error('Use a monetary amount with at most two decimal places.');
