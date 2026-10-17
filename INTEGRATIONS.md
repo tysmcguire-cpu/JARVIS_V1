@@ -28,3 +28,7 @@ Exact scopes and provider approval requirements must be rechecked against offici
 ## Telegram implementation status
 
 Phase 3 command handling and local setup are implemented; see TELEGRAM.md. TELEGRAM_ENABLED defaults to false, the bot token and approved IDs are missing, and no bot connection/webhook is claimed. Local polling is the primary mode on this computer. It requires no hosting or tunnel. The webhook endpoint is prepared for a separately authorized HTTPS deployment. No API call or message to a real bot was made during implementation.
+
+## Chase bank transaction history (2026-10-17)
+
+Read-only Chase/Plaid Transactions connection, encrypted owner-bound grant and OAuth session, periodic hosted-worker sync, atomic cursor reconciliation, pending-to-posted replacement, and paginated Finances bank history are implemented. Production is disabled without explicit free Trial confirmation and owner credentials/consent. No live bank connection has been tested. Existing manual ledger and alerts do not automatically include bank records. Additive bank-history migration extends existing provider/kind constraints and indexes; no new database role or paid worker is required. Revoke the bank Item before app-data deletion or snapshot replacement; backups exclude credentials and restores disconnect providers. See [CHASE_BANK_SETUP.md](CHASE_BANK_SETUP.md) for activation, free Trial limits and recovery details.

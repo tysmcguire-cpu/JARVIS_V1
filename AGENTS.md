@@ -17,3 +17,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+Owner bank preference: Chase transaction history with automatic read-only sync, no CSV requirement. Keep Plaid disabled until owner-configured credentials and consent. Production requires confirmed free Trial; never upgrade billing or connect the real bank autonomously. See CHASE_BANK_SETUP.md.

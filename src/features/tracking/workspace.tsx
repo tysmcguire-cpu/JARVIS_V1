@@ -5,12 +5,13 @@ import { currencies, entities, entityFor, formatMoney, moneyInput, type Field, t
 import { demoWorkspace, syntheticRecords } from './demo';
 import { deleteTracking, saveTracking, searchLinkedChoices } from './actions';
 import {canvasDetailFields,canvasFieldValue} from './canvas-fields';
+import {BankHistoryPanel} from '@/features/banking/history-panel';
 import { validateRecord } from './validation';
 const initialQuery=()=>({page:1,search:'',status:'',sort:'updatedAt',direction:'desc',month:new Date().toISOString().slice(0,7)});
 export function TrackingWorkspace({module,demo,initial}:{module:string;demo:boolean;initial?:WorkspaceData}) {
   const tabs=entities.filter(e=>e.module===module);const [key,setKey]=useState(tabs[0].key);const entity=entityFor(key);
   const [query,setQuery]=useState(initialQuery);const [fixtures,setFixtures]=useState(syntheticRecords);const [data,setData]=useState<WorkspaceData|undefined>(initial);
-  const [pending,startTransition]=useTransition();const [message,setMessage]=useState('');const [error,setError]=useState(false);const [editor,setEditor]=useState<RecordRow|null|undefined>();const [deleting,setDeleting]=useState<RecordRow>();const [values,setValues]=useState<Record<string,string>>({});const [fieldPage,setFieldPage]=useState(0);const [view,setView]=useState(module==='calendar'?'calendar':'records');const [sourceRow,setSourceRow]=useState<RecordRow>();const [calendarDay,setCalendarDay]=useState<string>();const [dayPage,setDayPage]=useState(0);
+  const [pending,startTransition]=useTransition();const [message,setMessage]=useState('');const [error,setError]=useState(false);const [editor,setEditor]=useState<RecordRow|null|undefined>();const [deleting,setDeleting]=useState<RecordRow>();const [values,setValues]=useState<Record<string,string>>({});const [fieldPage,setFieldPage]=useState(0);const [view,setView]=useState(module==='calendar'?'calendar':'records');const [sourceRow,setSourceRow]=useState<RecordRow>();const [calendarDay,setCalendarDay]=useState<string>();const [dayPage,setDayPage]=useState(0);const [bankView,setBankView]=useState(false);
   const generation=useRef(0);const controller=useRef<AbortController|null>(null);const dialog=useRef<HTMLDialogElement>(null);const trigger=useRef<HTMLElement|null>(null);
   useEffect(()=>()=>{generation.current++;controller.current?.abort()},[]);
   const shown=demo?demoWorkspace(key,fixtures,query):data;
@@ -34,9 +35,10 @@ export function TrackingWorkspace({module,demo,initial}:{module:string;demo:bool
   const dateField=entity.fields.find(f=>f.type==='date');
   const display=(row:RecordRow,name:string)=>{const f=entity.fields.find(f=>f.name===name)!;if(row.readOnly==='true'){const value=canvasFieldValue(row,name);return name==='dueDate'&&row.dueTime?value+' '+row.dueTime+' '+row.timezone:value;}return f.type==='relation'?shown?.options[f.target!]?.find(r=>r.id===row[name])?.title??'Linked record':f.type==='money'?formatMoney(BigInt(row[name]),String(row.currency??'USD')):row[name];};
   const firstDay=new Date(query.month+'-01T12:00:00Z');const dayCount=new Date(Date.UTC(firstDay.getUTCFullYear(),firstDay.getUTCMonth()+1,0)).getUTCDate();
+  if(bankView&&module==='finances')return <BankHistoryPanel demo={demo} onBack={()=>setBankView(false)}/>;
   return <section className="tracking-workspace" aria-busy={pending}>
     <header className="tracking-heading"><div><p className="eyebrow">{demo?'SYNTHETIC PREVIEW':'OWNER RECORDS'} / PHASE 02</p><h1>{findModule(module)!.label}</h1></div><button className="tracking-primary" disabled={pending||!shown} onClick={()=>open(null)}>+ Add {entity.label.toLowerCase()}</button></header>
-    <nav className="tracking-tabs" aria-label="Record types">{tabs.map(tab=><button key={tab.key} aria-pressed={tab.key===key} disabled={pending} onClick={()=>{setKey(tab.key);setQuery(initialQuery());setView(module==='calendar'?'calendar':'records');setMessage('');if(!demo){setData(undefined);load(tab.key,initialQuery());}}}>{tab.label}</button>)}</nav>
+    <nav className="tracking-tabs" aria-label="Record types">{tabs.map(tab=><button key={tab.key} aria-pressed={tab.key===key} disabled={pending} onClick={()=>{setKey(tab.key);setQuery(initialQuery());setView(module==='calendar'?'calendar':'records');setMessage('');if(!demo){setData(undefined);load(tab.key,initialQuery());}}}>{tab.label}</button>)}{module==='finances'&&<button onClick={()=>setBankView(true)}>Bank transactions</button>}</nav>
     {!(module==='calendar'&&view==='calendar')&&<div className="tracking-summary">{shown?.summary.map((s,i)=><div key={s.label+i}><span>{s.label}</span><strong>{s.value}</strong></div>)}</div>}
     <form className="tracking-toolbar" onSubmit={e=>{e.preventDefault();const form=new FormData(e.currentTarget);changeQuery({search:String(form.get('search')??''),page:1});}}>
       <input aria-label="Search titles" name="search" placeholder="Search titles…" maxLength={100} key={key} /><button disabled={pending}>Search</button>
