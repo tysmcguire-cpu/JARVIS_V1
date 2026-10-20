@@ -5,5 +5,5 @@ export const dynamic = "force-dynamic";
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
   await requireOwner();
   const settings=await readSettings();
-  return <AppearanceProvider initial={settings?{primaryColor:settings.primaryColor,secondaryColor:settings.secondaryColor}:undefined}>{children}</AppearanceProvider>;
+  return <AppearanceProvider initial={settings?{primaryColor:settings.primaryColor,secondaryColor:settings.secondaryColor,background:settings.background as 'current'|'black'|'white'}:undefined}>{children}</AppearanceProvider>;
 }

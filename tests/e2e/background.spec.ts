@@ -1,0 +1,11 @@
+import {test,expect} from '@playwright/test';
+test('background choices persist across pages and reload, with readable panels and a styled wordmark',async({page},info)=>{
+ test.setTimeout(90000);await page.setViewportSize({width:1024,height:600});
+ for(const choice of ['white','black','current']){
+  await page.goto('/demo/settings');await page.getByRole('button',{name:'Appearance',exact:true}).click();await page.getByRole('radio',{name:choice[0].toUpperCase()+choice.slice(1),exact:true}).check();await page.getByRole('button',{name:'Save palette',exact:true}).click();await expect(page.locator('.appearance-root')).toHaveAttribute('data-background',choice);expect(await page.locator('.appearance-panel').evaluate(e=>e.scrollHeight<=e.clientHeight)).toBe(true);
+  await page.reload();await expect(page.locator('.appearance-root')).toHaveAttribute('data-background',choice);await page.getByRole('button',{name:'Appearance',exact:true}).click();await expect(page.getByRole('radio',{name:choice[0].toUpperCase()+choice.slice(1),exact:true})).toBeChecked();await page.getByRole('button',{name:'Reset colors',exact:true}).click();await expect(page.getByRole('radio',{name:choice[0].toUpperCase()+choice.slice(1),exact:true})).toBeChecked();await page.screenshot({path:'test-results/'+info.project.name+'-appearance-'+choice+'.png'});
+  await page.goto('/demo');await expect(page.locator('.appearance-root')).toHaveAttribute('data-background',choice);await expect(page.locator('.flowing-wordmark strong')).toHaveText('JARVIS');expect(await page.locator('.flowing-wordmark strong').evaluate(e=>getComputedStyle(e).fontStyle)).toBe('italic');await page.screenshot({path:'test-results/'+info.project.name+'-dashboard-'+choice+'.png'});
+  if(choice!=='current')expect(await page.locator('.workspace').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe(choice==='white'?'rgb(255, 255, 255)':'rgb(0, 0, 0)');
+  await page.goto('/demo/finances');await expect(page.locator('.appearance-root')).toHaveAttribute('data-background',choice);await expect(page.getByRole('region',{name:'Logged transactions'})).toBeVisible();await page.screenshot({path:'test-results/'+info.project.name+'-finance-'+choice+'.png'});expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }
+});

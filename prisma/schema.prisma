@@ -87,6 +87,7 @@ model AiSourceReference {
 }
 
 model UserSettings {
+  background String @default("current") @db.VarChar(10)
   primaryColor String @default("#69d8f3") @db.VarChar(7)
   secondaryColor String @default("#b1a0ff") @db.VarChar(7)
   notificationTelegramEnabled Boolean  @default(false)
