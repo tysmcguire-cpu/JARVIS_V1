@@ -1,11 +1,11 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {EditorContent,useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import {Markdown} from '@tiptap/markdown';
 import {Fragment,Slice} from '@tiptap/pm/model';
 import {Bold,Italic,Strikethrough,Heading2,List,ListOrdered,Quote,Code,Undo2,Redo2,Type} from 'lucide-react';
-export function NoteEditor({content,onChange,disabled,reset=0}:{content:string;onChange:(value:string)=>void;disabled:boolean;reset?:number}){
+export function NoteEditor({content,onChange,disabled,heading,reset=0}:{content:string;onChange:(value:string)=>void;disabled:boolean;heading?:ReactNode;reset?:number}){
  const viewport=useRef<HTMLDivElement>(null),[page,setPage]=useState(0),[height,setHeight]=useState(110),[documentHeight,setDocumentHeight]=useState(110);
  const editor=useEditor({extensions:[StarterKit.configure({link:false,underline:false,trailingNode:false,heading:{levels:[1,2,3]}}),Markdown.configure({markedOptions:{gfm:true,breaks:true}})],content,contentType:'markdown',immediatelyRender:false,shouldRerenderOnTransaction:true,editorProps:{attributes:{role:'textbox','aria-label':'Note content','aria-multiline':'true',class:'note-body'},handleScrollToSelection:()=>true,handlePaste:(view,event)=>{
   const text=event.clipboardData?.getData('text/plain');if(text===undefined)return false;event.preventDefault();
@@ -35,5 +35,5 @@ export function NoteEditor({content,onChange,disabled,reset=0}:{content:string;o
   {name:'Undo',icon:Undo2,run:()=>editor?.chain().focus().undo().run()},
   {name:'Redo',icon:Redo2,run:()=>editor?.chain().focus().redo().run()},
  ];
- return <div className="rich-note-shell"><div role="toolbar" aria-label="Note formatting" className="note-toolbar">{tools.map(tool=><button key={tool.name} type="button" aria-label={tool.name} title={tool.name} aria-pressed={tool.active} disabled={disabled||!editor} onMouseDown={event=>event.preventDefault()} onClick={tool.run}><tool.icon size={15}/></button>)}</div><div ref={viewport} className="note-viewport" onClick={event=>{if(event.target===event.currentTarget)editor?.commands.focus('end')}}><div className="note-page" style={{height}}><div className="note-document" style={{transform:`translateY(-${part*height}px)`}}><EditorContent editor={editor}/></div></div></div><div className="note-parts"><button type="button" disabled={part===0} onClick={()=>setPage(part-1)}>Previous section</button><span>{part+1} / {pages}</span><button type="button" disabled={part>=pages-1} onClick={()=>setPage(part+1)}>Next section</button></div></div>;
+ return <div className="rich-note-shell"><div role="toolbar" aria-label="Note formatting" className="note-toolbar">{tools.map(tool=><button key={tool.name} type="button" aria-label={tool.name} title={tool.name} aria-pressed={tool.active} disabled={disabled||!editor} onMouseDown={event=>event.preventDefault()} onClick={tool.run}><tool.icon size={15}/></button>)}</div>{heading}<div ref={viewport} className="note-viewport" onClick={event=>{if(event.target===event.currentTarget)editor?.commands.focus('end')}}><div className="note-page" style={{height}}><div className="note-document" style={{transform:`translateY(-${part*height}px)`}}><EditorContent editor={editor}/></div></div></div><div className="note-parts"><button type="button" disabled={part===0} onClick={()=>setPage(part-1)}>Previous section</button><span>{part+1} / {pages}</span><button type="button" disabled={part>=pages-1} onClick={()=>setPage(part+1)}>Next section</button></div></div>;
 }

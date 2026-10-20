@@ -314,7 +314,7 @@ Preserved the Notes index/reading-pane layout and replaced Open/edit with direct
 
 Tiptap 3.32.0 is loaded only for Notes. Plain-text pasting and disabled link/image extensions keep remote markup inert. A complete document is paged through a clipped viewport, preserving the desktop-only 1024×600/no-scrolling override without splitting stored text or rich-text nodes. No private records, credentials or integrations were changed; the complete master specification is unchanged.
 
-Executed verification: all 209 unit/database tests, nine Notes/tracking/module browser regressions, lint, TypeScript, production build, three production boundary tests and the 46-asset client-secret scan passed. Browser coverage includes formatting/save round-trips, discard, keyboard save, undo/redo, unsaved navigation, full long-note access at minimum size and inert malicious stored/pasted markup. Minimum-size editor and final-page screenshots were visually reviewed. This change is local pending an owner-requested push/deployment.
+Executed verification: all 209 unit/database tests, nine Notes/tracking/module browser regressions, lint, TypeScript, production build, three production boundary tests and the 46-asset client-secret scan passed. Browser coverage includes formatting/save round-trips, discard, keyboard save, undo/redo, unsaved navigation, full long-note access at minimum size and inert malicious stored/pasted markup. Minimum-size editor and final-page screenshots were visually reviewed. The owner subsequently authorized automatic push/deployment for completed changes; the inline editor was pushed as b7d4bcc.
 
 ## Primary hover highlights and pulsing outer ring — October 20, 2026
 
@@ -323,3 +323,9 @@ Sidebar module hover/keyboard focus and record/settings tab hover now explicitly
 Replaced the outermost static satellite outline with an SVG ring whose equal-point paths smoothly morph through three six/eleven-wave shapes. A separate slow scale/opacity pulse keeps the effect centered and follows the primary color. Existing satellite nodes and inner core remain. CSS effects obey Pause/reduced-motion controls and remain behind module hit targets.
 
 Executed verification: two dashboard layout/motion scenarios across six desktop aspect ratios plus two final hover/ring scenarios passed. Tests use a green primary with a black third color across all three background modes, verify actual hover/focus background colors, seek the ring animations to confirm changing path geometry/scale, and verify Pause/reduced motion. Minimum-size hover and ring screenshots were visually reviewed. Lint, TypeScript/production build, three production boundary checks and a 41-asset client-secret scan passed. No database, owner preference, credential or provider changes. Master specification unchanged; hosted acceptance follows Render deployment.
+
+## Notes toolbar and original background — October 20, 2026
+
+Moved the formatting toolbar above the note tag/title within the same editor pane. Renamed the Current background option to Original blue-gray and fixed its workspace, sidebar and panel surfaces independently of the third detail color. Kept the stored current enum for compatibility; no migration or owner preference write is required. Contrast protection includes the restored surfaces. The desktop-only single-screen override and complete master specification remain unchanged.
+
+Verification: 209 unit/database tests, five Notes/Appearance browser scenarios, lint, TypeScript/production build, three production boundary checks and the 46-asset client-secret scan passed. The minimum-size Notes screenshot was reviewed. The owner authorizes pushing/deploying completed verified changes automatically from now on.
