@@ -53,3 +53,9 @@
 .appearance-root[data-background=white] .wordmark-preview{color:var(--app-detail-text)}
 .appearance-root[data-background=white] .finance-bars line{stroke:var(--app-light-border)}
 .appearance-root[data-background=white] .nav-caption,.appearance-root[data-background=white] .workspace-footer{color:var(--app-detail-text)}
+/* Hover and keyboard focus are primary accents, independent of detail text. */
+.appearance-root .nav-item:is(:hover,:focus-visible),.appearance-root .tracking-tabs button:is(:hover,:focus-visible){background:color-mix(in srgb,var(--app-primary) 24%,#101010);border-color:var(--app-primary);box-shadow:inset 2px 0 var(--app-primary);color:color-mix(in srgb,var(--app-primary) 65%,white)!important}
+.appearance-root .nav-item:is(:hover,:focus-visible) .nav-copy{color:color-mix(in srgb,var(--app-primary) 65%,white)!important}
+.appearance-root .tracking-workspace .tracking-tabs button:is(:hover,:focus-visible){background:color-mix(in srgb,var(--app-primary) 24%,#101010);border-color:var(--app-primary)}
+.appearance-root[data-background=white] .nav-item:is(:hover,:focus-visible),.appearance-root[data-background=white] .tracking-tabs button:is(:hover,:focus-visible),.appearance-root[data-background=white] .tracking-workspace .tracking-tabs button:is(:hover,:focus-visible){background:color-mix(in srgb,var(--app-primary) 24%,white);border-color:color-mix(in srgb,var(--app-primary) 70%,black);color:color-mix(in srgb,var(--app-primary) 42%,black)!important}
+.appearance-root[data-background=white] .nav-item:is(:hover,:focus-visible) .nav-copy{color:color-mix(in srgb,var(--app-primary) 42%,black)!important}

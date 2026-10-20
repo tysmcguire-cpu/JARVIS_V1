@@ -39,3 +39,5 @@ JARVIS font styles: Settings → Appearance includes a live preview and 12 dashb
 Dashboard motion now includes 24 drifting particles, a sliding peripheral grid, traveling circuit traces and three additional satellite orbits. Effects stay behind module hit targets, use the saved palette and obey Pause/reduced-motion controls. The core glow remains centered.
 
 Third-color correction: White mode now derives detail text, borders and chart labels from your third color instead of overriding them with fixed gray. Text uses darker shades on White and readable lighter tones on Current/Black, including when you choose pure white or black. Your saved color remains the same; displayed shades adapt to the selected background.
+
+Hover follow-up: sidebar module links and record/settings tabs use the primary color on hover and keyboard focus, independent of the third color in every background mode. The dashboard's outermost ring now pulses and morphs into a gentle wave, respecting Pause and reduced-motion settings.
