@@ -87,6 +87,7 @@ model AiSourceReference {
 }
 
 model UserSettings {
+  wordmarkStyle String @default("original") @db.VarChar(20)
   tertiaryColor String @default("#87a8bc") @db.VarChar(7)
   background String @default("current") @db.VarChar(10)
   primaryColor String @default("#69d8f3") @db.VarChar(7)

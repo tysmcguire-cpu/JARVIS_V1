@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import {Wordmark} from './wordmark';
 import {useAppearance} from "@/features/settings/appearance-provider";
 
 /** Original, decorative light ribbons. No AI activity or external telemetry. */
@@ -92,5 +93,5 @@ export function FlowingCore({ paused }: { paused: boolean }) {
     resize(); sync();
     return () => { stopped = true; cancelAnimationFrame(frame); observer.disconnect(); preference.removeEventListener("change", sync); document.removeEventListener("visibilitychange", sync); };
   }, [paused,palette]);
-  return <div className="flowing-core" aria-hidden="true"><div className="flowing-aura" /><canvas ref={ref} width={600} height={600} /><div className="flowing-wordmark"><strong>JARVIS</strong></div></div>;
+  return <div className="flowing-core" aria-hidden="true"><div className="flowing-aura" /><canvas ref={ref} width={600} height={600} /><div className="flowing-wordmark"><Wordmark variant={palette.wordmarkStyle}/></div></div>;
 }

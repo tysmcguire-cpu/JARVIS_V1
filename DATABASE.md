@@ -63,3 +63,5 @@ Appearance settings (20261019000000_appearance) add primaryColor and secondaryCo
 Migration 20261020000000_background adds UserSettings.background with the existing appearance as the default ('current') and a database constraint accepting only current/black/white. Existing owner-scoped settings updates and exact-action appearance audit policies apply. Older backups restore 'current' if the field is absent; older demo palette cookies also default to 'current'.
 
 Migration 20261020010000_tertiary_color adds UserSettings.tertiaryColor with a six-digit hex constraint and the existing muted blue-gray default. Existing owner-scoped settings writes/audit apply. Older saved demo palettes and backups default the missing third color; current primary/secondary colors and background preferences are preserved.
+
+Migration 20261020020000_wordmark_styles adds UserSettings.wordmarkStyle, defaults existing owners to original, and constrains values to the 12 supported style identifiers. Existing owner-scoped appearance writes/audit apply; older saved demo palettes and backups default to original. No existing color/background choice is overwritten.
