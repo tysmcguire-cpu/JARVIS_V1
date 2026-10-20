@@ -5,6 +5,7 @@ import { withOwnerDatabase } from '@/lib/owner-db';
 import { entities, entityFor, formatMoney, type WorkspaceData } from './config';
 import { recordId, validateRecord } from './validation';
 import {workspaceQuery} from './read-query';
+import {categoryName,resolveCategory} from './categories';
 const quoted = (name: string) => `"${name}"`; // Names come exclusively from the static entity definitions.
 type ReadResult=Omit<WorkspaceData,"summary"|"chart"> & {facts:ModuleFacts;statuses:{label:string;value:number}[];balances?:{currency:string;balance:string}[];spending?:{label:string;value:string}[];grade?:{earned:string;possible:string};budgetSpending?:{title:string;currency:string;spent:string}[]};
 export async function readWorkspace(key:string,input:unknown):Promise<WorkspaceData>{
@@ -24,6 +25,11 @@ export async function readWorkspace(key:string,input:unknown):Promise<WorkspaceD
 export async function writeRecord(key: string, input: unknown, id?: string, expectedUpdatedAt?: string) {
   const entity=entityFor(key); const values=validateRecord(key,input); if(id)recordId.parse(id);
   return withOwnerDatabase(async(tx,ownerId)=>{
+    if(key==='Category'){
+      values.title=categoryName(String(values.title));
+      const existing=await resolveCategory(tx,ownerId,String(values.title),String(values.kind));
+      if(existing&&existing!==id)throw Error('A category with this name and type already exists. Use the existing category.');
+    }
     for(const field of entity.fields.filter(f=>f.target)) {
       const found=await tx.$queryRawUnsafe<{id:string}[]>(`SELECT id FROM ${quoted(field.target!)} WHERE id=$1::uuid AND "userId"=$2::uuid`,values[field.name],ownerId);
       if(!found.length)throw Error('A linked record is unavailable.');
@@ -64,5 +70,5 @@ export async function removeRecord(key:string,id:string,updatedAt:string) {
 export function moduleForEntity(key:string) {return entities.find(e=>e.key===key)?.module;}
 export async function readLinkedChoices(key:string,fieldName:string,search:string) {
  const entity=entityFor(key);const field=entity.fields.find(f=>f.name===fieldName&&f.target);if(!field||search.length>100)throw Error('Invalid linked-record search.');
- return withOwnerDatabase((tx,ownerId)=>tx.$queryRawUnsafe<{id:string;title:string}[]>(`SELECT id,title FROM "${field.target}" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY title,id LIMIT 50`,ownerId,`%${search.replace(/[\\%_]/g,'\\$&')}%`));
+ return withOwnerDatabase((tx,ownerId)=>tx.$queryRawUnsafe<{id:string;title:string;kind?:string}[]>(`SELECT id,title${field.target==='Category'?",kind":""} FROM "${field.target}" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY title,id LIMIT 50`,ownerId,`%${search.replace(/[\\%_]/g,'\\$&')}%`));
 }

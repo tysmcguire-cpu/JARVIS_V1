@@ -1,5 +1,13 @@
 # Implementation plan
 
+## Unified budgets and primary filter hover — October 20, 2026
+
+Owner requested one Budgets tab instead of separate Budgets/Budget limits, a left-hand list and right-hand remaining-spend graph, and a Label/Category/Limit form with inline expense-category creation. The UI retains the normalized Budget/BudgetCategory storage, existing date ranges, currencies and grouped allocations. New records use the selected month/currency. Category resolution, parent/allocation inserts and audits commit atomically; stale edits roll back newly created categories. Explicit budget deletion removes the selected allocation and its period container only when no other allocation remains. Expenses use exact minor-unit sums bounded to the saved period/currency. Pages remain bounded at 1024×600. No schema migration or provider activation is needed.
+
+Selected-tab specificity had allowed detail-color rules to win on hover. Final primary hover/focus rules now cover module/settings tabs, notification sections and filter controls in all backgrounds. Category choices display kind, budgets suggest expense kinds only, and manual/inline/Telegram category creation shares normalized case/whitespace lookup and an owner transaction lock. Read-only owner-scoped inspection distinguished same-name income/expense records; no owner category or transaction was merged, deleted or reclassified. The master specification remains unchanged.
+
+Executed validation: 205 unit/database tests, eight focused desktop browser regressions (all tracking tabs/forms at 1024×600, finance overview, budget create/edit/delete/overspending and primary hover across every tracking module, Settings/Notifications and all background modes), three production security checks, ESLint, TypeScript, production build and 41-asset client-secret scan passed. Budget screenshot reviewed. Existing grouped periods/currencies and stale-write rollback were covered in embedded PostgreSQL. No live owner data was written and no hosted deployment was performed.
+
 The complete JARVIS_SPEC.md is authoritative. All six implementation phases are built locally. The owner authorized continuing through all phases on this primary computer on October 16, 2026. External activation, actual owner recovery rehearsal and hosted acceptance remain setup gates in OWNER_SETUP.md. Historical notes below describe their original scope and do not override this current status.
 
 ## Phase 6 completion — October 16, 2026

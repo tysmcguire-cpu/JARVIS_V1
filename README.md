@@ -76,6 +76,8 @@ This computer is the primary development workspace. Phase 3 command processing, 
 
 ## Integrations and financial CSV
 
+Finances → Budgets combines category allocations into a single list and remaining-spend graph. Choose month/currency in the toolbar, then add a budget using Label, Category and Limit. Typing a new category creates an expense category in the same transaction; existing names are matched ignoring case and repeated whitespace. Editing preserves the saved period/currency. Spending includes only expenses in that period and currency; overspending is shown explicitly. Existing grouped allocations remain separate editable rows. Category choices show expense/income types, since matching names across those types can be legitimate. No migration is needed for this UI change.
+
 The Assistant is available for local grounded analysis and on-demand weekly reviews. Optional OpenAI question interpretation stays disabled until API key/model/billing are configured locally. See ASSISTANT.md for scope, privacy, setup and Telegram `/ask`. Record contents remain local; it is not a general conversational chatbot.
 
 Open Settings → Integrations and CSV. CSV import supports account/category choice, column/date/sign mapping, paginated preview, duplicate review and atomic confirmation. It writes internal records without connecting a bank. Create the destination account and categories in Finances first.

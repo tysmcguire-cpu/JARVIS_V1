@@ -4,18 +4,18 @@ test('every tracking tab fits the minimum desktop viewport',async({page},info)=>
  await page.setViewportSize({width:1024,height:600});
  for(const slug of ['finances','education','calendar','career','projects','goals','notes']){
  await page.goto('/demo/'+slug);await expect(page.locator('.tracking-workspace')).toBeVisible();
- for(const entity of entities.filter(e=>e.module===slug)){
- await page.getByRole('navigation',{name:'Record types'}).getByRole('button',{name:entity.label,exact:true}).click();
+ for(const entity of entities.filter(e=>e.module===slug&&e.key!=='Budget')){
+ await page.getByRole('navigation',{name:'Record types'}).getByRole('button',{name:entity.key==='BudgetCategory'?'Budgets':entity.label,exact:true}).click();
  if(slug==='calendar')await page.getByRole('button',{name:'Records',exact:true}).click();
- await expect(page.getByRole('button',{name:'+ Add '+entity.label.toLowerCase(),exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'+ Add '+(entity.key==='BudgetCategory'?'budget':entity.label.toLowerCase()),exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight)).toBe(true);
  const pagination=await page.locator('.tracking-pagination').boundingBox();expect(pagination!.y+pagination!.height).toBeLessThanOrEqual(576);
- await page.getByRole('button',{name:'+ Add '+entity.label.toLowerCase(),exact:true}).click();
+ await page.getByRole('button',{name:'+ Add '+(entity.key==='BudgetCategory'?'budget':entity.label.toLowerCase()),exact:true}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
  expect(await dialog.evaluate(e=>e.scrollHeight<=e.clientHeight&&e.scrollWidth<=e.clientWidth)).toBe(true);
  if(await dialog.getByRole('button',{name:'Continue',exact:true}).count()) {await dialog.getByRole('button',{name:'Continue',exact:true}).click();expect(await dialog.evaluate(e=>e.scrollHeight<=e.clientHeight)).toBe(true);}
  await page.keyboard.press('Escape');await expect(dialog).not.toBeVisible();
- const table=page.locator('.tracking-table-wrap,.finance-log');expect(await table.evaluate(e=>e.scrollWidth<=e.clientWidth&&e.scrollHeight<=e.clientHeight)).toBe(true);
+ const table=page.locator('.tracking-table-wrap,.finance-log,.budget-workspace');expect(await table.evaluate(e=>e.scrollWidth<=e.clientWidth&&e.scrollHeight<=e.clientHeight)).toBe(true);
  }
  if(slug==='finances'||slug==='goals')await page.screenshot({path:`test-results/${info.project.name}-${slug}-tracking.png`});
  }

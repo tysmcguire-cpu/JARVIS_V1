@@ -15,9 +15,8 @@ vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:async(callback:(tx:unknown,id:s
  };return callback(adapter,owner);
 })}));
 import { writeRecord,readWorkspace,removeRecord,readLinkedChoices } from '@/features/tracking/repository';
+import {writeBudget,removeBudget} from '@/features/tracking/budget-repository';
 describe('actual tracking repository against PostgreSQL',()=>{
- beforeAll(async()=>{database=new PGlite();await database.exec(`CREATE SCHEMA auth;CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE runtime;GRANT USAGE ON SCHEMA public,auth TO runtime;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;INSERT INTO auth.users VALUES('${owner}');`);await database.exec(readFileSync('prisma/migrations/20261015000000_foundation/migration.sql','utf8'));await database.exec(readFileSync('prisma/migrations/20261016000000_core_tracking/migration.sql','utf8'));await database.exec(readFileSync('prisma/migrations/20261016020000_integrations/migration.sql','utf8'));await database.exec(`GRANT SELECT ON "ApiConnection","ExternalRecord","UserSettings" TO runtime;INSERT INTO "User"(id,"updatedAt")VALUES('${owner}',now());GRANT SELECT,INSERT,UPDATE,DELETE ON ${entities.map(e=>'"'+e.key+'"').join(',')} TO runtime;GRANT INSERT ON "AuditLog" TO runtime;`);},30000);
- afterAll(async()=>database?.close());
  it('creates, searches, updates with concurrency control, and deletes',async()=>{
  await writeRecord('Note',{title:'100% real title',content:'First','tag':'test'});let view=await readWorkspace('Note',{search:'%'});expect(view.total).toBe(1);const row=view.rows[0];await writeRecord('Note',{title:'Edited',content:'Second','tag':'test'},row.id,row.updatedAt);await expect(writeRecord('Note',{title:'Stale',content:'','tag':''},row.id,row.updatedAt)).rejects.toThrow('changed');view=await readWorkspace('Note',{});expect(view.rows[0].title).toBe('Edited');await removeRecord('Note',row.id,view.rows[0].updatedAt);expect((await readWorkspace('Note',{})).total).toBe(0);expect((await database.query('SELECT * FROM "AuditLog"')).rows).toHaveLength(3);
  });
@@ -52,5 +51,31 @@ it('makes every saved assignment reachable with six-row pagination and stable or
  for(let i=0;i<14;i++)await writeRecord('Assignment',{title:'Pagination assignment '+String(i).padStart(2,'0'),courseId:course.id,dueDate:'2026-10-25',status:'planned',pointsPossible:'100'});
  const ids=new Set<string>();for(let page=1;page<=3;page++){const data=await readWorkspace('Assignment',{search:'Pagination assignment',sort:'title',direction:'asc',page});expect(data.total).toBe(14);expect(data.pageSize).toBe(6);expect(data.rows).toHaveLength(page===3?2:6);data.rows.forEach(r=>ids.add(r.id))}expect(ids.size).toBe(14);expect((await readWorkspace('Assignment',{search:'Pagination assignment',page:999})).page).toBe(3);
 });
+
+ it('saves monthly budgets atomically, reuses normalized expense categories, and preserves legacy periods on edit',async()=>{
+  await writeBudget({title:'Groceries budget',category:'  Groceries   home  ',limit:'25.10',month:'2026-10',currency:'USD'});
+  const view=await readWorkspace('BudgetCategory',{search:'Groceries budget',period:true,month:'2026-10',currency:'USD'}),row=view.rows[0];
+  expect(row).toMatchObject({title:'Groceries budget',categoryTitle:'Groceries home',limitAmount:'2510',spent:'0',startDate:'2026-10-01',endDate:'2026-10-31',currency:'USD'});
+  await writeBudget({title:'Household budget',category:'groceries home',limit:'30',month:'2026-11',currency:'USD'});
+  expect((await readWorkspace('Category',{search:'Groceries home'})).total).toBe(1);
+  await expect(writeRecord('Category',{title:' GROCERIES   HOME ',kind:'expense'})).rejects.toThrow('already exists');
+  await writeBudget({title:'Groceries revised',category:'Groceries home',limit:'40',month:'2026-11',currency:'EUR'},row.id,row.updatedAt);
+  const revised=(await readWorkspace('BudgetCategory',{search:'Groceries revised'})).rows[0];expect(revised).toMatchObject({limitAmount:'4000',startDate:'2026-10-01',endDate:'2026-10-31',currency:'USD'});
+  await expect(writeBudget({title:'Stale',category:'Must roll back',limit:'99',month:'2026-10',currency:'USD'},row.id,row.updatedAt)).rejects.toThrow('changed');
+  expect((await readWorkspace('Category',{search:'Must roll back'})).total).toBe(0);
+  expect((await readWorkspace('BudgetCategory',{search:'Groceries revised',period:true,month:'2026-11',currency:'USD'})).total).toBe(0);
+  expect((await readWorkspace('BudgetCategory',{search:'Groceries revised',period:true,month:'2026-10',currency:'EUR'})).total).toBe(0);
+  const account=(await readWorkspace('FinancialAccount',{search:'USD account'})).rows[0];
+  for(const [date,amount] of [['2026-10-01','0.10'],['2026-10-31','0.20'],['2026-11-01','999']])await writeRecord('Transaction',{title:'Budget spending fixture',accountId:account.id,categoryId:row.categoryId,amount,date});
+  expect((await readWorkspace('BudgetCategory',{search:'Groceries revised'})).rows[0].spent).toBe('30');
+  await expect(writeBudget({title:'Bad',category:'Bad',limit:'-1',month:'2026-10',currency:'USD'})).rejects.toThrow();
+  await expect(removeBudget(row.id,row.updatedAt)).rejects.toThrow('changed');
+  await removeBudget(revised.id,revised.updatedAt);
+  expect((await readWorkspace('BudgetCategory',{search:'Groceries revised'})).total).toBe(0);
+  expect((await readWorkspace('Budget',{search:'Groceries revised'})).total).toBe(0);
+  expect((await readWorkspace('Category',{search:'Groceries home'})).total).toBe(1);
+ });
+ beforeAll(async()=>{database=new PGlite();await database.exec(`CREATE SCHEMA auth;CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE runtime;GRANT USAGE ON SCHEMA public,auth TO runtime;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;INSERT INTO auth.users VALUES('${owner}');`);await database.exec(readFileSync('prisma/migrations/20261015000000_foundation/migration.sql','utf8'));await database.exec(readFileSync('prisma/migrations/20261016000000_core_tracking/migration.sql','utf8'));await database.exec(readFileSync('prisma/migrations/20261016020000_integrations/migration.sql','utf8'));await database.exec(`GRANT SELECT ON "ApiConnection","ExternalRecord","UserSettings" TO runtime;INSERT INTO "User"(id,"updatedAt")VALUES('${owner}',now());GRANT SELECT,INSERT,UPDATE,DELETE ON ${entities.map(e=>'"'+e.key+'"').join(',')} TO runtime;GRANT INSERT ON "AuditLog" TO runtime;`);},30000);
+ afterAll(async()=>database?.close());
 
 });

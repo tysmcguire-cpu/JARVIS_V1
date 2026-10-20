@@ -15,7 +15,8 @@ export function workspaceQuery(key:string,input:unknown){
  const date=entity.fields.find(f=>f.type==='date'),sort=query.sort==='date'?date?.name??'updatedAt':query.sort;
  const automaticMonth=key==='Transaction'&&query.period&&!(input&&typeof input==='object'&&'month' in input);
  const requestedPage=bind(query.page),monthValue=bind(automaticMonth?null:query.month+'-01'),month=automaticMonth?`COALESCE(${monthValue}::date,date_trunc('month',CURRENT_TIMESTAMP AT TIME ZONE COALESCE((SELECT timezone FROM "UserSettings" WHERE "userId"=${owner}),'America/Chicago'))::date)`:monthValue;
- const financeCurrency=key==='Transaction'?bind(query.currency??'USD'):'';
+ const financeCurrency=key==='Transaction'||(key==='BudgetCategory'&&query.period)?bind(query.currency??'USD'):'';
+ if(key==='BudgetCategory'&&query.period)where+=` AND EXISTS(SELECT 1 FROM "Budget" b WHERE b.id="budgetId" AND b."userId"=${owner} AND b.currency=${financeCurrency}::text AND b."startDate"<${month}::date+interval '1 month' AND b."endDate">=${month}::date)`;
  if(key==='Transaction'){
  if(query.period)where+=` AND date>=${month}::date AND date<${month}::date+interval '1 month'`;
  where+=` AND EXISTS(SELECT 1 FROM "FinancialAccount" a WHERE a.id="accountId" AND a."userId"=${owner} AND a.currency=${financeCurrency}::text)`;
@@ -26,14 +27,17 @@ export function workspaceQuery(key:string,input:unknown){
  const fields=['id',...entity.fields.map(f=>f.name)];
  const rowValues=fields.flatMap(f=>[`'${f}'`,`r."${f}"::text`]);rowValues.push(`'updatedAt'`,`to_char(r."updatedAt" AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`);
  if(key==='Transaction')rowValues.push("'categoryKind'",`(SELECT kind FROM "Category" c WHERE c.id=r."categoryId" AND c."userId"=${owner})`);
+ if(key==='BudgetCategory'){
+  rowValues.push("'categoryTitle'",`(SELECT title FROM "Category" c WHERE c.id=r."categoryId" AND c."userId"=${owner})`,"'startDate'",`(SELECT "startDate"::text FROM "Budget" b WHERE b.id=r."budgetId" AND b."userId"=${owner})`,"'endDate'",`(SELECT "endDate"::text FROM "Budget" b WHERE b.id=r."budgetId" AND b."userId"=${owner})`,"'spent'",`(SELECT COALESCE(sum(t.amount),0)::text FROM "Transaction" t JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" JOIN "Budget" b ON b.id=r."budgetId" AND b."userId"=${owner} JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" WHERE t."userId"=${owner} AND t."categoryId"=r."categoryId" AND c.kind='expense' AND a.currency=b.currency AND t.date BETWEEN b."startDate" AND b."endDate")`);
+ }
  if(key==='FinancialAccount')rowValues.push("'currentBalance'",`(r."openingBalance"+COALESCE((SELECT sum(CASE WHEN c.kind='income' THEN t.amount ELSE -t.amount END) FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" WHERE t."accountId"=r.id AND t."userId"=${owner}),0))::text`);
  const parent=entity.fields.some(f=>f.name==='accountId')?{table:'FinancialAccount',field:'accountId'}:entity.fields.some(f=>f.name==='budgetId')?{table:'Budget',field:'budgetId'}:null;
  if(parent)rowValues.push(`'currency'`,`(SELECT currency FROM "${parent.table}" p WHERE p.id=r."${parent.field}" AND p."userId"=${owner})`);
  const targets=[...new Set(entity.fields.filter(f=>f.target).map(f=>f.target!))],options:string[]=[],truncated:string[]=[];
  for(const target of targets){
  const related=entity.fields.filter(f=>f.target===target).map(f=>`p.id IN(SELECT "${f.name}" FROM page_rows)`).join(' OR ');
- ctes.push(`base_${target} AS MATERIALIZED(SELECT id,title FROM "${target}" WHERE "userId"=${owner} ORDER BY title,id LIMIT 501)`);
- options.push(`'${target}'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(o) ORDER BY title,id),'[]'::jsonb) FROM(SELECT * FROM(SELECT * FROM base_${target} ORDER BY title,id LIMIT 500) first_choices UNION ALL SELECT p.id,p.title FROM "${target}" p WHERE p."userId"=${owner} AND (${related}) AND p.id NOT IN(SELECT id FROM base_${target} ORDER BY title,id LIMIT 500)) o)`);
+ ctes.push(`base_${target} AS MATERIALIZED(SELECT id,title${target==='Category' ? ",kind" : ""} FROM "${target}" WHERE "userId"=${owner} ORDER BY title,id LIMIT 501)`);
+ options.push(`'${target}'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(o) ORDER BY title,id),'[]'::jsonb) FROM(SELECT * FROM(SELECT * FROM base_${target} ORDER BY title,id LIMIT 500) first_choices UNION ALL SELECT p.id,p.title${target==='Category' ? ",p.kind" : ""} FROM "${target}" p WHERE p."userId"=${owner} AND (${related}) AND p.id NOT IN(SELECT id FROM base_${target} ORDER BY title,id LIMIT 500)) o)`);
  truncated.push(`(SELECT count(*)>500 FROM base_${target})`);
  }
 
