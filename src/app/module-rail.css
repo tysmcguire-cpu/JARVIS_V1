@@ -29,3 +29,12 @@
  .app-shell:not(.dashboard-shell) .module-rail nav button{font-size:14px;padding:11px 10px}
 }
 @media(max-width:1199px){.app-shell:not(.dashboard-shell) #main-content{padding-left:16px;padding-right:16px}}
+
+/* Expand over the content without moving the workspace or contextual rail. */
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .sidebar{position:fixed;inset:0 auto 0 0;width:72px;z-index:50;transition:width .18s ease,box-shadow .18s ease}
+.app-shell.sidebar-collapsed:not(.dashboard-shell)>.workspace{grid-column:2;grid-row:1}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .sidebar:is(.sidebar-peek,:focus-within){width:224px;box-shadow:14px 0 32px #0005;border-right:1px solid var(--app-primary)}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .sidebar:is(.sidebar-peek,:focus-within) :is(.nav-item,.brand,.collapse-button){justify-content:flex-start}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .sidebar:is(.sidebar-peek,:focus-within) :is(.nav-item,.brand,.collapse-button)>.nav-copy{display:inline;white-space:nowrap}
+.app-shell:not(.dashboard-shell) .calendar-day-titles{gap:4px}
+@media(prefers-reduced-motion:reduce){.app-shell.sidebar-collapsed:not(.dashboard-shell) .sidebar{transition:none}}
