@@ -73,3 +73,7 @@ The integrations feature separates bounded parsing, reusable sync/normalization,
 CsvImportBatch stores validated, expiring server plans. Confirmation rechecks account currency, category types, receipts and new duplicates. A parameterized CTE inserts new source keys and matching transactions, followed by counts/audit in the same transaction. Bank IDs deduplicate overlapping exports; no-ID files use exact-file/row identity and explicit review. Receipts survive transaction edits/deletion. Optional Transaction.csvBatchId links provenance.
 
 Source snapshots never overwrite manual records and render only as text. AES-GCM envelopes authenticate owner/connection/provider context. No encryption key or custody service is chosen automatically. Status responses omit credentials. Telegram pairing/polling survived the local client restart.
+
+## Shared module visual layer
+
+module-polish.css loads after feature and appearance styles and scopes its rules to app shells excluding the dashboard. It preserves existing layout grids and behavior, uses protected palette variables for accents, and adds surface/typography/interaction consistency. Roomier spacing applies only at heights of at least 760px and widths of at least 1200px; compact geometry preserves the desktop-only 1024×600 no-scroll override. Reduced-motion removes control transitions. Feature-specific sizing, including the rich-note 22px pagination rhythm, remains authoritative.
