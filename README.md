@@ -99,3 +99,7 @@ The five read-only adapters and synthetic tests are implemented, but no Calendar
 ## Clock display
 
 Settings → Appearance → Top-bar time format offers 24-hour (military) and 12-hour (AM/PM). Choose a format and Save palette. The account preference follows you across computers; existing accounts default to 24-hour. It changes only the local top-bar clock, not stored dates, timezone settings or notification schedules. Reset colors preserves the selected format.
+
+## Grade calculator
+
+Open Education → Grades → Grade calculator. Enter up to 20 assessments, using Total points or Weighted scores. Weights are normalized across the entered assessments; individual earned scores may exceed possible points for extra credit. Enter a target overall percentage and final-exam weight to estimate the required final score. This assumes the entered assessments represent all pre-final coursework and does not assume a letter scale or rounding policy. Calculations are temporary and never update saved grades; closing the calculator, leaving Grades or reloading resets the draft. Use Saved grades to return to records.
