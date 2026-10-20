@@ -28,8 +28,13 @@
 .appearance-root[data-background=white] .flowing-aura{opacity:.35}
 .appearance-root[data-background=white] .appearance-panel{color:#243447}
 .appearance-root[data-background=white] .palette-buttons button{background:#eef3f7}
-.appearance-root .flowing-wordmark strong{font-family:'Bahnschrift','Agency FB','Arial Narrow',sans-serif;font-weight:600;font-style:italic;font-stretch:condensed;letter-spacing:.17em;transform:skewX(-6deg);background:linear-gradient(115deg,#f4fcff 5%,var(--app-primary) 45%,var(--app-secondary) 100%);background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--app-primary) 35%,transparent));text-shadow:none}
-.appearance-root[data-background=white] .flowing-wordmark strong{background:linear-gradient(115deg,#182b43,color-mix(in srgb,var(--app-primary) 45%,#14273d),color-mix(in srgb,var(--app-secondary) 45%,#14273d));background-clip:text;filter:none}
+
+
 @media(max-height:740px){.appearance-panel{gap:8px}.appearance-panel form{gap:10px}.appearance-panel .palette-preview{height:28px}.background-options legend{margin-bottom:5px}.background-swatch{width:21px;height:21px}}
 .appearance-root[data-background=white] :is(.tracking-dialog,.authorization-dialog,.bank-dialog,.mfa-card){background:#fff;border-color:#b9c8d9;color:#243447}.appearance-root[data-background=white] :is(.finance-amount[data-kind=income],.module-status[data-status=done]){color:#176548!important}
 .appearance-root[data-background=white] :is(.brand-mark,.avatar){background:#edf3f8!important;border-color:#bccbd9;box-shadow:none}.appearance-root[data-background=white] .finance-totals{border-color:#d5dee8}
+/* Geometric dotted lettering follows the supplied reference, with no font download. */
+.appearance-root .flowing-wordmark .jarvis-lettering{display:block;position:relative;width:64%;max-width:350px;margin:0;font-style:normal;transform:none;background:none;-webkit-text-fill-color:currentColor;color:#edf5fa!important;text-shadow:none;filter:drop-shadow(0 0 9px color-mix(in srgb,var(--app-primary) 18%,transparent));line-height:0}
+.jarvis-lettering>svg{display:block;width:100%;height:auto;overflow:visible}
+.appearance-root[data-background=white] .flowing-wordmark .jarvis-lettering{color:#243447!important;filter:none}
+.flowing-aura{transform-origin:center;background-position:center}

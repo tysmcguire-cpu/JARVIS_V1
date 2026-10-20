@@ -23,9 +23,9 @@ export function OrbitalDashboard({demo}:{demo:boolean}){
  return <div className={styles.dashboard} data-paused={paused}>
  <header className={styles.heading}><h1>JARVIS</h1><button className={styles.motion} aria-label={paused?'Resume interface animations':'Pause interface animations'} aria-pressed={paused} onClick={()=>setPaused(p=>!p)}>{paused?<Play size={13}/>:<Pause size={13}/>}<span>{paused?'Resume motion':'Pause motion'}</span></button></header>
  <section className={styles.stage} aria-label="JARVIS command hub">
- <div className={styles.ambient} aria-hidden="true"/>
  <svg className={styles.connections} viewBox="0 0 1000 600" preserveAspectRatio="none" fill="none" aria-hidden="true">{modules.map((m,i)=>{const left=i<5,y=60+(i%5)*120,d=left?`M260 ${y} C345 ${y} 355 300 412 300`:`M740 ${y} C655 ${y} 645 300 588 300`;return <g key={m.slug} data-selected={selected===m.slug}><path d={d}/><path d={d} className={styles.packet} style={{animationDelay:`${(i%5)*.85}s`}}/></g>})}</svg>
  <div className={styles.center}>
+ <div className={styles.ambient} data-decoration="ambient-glow" aria-hidden="true"/>
  <div className={styles.orbits} aria-hidden="true"><i/><i/><i/><span/><b/></div>
  <div className={styles.core}><FlowingCore paused={paused}/></div>
  <div className={`hub-selection ${styles.selection}`} aria-live="polite">{selected&&<strong>{label(selected)}</strong>}</div>
