@@ -19,7 +19,7 @@ export function ModulePage({ slug, demo, settings }: { slug: ModuleSlug; demo: b
     ["Unsolicited AI recommendations", enabled(settings.unsolicitedAiEnabled)]
   ] : [];
   return <>
-    <div className="page-heading"><div><h1>{moduleInfo.label}</h1></div></div>
+    {slug!=="settings"&&<div className="page-heading"><div><h1>{moduleInfo.label}</h1></div></div>}
     {slug === "settings" ? <SettingsPanels demo={demo}>
       <section className="panel"><div className="panel-heading"><h2>Notification preferences</h2></div><dl className="preferences">{preferences.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
 

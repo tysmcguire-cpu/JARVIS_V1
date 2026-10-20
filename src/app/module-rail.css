@@ -1,0 +1,31 @@
+/* Move module identity/sections beside the content, reclaiming header rows. */
+.app-shell:not(.dashboard-shell) .tracking-workspace,.module-layout{display:grid;grid-template-columns:148px minmax(0,1fr);gap:18px;flex:1;min-height:0;min-width:0}
+.module-body{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0;flex:1}
+.module-rail{display:flex;flex-direction:column;gap:20px;min-height:0;min-width:0;border-right:1px solid var(--module-line);padding:4px 14px 0 0}
+.app-shell:not(.dashboard-shell) .module-rail :is(.tracking-heading,.page-heading){display:flex;flex-direction:column;align-items:stretch;gap:18px;padding:0;margin:0;border:0}
+.app-shell:not(.dashboard-shell) .module-rail :is(.tracking-heading,.page-heading)::after{top:31px;bottom:auto;width:30px}
+.app-shell:not(.dashboard-shell) .module-rail h1{font-size:21px;line-height:26px;overflow-wrap:anywhere;margin:0}
+.app-shell:not(.dashboard-shell) .module-rail nav{display:flex;flex-direction:column;align-items:stretch;gap:6px;flex-wrap:nowrap}
+.app-shell:not(.dashboard-shell) .module-rail nav button{font:inherit;font-size:13px;line-height:1.4;padding:9px 10px;text-align:left;white-space:normal;overflow-wrap:anywhere;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--app-detail-text);cursor:pointer;min-width:0}
+.app-shell:not(.dashboard-shell) .module-rail nav button[aria-pressed=true]{background:var(--module-wash);border-color:var(--module-line);box-shadow:inset 2px 0 var(--app-primary)}
+.appearance-root .module-rail nav button:is(:hover,:focus-visible){background:color-mix(in srgb,var(--app-primary) 24%,#101010)!important;border-color:var(--app-primary)!important;color:color-mix(in srgb,var(--app-primary) 65%,white)!important;box-shadow:inset 2px 0 var(--app-primary)!important}
+.appearance-root[data-background=white] .module-rail nav button:is(:hover,:focus-visible){background:color-mix(in srgb,var(--app-primary) 24%,white)!important;color:color-mix(in srgb,var(--app-primary) 42%,black)!important}
+.module-rail button:disabled{opacity:.45;cursor:default}
+.app-shell:not(.dashboard-shell) .module-rail .tracking-heading>button{white-space:normal;font-size:12px;padding:8px 6px;line-height:1.4}
+.app-shell:not(.dashboard-shell) .tracking-toolbar{margin-top:0;padding-top:0;border-top:0}
+.module-layout>.panel{min-width:0}
+.app-shell.sidebar-collapsed:not(.dashboard-shell){grid-template-columns:72px minmax(0,1fr)}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .sidebar{padding-left:10px;padding-right:10px}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .nav-item{justify-content:center;padding:9px;min-height:36px}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .brand{justify-content:center}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .brand-mark{padding:8px}
+.app-shell.sidebar-collapsed:not(.dashboard-shell) .collapse-button{justify-content:center}
+@media(min-height:760px) and (min-width:1200px){
+ .app-shell:not(.dashboard-shell) .tracking-workspace,.module-layout{grid-template-columns:168px minmax(0,1fr);gap:24px}
+ .module-body{gap:12px}
+ .module-rail{gap:24px;padding-right:20px}
+ .app-shell:not(.dashboard-shell) .module-rail h1{font-size:24px;line-height:30px}
+ .app-shell:not(.dashboard-shell) .module-rail :is(.tracking-heading,.page-heading)::after{top:35px}
+ .app-shell:not(.dashboard-shell) .module-rail nav button{font-size:14px;padding:11px 10px}
+}
+@media(max-width:1199px){.app-shell:not(.dashboard-shell) #main-content{padding-left:16px;padding-right:16px}}

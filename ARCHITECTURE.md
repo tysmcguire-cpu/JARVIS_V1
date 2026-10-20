@@ -77,3 +77,7 @@ Source snapshots never overwrite manual records and render only as text. AES-GCM
 ## Shared module visual layer
 
 module-polish.css loads after feature and appearance styles and scopes its rules to app shells excluding the dashboard. It preserves existing layout grids and behavior, uses protected palette variables for accents, and adds surface/typography/interaction consistency. Roomier spacing applies only at heights of at least 760px and widths of at least 1200px; compact geometry preserves the desktop-only 1024×600 no-scroll override. Reduced-motion removes control transitions. Feature-specific sizing, including the rich-note 22px pagination rhythm, remains authoritative.
+
+## Contextual module rail
+
+TrackingWorkspace now separates module-rail (identity, creation action, record sections) from module-body (filters, records and pagination). SettingsPanels, NotificationPanel and AssistantPanel share the module-layout grid. module-rail.css retains the bounded desktop sizing and protected appearance tokens. Shell defaults module pages to compact primary navigation, preserving explicit accessible link names and an expansion button. No dashboard grid, server data boundary or action semantics changed.
