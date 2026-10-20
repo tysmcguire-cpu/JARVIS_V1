@@ -1,4 +1,5 @@
 import type {FinanceGeneral} from './finance-general-data';
+import type {AccountHistory} from './account-history';
 import definitions from './entities.json';
 export type Field = { name: string; label: string; type: string; target?: string; options?: string[]; max?: number };
 export type Entity = { key: string; module: string; label: string; fields: Field[] };
@@ -7,7 +8,7 @@ export const trackingModules = ['finances', 'education', 'calendar', 'career', '
 export function entityFor(key: string) { const entity = entities.find(e => e.key === key); if (!entity) throw new Error('Unknown record type.'); return entity; }
 export type RecordRow = { id: string; updatedAt: string; [key: string]: string };
 export type FinanceOverview={currency:string;month:string;balance:string;income:string;expense:string;pie:{label:string;minor:string}[];daily:{date:string;minor:string}[]};
-export type WorkspaceData = { general?:FinanceGeneral; finance?:FinanceOverview; today?:string; rows: RecordRow[]; total: number; page: number; pageSize: number; options: Record<string, {id: string; title: string;kind?:string}[]>; relationsTruncated: boolean; summary: {label: string; value: string}[]; chart: {label: string; value: number}[]; calendar: {id?:string;date: string; title: string;time?:string}[] };
+export type WorkspaceData = { accountHistory?:AccountHistory[];general?:FinanceGeneral; finance?:FinanceOverview; today?:string; rows: RecordRow[]; total: number; page: number; pageSize: number; options: Record<string, {id: string; title: string;kind?:string}[]>; relationsTruncated: boolean; summary: {label: string; value: string}[]; chart: {label: string; value: number}[]; calendar: {id?:string;date: string; title: string;time?:string}[] };
 export const currencies = ['USD', 'CAD', 'EUR', 'GBP'];
 export function parseMoney(input: string): bigint {
   if (!/^-?\d{1,12}(\.\d{1,2})?$/.test(input)) throw new Error('Use a monetary amount with at most two decimal places.');

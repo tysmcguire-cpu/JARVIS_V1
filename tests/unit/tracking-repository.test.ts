@@ -52,6 +52,12 @@ it('makes every saved assignment reachable with six-row pagination and stable or
  const ids=new Set<string>();for(let page=1;page<=3;page++){const data=await readWorkspace('Assignment',{search:'Pagination assignment',sort:'title',direction:'asc',page});expect(data.total).toBe(14);expect(data.pageSize).toBe(6);expect(data.rows).toHaveLength(page===3?2:6);data.rows.forEach(r=>ids.add(r.id))}expect(ids.size).toBe(14);expect((await readWorkspace('Assignment',{search:'Pagination assignment',page:999})).page).toBe(3);
 });
 
+ it('reads per-account balance history from the whole ledger without future points or currency mixing',async()=>{
+  await writeRecord('FinancialAccount',{title:'History EUR',currency:'EUR',openingBalance:'-1.00'});const account=(await readWorkspace('FinancialAccount',{search:'History EUR',month:'2000-02'})).rows[0];
+  await writeRecord('Category',{title:'History income',kind:'income'});await writeRecord('Category',{title:'History expense',kind:'expense'});const income=(await readWorkspace('Category',{search:'History income'})).rows[0],expense=(await readWorkspace('Category',{search:'History expense'})).rows[0];
+  for(const [date,amount,categoryId] of [['2000-01-01','0.10',income.id],['2000-02-01','0.20',income.id],['2000-02-02','0.30',expense.id],['2000-03-01','999',income.id]])await writeRecord('Transaction',{title:'History event',date,amount,categoryId,accountId:account.id});
+  const result=await readWorkspace('FinancialAccount',{search:'History EUR',month:'2000-02'}),history=result.accountHistory![0];expect(history.opening).toBe('-90');expect(history.points).toHaveLength(30);expect(history.points.slice(0,3)).toEqual([{date:'2000-01-31',balance:'-90'},{date:'2000-02-01',balance:'-70'},{date:'2000-02-02',balance:'-100'}]);expect(history.points.at(-1)).toEqual({date:'2000-02-29',balance:'-100'});expect((await readWorkspace('FinancialAccount',{search:'History EUR',month:'9999-01'})).accountHistory![0].points).toEqual([]);
+ });
  it('saves monthly budgets atomically, reuses normalized expense categories, and preserves legacy periods on edit',async()=>{
   await writeBudget({title:'Groceries budget',category:'  Groceries   home  ',limit:'25.10',month:'2026-10',currency:'USD'});
   const view=await readWorkspace('BudgetCategory',{search:'Groceries budget',period:true,month:'2026-10',currency:'USD'}),row=view.rows[0];

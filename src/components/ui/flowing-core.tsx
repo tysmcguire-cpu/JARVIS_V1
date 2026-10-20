@@ -5,7 +5,7 @@ import {useAppearance} from "@/features/settings/appearance-provider";
 
 /** Original, decorative light ribbons. No AI activity or external telemetry. */
 export function FlowingCore({ paused }: { paused: boolean }) {
-  const {palette}=useAppearance();
+  const {colors:palette}=useAppearance();
   const ref = useRef<HTMLCanvasElement>(null);
   const elapsedRef = useRef(0);
   useEffect(() => {

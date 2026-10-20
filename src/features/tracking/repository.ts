@@ -19,7 +19,7 @@ export async function readWorkspace(key:string,input:unknown):Promise<WorkspaceD
   if(entity.key!=="Grade"&&data.grade&&BigInt(data.grade.possible)>0n)summary.push({label:"Recorded points (unweighted)",value:(Number(data.grade.earned)/Number(data.grade.possible)*100).toFixed(1)+"%"});
   if(key==="Goal")chart=data.rows.map(r=>({label:r.title,value:Math.min(100,Number(r.current)/Number(r.target)*100)}));
   if(data.budgetSpending)summary.push(...data.budgetSpending.map(r=>({label:"Spent · "+r.title,value:formatMoney(BigInt(r.spent),r.currency)})));
-  return {rows:data.rows,total:data.total,page:data.page,pageSize:data.pageSize,options:data.options,relationsTruncated:data.relationsTruncated,calendar:data.calendar,summary:summary.slice(0,5),today:data.facts.today,finance:data.finance,general:data.general,chart};
+  return {rows:data.rows,total:data.total,page:data.page,pageSize:data.pageSize,options:data.options,relationsTruncated:data.relationsTruncated,calendar:data.calendar,summary:summary.slice(0,5),today:data.facts.today,finance:data.finance,general:data.general,accountHistory:data.accountHistory,chart};
  });
 }
 export async function writeRecord(key: string, input: unknown, id?: string, expectedUpdatedAt?: string) {

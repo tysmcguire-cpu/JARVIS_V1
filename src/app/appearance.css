@@ -62,3 +62,10 @@
 /* Include selected tabs and filter controls; module/detail rules must not win. */
 .appearance-root :is(.tracking-tabs,.tracking-toolbar,.notification-tabs,.notification-panel nav,.notification-pager,.assistant-controls) :is(button,select):is(:hover,:focus-visible),.appearance-root [role=tab]:is(:hover,:focus-visible){background:color-mix(in srgb,var(--app-primary) 24%,#101010)!important;border-color:var(--app-primary)!important;color:color-mix(in srgb,var(--app-primary) 65%,white)!important;box-shadow:inset 2px 0 var(--app-primary)!important}
 .appearance-root[data-background=white] :is(.tracking-tabs,.tracking-toolbar,.notification-tabs,.notification-panel nav,.notification-pager,.assistant-controls) :is(button,select):is(:hover,:focus-visible),.appearance-root[data-background=white] [role=tab]:is(:hover,:focus-visible){background:color-mix(in srgb,var(--app-primary) 24%,white)!important;border-color:var(--app-primary)!important;color:color-mix(in srgb,var(--app-primary) 42%,black)!important}
+/* Essential boundaries use protected colors instead of low-opacity detail mixes. */
+.appearance-root :is(input,select,textarea,button){border-color:var(--app-tertiary)}
+.appearance-root :is(.nav-item.active,.account-select[aria-pressed=true],.tracking-tabs button[aria-pressed=true]){border-color:var(--app-primary)}
+.appearance-root :focus-visible{outline:2px solid var(--app-primary)!important;outline-offset:2px}
+.appearance-root .palette-preview{border:1px solid var(--app-tertiary)}
+.appearance-root .finance-pie :is(path,circle){stroke:var(--app-tertiary);stroke-width:1}
+.appearance-root[data-background=white] :is(input,select,textarea,button){border-color:var(--app-tertiary)}
