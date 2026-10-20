@@ -5,7 +5,7 @@ function luminance(color:string){return rgb(color).map(n=>{const s=n/255;return 
 export function contrastRatio(a:string,b:string){const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
 /** Preserve the stored preference; move only its rendered shade toward black/white. */
 export function readableColor(color:string,light:boolean){
- const surfaces=light?['#ffffff','#f3f3f3']:['#000000','#131719','#262626','#0b1018','#0d131d','#111b28'];
+ const surfaces=light?['#ffffff','#f3f3f3']:['#000000','#131719','#262626','#0b1018','#0d131d','#111b28','#1b2938','#14212e','#223344'];
  const passes=(value:string)=>surfaces.every(surface=>contrastRatio(value,surface)>=4.5);
  if(passes(color))return color;
  const source=rgb(color),target=light?0:255;

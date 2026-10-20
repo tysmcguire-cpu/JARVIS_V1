@@ -71,9 +71,9 @@
 .appearance-root[data-background=white] :is(input,select,textarea,button){border-color:var(--app-tertiary)}
 
 /* Original blue-gray surfaces stay independent of the detail color. */
-.appearance-root[data-background=current]{background:#0b1018;color-scheme:dark}
-.appearance-root[data-background=current] :is(.app-shell,.workspace,#main-content,.workspace-footer){background:#0b1018}
-.appearance-root[data-background=current] :is(.sidebar,.topbar){background:#0d131d}
-.appearance-root[data-background=current] :is(.tracking-table-wrap,.panel,.integration-panel,.notification-panel,.assistant-panel,.data-controls,.tracking-calendar,.note-reader,.pipeline-lane,.module-record-card){background:#111b28}
-.appearance-root[data-background=current] .orbital-console{background-color:#0b1018}
-.background-swatch[data-background=current]{background:#0b1018}
+.appearance-root[data-background=current]{background:#1b2938;color-scheme:dark}
+.appearance-root[data-background=current] :is(.app-shell,.workspace,#main-content,.workspace-footer){background:#1b2938}
+.appearance-root[data-background=current] :is(.sidebar,.topbar){background:#14212e}
+.appearance-root[data-background=current] :is(.tracking-table-wrap,.panel,.integration-panel,.notification-panel,.assistant-panel,.data-controls,.tracking-calendar,.note-reader,.pipeline-lane,.module-record-card){background:#223344}
+.appearance-root[data-background=current] .orbital-console{background-color:#1b2938}
+.background-swatch[data-background=current]{background:#1b2938}
