@@ -14,7 +14,7 @@ export function AssistantPanel({demo,initial}:{demo:boolean;initial?:History}){
  const sourceItems=entry?.answer.sources.flatMap(source=>[{source,text:'Origin: '+source.origin+'\nSource updated: '+source.updatedAt+'\nRetrieved: '+source.fetchedAt},...Array.from({length:Math.max(1,Math.ceil(source.detail.length/220))},(_,part)=>({source,text:source.detail.slice(part*220,(part+1)*220)}))])??[];
  const count=entry?(tab==='answer'?answerItems.length:tab==='sources'?sourceItems.length:entry.answer.limitations.length):0;
  const claim=answerItems[index],source=sourceItems[index]?.source;
- return <><div className="page-heading"><div><p className="eyebrow">GROUNDED WORKSPACE</p><h1>AI Assistant</h1><p className="subtitle">Read-only analysis with source references. Recommendations only when requested.</p></div></div>
+ return <><div className="page-heading"><div><h1>Assistant</h1></div></div>
  <section className="panel assistant-panel" aria-label="Grounded assistant" aria-busy={pending}>
  <div className="assistant-compose">
  <form onSubmit={e=>{e.preventDefault();run(async()=>{show(demo?demoAnswer(question,query):await askAssistant({question,query,interpret,compose,consent}));if(!demo){setPast(await assistantHistory(1));setPage(1)}})}}>

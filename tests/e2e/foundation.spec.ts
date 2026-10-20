@@ -9,8 +9,8 @@ test("private routes fail closed without auth configuration", async ({ page }) =
 });
 test("synthetic shell, navigation and settings work on all viewports", async ({ page }, testInfo) => {
   await page.goto("/demo");
-  await expect(page.getByRole("heading", { name: "Command Center." })).toBeVisible();
-  await expect(page.getByText("DEMONSTRATION MODE", { exact: false })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "JARVIS", exact: true })).toBeVisible();
+  await expect(page.getByText("Demo data", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
   for (const link of await page.getByRole("navigation", { name: "Workspace modules" }).getByRole("link").all()) {

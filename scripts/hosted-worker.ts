@@ -3,7 +3,6 @@ import {loadEnvironment} from './load-environment';
 loadEnvironment();
 
 async function main() {
-  const {bankTick} = await import('../src/features/banking/worker');
   const {canvasFeedTick} = await import('../src/features/integrations/canvas-feed-worker');
   const feeds = !!process.env.JARVIS_OWNER_ID;
   const {notificationTick} = await import('../src/features/notifications/worker');
@@ -24,7 +23,6 @@ async function main() {
       // A stalled task fails the supervised service rather than silently missing schedules.
       const watchdog = setTimeout(() => {console.error('Background processing stalled; restarting service.');process.exit(1)}, 120000);
       let failed = false;
-      try {if (feeds) await bankTick()} catch {failed = true}
       try {if (feeds) await canvasFeedTick()} catch {failed = true}
       try {if (notifications) await notificationTick()} catch {failed = true}
       try {if (replies && !controller.signal.aborted) await flushReplies(telegram!)} catch {failed = true}

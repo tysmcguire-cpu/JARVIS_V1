@@ -7,7 +7,7 @@ export const navigation = [
   { slug: "projects", label: "Projects", group: "Workspace" },
   { slug: "goals", label: "Goals", group: "Workspace" },
   { slug: "notes", label: "Notes", group: "Workspace" },
-  { slug: "assistant", label: "AI Assistant", group: "System" },
+  { slug: "assistant", label: "Assistant", group: "System" },
   { slug: "notifications", label: "Notifications", group: "System" },
   { slug: "settings", label: "Settings", group: "System" }
 ] as const;

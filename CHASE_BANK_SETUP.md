@@ -1,5 +1,7 @@
 # Chase transaction sync setup
 
+> Superseded by manual Telegram finance logging. Do not follow these activation steps for the current app. See FINANCE_LOGGING.md.
+
 The read-only Plaid connector is implemented. The database migration is applied. No live Chase account has been connected or tested. Keep bank credentials and API secrets out of chat and Git.
 
 ## 1. Confirm free access first

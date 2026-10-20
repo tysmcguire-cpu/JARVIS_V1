@@ -15,7 +15,7 @@ test('every tracking tab fits the minimum desktop viewport',async({page},info)=>
  expect(await dialog.evaluate(e=>e.scrollHeight<=e.clientHeight&&e.scrollWidth<=e.clientWidth)).toBe(true);
  if(await dialog.getByRole('button',{name:'Continue',exact:true}).count()) {await dialog.getByRole('button',{name:'Continue',exact:true}).click();expect(await dialog.evaluate(e=>e.scrollHeight<=e.clientHeight)).toBe(true);}
  await page.keyboard.press('Escape');await expect(dialog).not.toBeVisible();
- const table=page.locator('.tracking-table-wrap');expect(await table.evaluate(e=>e.scrollWidth<=e.clientWidth&&e.scrollHeight<=e.clientHeight)).toBe(true);
+ const table=page.locator('.tracking-table-wrap,.finance-log');expect(await table.evaluate(e=>e.scrollWidth<=e.clientWidth&&e.scrollHeight<=e.clientHeight)).toBe(true);
  }
  if(slug==='finances'||slug==='goals')await page.screenshot({path:`test-results/${info.project.name}-${slug}-tracking.png`});
  }

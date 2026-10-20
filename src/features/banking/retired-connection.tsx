@@ -1,0 +1,4 @@
+'use client';
+import {useState,useTransition} from 'react';
+import {revokeBank} from './actions';
+export function RetiredBankConnection(){const [confirmed,setConfirmed]=useState(false),[message,setMessage]=useState(''),[pending,start]=useTransition();return <section className="bank-connection"><h2>Previous bank connection</h2><p>Automatic bank downloads are off.</p><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Disconnect and revoke the previous connection</label><button disabled={!confirmed||pending} onClick={()=>start(async()=>{try{const result=await revokeBank(true);setMessage(result.ok?'Bank connection revoked.':result.message)}catch{setMessage('Could not revoke the connection. Try again.')}})}>Disconnect</button>{message&&<p role="status">{message}</p>}</section>}

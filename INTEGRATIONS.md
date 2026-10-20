@@ -32,3 +32,7 @@ Phase 3 command handling and local setup are implemented; see TELEGRAM.md. TELEG
 ## Chase bank transaction history (2026-10-17)
 
 Read-only Chase/Plaid Transactions connection, encrypted owner-bound grant and OAuth session, periodic hosted-worker sync, atomic cursor reconciliation, pending-to-posted replacement, and paginated Finances bank history are implemented. Production is disabled without explicit free Trial confirmation and owner credentials/consent. No live bank connection has been tested. Existing manual ledger and alerts do not automatically include bank records. Additive bank-history migration extends existing provider/kind constraints and indexes; no new database role or paid worker is required. Revoke the bank Item before app-data deletion or snapshot replacement; backups exclude credentials and restores disconnect providers. See [CHASE_BANK_SETUP.md](CHASE_BANK_SETUP.md) for activation, free Trial limits and recovery details.
+
+## Finance workflow update
+
+Use Telegram +400 / -20 food and the Finances log/charts. Automatic Plaid processing and new-bank setup are retired. No bank keys or new service are needed. Existing bank grants are retained only for explicit revocation. See [FINANCE_LOGGING.md](FINANCE_LOGGING.md).

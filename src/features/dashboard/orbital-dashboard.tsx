@@ -1,7 +1,7 @@
 "use client";
 import { useState, type CSSProperties } from "react";
 import {NavigationLink as Link} from "@/features/shell/navigation-link";
-import { ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, FolderKanban, Network, NotebookPen, Pause, Play, Settings, ShieldCheck, Sparkles, Target, Wallet } from "lucide-react";
+import { ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, FolderKanban, NotebookPen, Pause, Play, Settings, Sparkles, Target, Wallet } from "lucide-react";
 import { FlowingCore } from "@/components/ui/flowing-core";
 import { navigation } from "@/features/shell/navigation";
 
@@ -25,10 +25,9 @@ export function OrbitalDashboard({ demo }: { demo: boolean }) {
   const label = (slug: string) => navigation.find(module => module.slug === slug)!.label;
   const href = (slug: string) => demo ? `/demo/${slug}` : `/${slug}`;
   return <div className={`orbital-dashboard ${paused ? "motion-paused" : ""}`}>
-    <header className="orbital-heading"><div><p className="eyebrow"><span className="eyebrow-marker" /> PERSONAL OPERATING SYSTEM / 01</p><h1>Command Center<span className="heading-period">.</span></h1></div><button className="motion-control" onClick={() => setPaused(!paused)} aria-label={paused ? "Resume interface animations" : "Pause interface animations"} aria-pressed={paused}>{paused ? <Play size={13} /> : <Pause size={13} />}<span>{paused ? "Motion paused" : "Pause motion"}</span></button></header>
+    <header className="orbital-heading"><div><h1>JARVIS</h1></div><button className="motion-control" onClick={() => setPaused(!paused)} aria-label={paused ? "Resume interface animations" : "Pause interface animations"} aria-pressed={paused}>{paused ? <Play size={13} /> : <Pause size={13} />}<span>{paused ? "Motion paused" : "Pause motion"}</span></button></header>
     <section className="orbital-console" aria-label="JARVIS command hub">
       <div className="console-corner corner-nw" aria-hidden="true" /><div className="console-corner corner-ne" aria-hidden="true" /><div className="console-corner corner-sw" aria-hidden="true" /><div className="console-corner corner-se" aria-hidden="true" />
-      <div className="console-topline"><span><ShieldCheck size={12} /> {demo ? "SYNTHETIC ENVIRONMENT" : "PRIVATE OWNER WORKSPACE"}</span><span className="console-decorative" aria-hidden="true">INTERFACE / FOUNDATION 01</span></div>
       <div className="orbital-field">
         <svg className="hub-connections" viewBox="0 0 1000 640" preserveAspectRatio="none" fill="none" aria-hidden="true">
           <ellipse cx="500" cy="326" rx="300" ry="283" className="hub-boundary" strokeDasharray="1 9" />
@@ -39,16 +38,14 @@ export function OrbitalDashboard({ demo }: { demo: boolean }) {
         <div className="hub-dust" aria-hidden="true">{Array.from({ length: 24 }, (_, i) => <i key={i} style={{ "--particle-angle": `${i * 15}deg`, "--particle-delay": `${i * .27}s` } as CSSProperties} />)}</div>
         <div className="hub-center">
           <FlowingCore paused={paused} />
-          <div className="hub-selection" aria-live="polite"><span className="hub-selection-caption">{focused ? "WORKSPACE DESTINATION" : "SELECT A WORKSPACE"}</span><strong>{focused ? label(focused.slug) : "Your world. Within reach."}</strong><p>{focused ? focused.detail : "Choose any module surrounding the core."}</p></div>
+          <div className="hub-selection" aria-live="polite">{focused&&<strong>{label(focused.slug)}</strong>}</div>
         </div>
         <nav className="orbital-modules" aria-label="Workspace modules">
           {modules.map((module, index) => { const Icon = module.icon; return <Link key={module.slug} href={href(module.slug)} aria-label={`Open ${label(module.slug)}`} className={`orbit-module orbit-${module.side} ${selected === module.slug ? "module-selected" : ""}`} style={{ "--module-x": `${module.x}%`, "--module-y": `${module.y}%`, "--module-delay": `${index * 45}ms` } as CSSProperties} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) setPaused(true); }} onMouseEnter={() => setSelected(module.slug)} onMouseLeave={() => setSelected(null)} onFocus={() => setSelected(module.slug)} onBlur={() => setSelected(null)}>
-            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><span className="orbit-module-index">{String(index + 1).padStart(2, "0")} / {module.phase === "01" ? "FOUNDATION" : module.phase === "02" ? "CORE TRACKING" : `PHASE ${module.phase}`}</span><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span><span className="module-trace" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /></span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
+            <span className="orbit-module-icon"><Icon size={21} /></span><span className="orbit-module-copy"><strong>{label(module.slug)}</strong><span className="orbit-module-detail">{module.detail}</span></span><ArrowUpRight className="orbit-module-arrow" size={14} /><span className="module-port" aria-hidden="true" />
           </Link>; })}
         </nav>
       </div>
-      <div className="console-bottomline"><span><Network size={12} /> 10 WORKSPACE DESTINATIONS</span><span>MANUAL TRACKING / CONNECTOR CONTROLS</span><div className="signal-decoration" aria-hidden="true">{Array.from({ length: 27 }, (_, i) => <i key={i} style={{ "--signal-height": `${5 + (i * 7 % 19)}px`, animationDelay: `${i * .1}s` } as CSSProperties} />)}</div></div>
     </section>
-    <p className="hub-footnote">{demo ? "Synthetic preview. Explore tracking with temporary sample records; reload to reset." : "Your workspace is private. Manual tracking is available. Manage connectors in Settings, grounded analysis in Assistant and delivery in Notifications."}</p>
   </div>;
 }

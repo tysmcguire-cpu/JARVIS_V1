@@ -5,7 +5,8 @@ export const entities: Entity[] = definitions;
 export const trackingModules = ['finances', 'education', 'calendar', 'career', 'projects', 'goals', 'notes'];
 export function entityFor(key: string) { const entity = entities.find(e => e.key === key); if (!entity) throw new Error('Unknown record type.'); return entity; }
 export type RecordRow = { id: string; updatedAt: string; [key: string]: string };
-export type WorkspaceData = { today?:string; rows: RecordRow[]; total: number; page: number; pageSize: number; options: Record<string, {id: string; title: string}[]>; relationsTruncated: boolean; summary: {label: string; value: string}[]; chart: {label: string; value: number}[]; calendar: {id?:string;date: string; title: string;time?:string}[] };
+export type FinanceOverview={currency:string;month:string;balance:string;income:string;expense:string;pie:{label:string;minor:string}[];daily:{date:string;minor:string}[]};
+export type WorkspaceData = { finance?:FinanceOverview; today?:string; rows: RecordRow[]; total: number; page: number; pageSize: number; options: Record<string, {id: string; title: string}[]>; relationsTruncated: boolean; summary: {label: string; value: string}[]; chart: {label: string; value: number}[]; calendar: {id?:string;date: string; title: string;time?:string}[] };
 export const currencies = ['USD', 'CAD', 'EUR', 'GBP'];
 export function parseMoney(input: string): bigint {
   if (!/^-?\d{1,12}(\.\d{1,2})?$/.test(input)) throw new Error('Use a monetary amount with at most two decimal places.');
@@ -15,3 +16,5 @@ export function parseMoney(input: string): bigint {
 }
 export function moneyInput(minor: string): string { const n = BigInt(minor); const abs = n < 0n ? -n : n; return `${n < 0n ? '-' : ''}${abs / 100n}.${String(abs % 100n).padStart(2, '0')}`; }
 export function formatMoney(minor: bigint, currency: string) { return `${currency} ${moneyInput(minor.toString())}`; }
+
+export function initialTrackingKey(module:string){return module==='finances'?'Transaction':entities.find(e=>e.module===module)!.key}

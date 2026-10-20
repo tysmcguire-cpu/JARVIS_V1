@@ -90,5 +90,5 @@ export function FlowingCore({ paused }: { paused: boolean }) {
     resize(); sync();
     return () => { stopped = true; cancelAnimationFrame(frame); observer.disconnect(); preference.removeEventListener("change", sync); document.removeEventListener("visibilitychange", sync); };
   }, [paused]);
-  return <div className="flowing-core" aria-hidden="true"><div className="flowing-aura" /><canvas ref={ref} width={600} height={600} /><div className="flowing-wordmark"><span>PERSONAL OPERATING SYSTEM</span><strong>JARVIS</strong><span className="flowing-wordmark-sub">PRIVATE · CONNECTED ON YOUR TERMS</span></div><div className="flowing-coordinate coordinate-a">01 / OWNER INTERFACE</div><div className="flowing-coordinate coordinate-b">FOUNDATION</div></div>;
+  return <div className="flowing-core" aria-hidden="true"><div className="flowing-aura" /><canvas ref={ref} width={600} height={600} /><div className="flowing-wordmark"><strong>JARVIS</strong></div></div>;
 }

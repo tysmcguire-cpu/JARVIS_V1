@@ -26,5 +26,5 @@ export function validateRecord(key: string, input: unknown): Record<string, stri
 }
 export const recordId = z.uuid();
 export function readQuery(input: unknown) {
-  return z.object({ page: z.number().int().min(1).max(100000).default(1), search: z.string().max(100).default(''), status: z.string().max(100).default(''), sort: z.enum(['updatedAt','title','date']).default('updatedAt'), direction: z.enum(['asc','desc']).default('desc'), month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).default(new Date().toISOString().slice(0,7)) }).strict().parse(input);
+  return z.object({ currency:z.enum(currencies as ['USD','CAD','EUR','GBP']).optional(),period:z.boolean().optional(),page: z.number().int().min(1).max(100000).default(1), search: z.string().max(100).default(''), status: z.string().max(100).default(''), sort: z.enum(['updatedAt','title','date']).default('updatedAt'), direction: z.enum(['asc','desc']).default('desc'), month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).default(new Date().toISOString().slice(0,7)) }).strict().parse(input);
 }

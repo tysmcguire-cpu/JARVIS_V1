@@ -1,3 +1,4 @@
+import {financeOverviewSql} from './finance-data';
 import {moduleFactsSql} from './module-metrics-query';
 import {canvasProjection} from './canvas-projection';
 import {entityFor} from './config';
@@ -11,7 +12,13 @@ export function workspaceQuery(key:string,input:unknown){
  if(query.search)where+=` AND title ILIKE ${bind('%'+query.search.replace(/[\\%_]/g,'\\$&')+'%')}`;
  if(query.status&&entity.fields.some(f=>f.name==='status'))where+=` AND status=${bind(query.status)}`;
  const date=entity.fields.find(f=>f.type==='date'),sort=query.sort==='date'?date?.name??'updatedAt':query.sort;
- const requestedPage=bind(query.page),month=bind(query.month+'-01');
+ const automaticMonth=key==='Transaction'&&query.period&&!(input&&typeof input==='object'&&'month' in input);
+ const requestedPage=bind(query.page),monthValue=bind(automaticMonth?null:query.month+'-01'),month=automaticMonth?`COALESCE(${monthValue}::date,date_trunc('month',CURRENT_TIMESTAMP AT TIME ZONE COALESCE((SELECT timezone FROM "UserSettings" WHERE "userId"=${owner}),'America/Chicago'))::date)`:monthValue;
+ const financeCurrency=key==='Transaction'?bind(query.currency??'USD'):'';
+ if(key==='Transaction'){
+ if(query.period)where+=` AND date>=${month}::date AND date<${month}::date+interval '1 month'`;
+ where+=` AND EXISTS(SELECT 1 FROM "FinancialAccount" a WHERE a.id="accountId" AND a."userId"=${owner} AND a.currency=${financeCurrency}::text)`;
+ }
  const projection=canvasProjection(entity,owner);
  const ctes=[...projection.ctes,`filtered AS NOT MATERIALIZED(SELECT * FROM ${projection.table} WHERE ${where})`,`counts AS(SELECT count(*)::int AS total FROM filtered)`,`paging AS(SELECT total,LEAST(${requestedPage}::int,GREATEST(1,ceil(total/4.0)::int)) AS page FROM counts)`,`page_rows AS MATERIALIZED(SELECT * FROM filtered ORDER BY "${sort}" ${query.direction==='asc'?'ASC':'DESC'},id LIMIT 4 OFFSET (SELECT (page-1)*4 FROM paging))`];
  const fields=['id',...entity.fields.map(f=>f.name)];
@@ -35,6 +42,7 @@ export function workspaceQuery(key:string,input:unknown){
  const calendarSql=date?`(SELECT COALESCE(jsonb_agg(to_jsonb(d) ORDER BY date,time,title),'[]'::jsonb) FROM(SELECT r.id,${calendarDate}::text AS date,r.title,${calendarTime} AS time FROM ${calendarFrom} WHERE ${calendarWhere} ORDER BY ${calendarDate},${calendarTime},r.id LIMIT 200) d)`:`'[]'::jsonb`;
  const attributes=[`'rows'`,`(SELECT COALESCE(jsonb_agg(jsonb_build_object(${rowValues.join(',')})${projection.ctes.length?"||COALESCE(r.source_metadata,'{}'::jsonb)":''} ORDER BY r."${sort}" ${query.direction==='asc'?'ASC':'DESC'},r.id),'[]'::jsonb) FROM page_rows r)`,`'total'`,`(SELECT total FROM paging)`,`'page'`,`(SELECT page FROM paging)`,`'pageSize'`,'4',`'options'`,`jsonb_build_object(${options.join(',')})`,`'relationsTruncated'`,truncated.length?'('+truncated.join(' OR ')+')':'false',`'statuses'`,entity.fields.some(f=>f.name==='status')?`(SELECT COALESCE(jsonb_agg(to_jsonb(s)),'[]'::jsonb) FROM(SELECT status AS label,count(*)::int AS value FROM filtered GROUP BY status ORDER BY status) s)`:`'[]'::jsonb`,`'calendar'`,calendarSql];
  attributes.push("'facts'",moduleFactsSql(entity,owner));
+ if(key==='Transaction')attributes.push("'finance'",financeOverviewSql(owner,month,financeCurrency));
  if(entity.module==='finances'){
  attributes.push(`'balances'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(b)),'[]'::jsonb) FROM(SELECT a.currency,sum(a."openingBalance"+COALESCE(t.net,0))::text AS balance FROM "FinancialAccount" a LEFT JOIN(SELECT t."accountId",t."userId",sum(CASE WHEN c.kind='income' THEN t.amount ELSE -t.amount END) AS net FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" WHERE t."userId"=${owner} GROUP BY t."accountId",t."userId") t ON t."accountId"=a.id AND t."userId"=a."userId" WHERE a."userId"=${owner} GROUP BY a.currency ORDER BY a.currency) b)`,`'spending'`,`(SELECT COALESCE(jsonb_agg(to_jsonb(s)),'[]'::jsonb) FROM(SELECT a.currency||' · '||c.title AS label,sum(t.amount)::text AS value FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" WHERE t."userId"=${owner} AND c.kind='expense' GROUP BY a.currency,c.title ORDER BY sum(t.amount) DESC LIMIT 6) s)`);
  }

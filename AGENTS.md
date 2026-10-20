@@ -18,4 +18,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-Owner bank preference: Chase transaction history with automatic read-only sync, no CSV requirement. Keep Plaid disabled until owner-configured credentials and consent. Production requires confirmed free Trial; never upgrade billing or connect the real bank autonomously. See CHASE_BANK_SETUP.md.
+Owner finance override: use manual transaction logging through Telegram (+400, -20 food) instead of automatic bank downloads. Finances defaults to the logged transactions on the left, with category pie/daily spending charts on the right. Do not re-enable Plaid workers or new bank setup. Preserve previous credentials only for explicit revocation. Keep general UI plain: remove slogans, phase labels and redundant decorative boxes.

@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
 import { validateRecord } from '@/features/tracking/validation';
-import { formatMoney } from '@/features/tracking/config';
+import {quickMoneyInput,quickAccountBalance} from './quick-money-service';
+import { formatMoney,parseMoney } from '@/features/tracking/config';
 import { approvedUpdate, hashCode, type TelegramConfig } from './config';
 import { CommandError, helpText, parseCommand, requireParts } from './commands';
 import { sendReply, TelegramDeliveryError } from './transport';
@@ -38,6 +39,11 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  }
  if(!identity[0].pairedAt)return {reply:'Pair first: generate a code in JARVIS Settings, then send /start CODE here.'};
  if(name==='help')return {reply:helpText};
+ if(name==='money'){
+ const entry=await quickMoneyInput(tx,owner,args),outcome=await insert(tx,owner,'Transaction',entry.input),balance=await quickAccountBalance(tx,owner,entry.account.id);
+ await audit(tx,owner,'create.Transaction');return {...outcome,reply:`Saved ${entry.kind==='income'?'+':'−'}${formatMoney(parseMoney(entry.input.amount),entry.account.currency)} · ${entry.category}.\n${entry.account.title} balance: ${formatMoney(balance,entry.account.currency)}.\n/undo to remove this entry.`};
+ }
+
  if(name==='ask'){
  requireParts(parts,3,4);let query;try{query=querySchema.parse({domain:parts[0],start:parts[1],end:parts[2],search:parts[3]??'',view:'summary',recommendations:false})}catch{throw new CommandError('Use /ask domain | YYYY-MM-DD | YYYY-MM-DD | optional title search. Domains: finances, education, calendar, career, projects, goals, notes, sources, weekly. Maximum 366 days.');}
  const answer=await analyze(tx,owner,query);const id=randomUUID();await tx.$executeRawUnsafe('INSERT INTO "AiConversation"(id,"userId",question,query,answer,status)VALUES($1::uuid,$2::uuid,$3,$4::jsonb,$5::jsonb,\'complete\')',id,owner,('/ask '+args).slice(0,1000),JSON.stringify(query),JSON.stringify(answer));
@@ -70,7 +76,7 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  else if(name==='idea'){requireParts(parts,2);outcome=await insert(tx,owner,'Note',{title:parts[0],content:parts[1],tag:'project-idea'});}
  else if(name==='remind'){requireParts(parts,3);const taskId=await exactParent(tx,owner,'Task',parts[0]);outcome=await insert(tx,owner,'Reminder',{title:('Reminder: '+parts[0]).slice(0,200),taskId,dueDate:parts[1],time:parts[2]});}
  else if(name==='expense'||name==='income'){requireParts(parts,5);const accountId=await exactParent(tx,owner,'FinancialAccount',parts[1]);const categoryId=await exactParent(tx,owner,'Category',parts[2],name);outcome=await insert(tx,owner,'Transaction',{title:parts[3],amount:parts[0],accountId,categoryId,date:parts[4]});}
- else return {reply:'Please use a command from /help. For a task: /task Title | YYYY-MM-DD | normal. AI interpretation is not connected.'};
+ else return {reply:'Use +400 for income, -20 food for spending, or /help for more commands.'};
  await audit(tx,owner,'create.'+outcome.entity);return {...outcome,reply:`Saved ${outcome.entity==='Transaction'?name:outcome.entity?.toLowerCase()} successfully.${name==='remind'?' Reminder stored; delivery follows Notification Center settings and a running worker.':''} Use /undo to remove it if unchanged.`};
 }
 async function audit(tx:Tx,ownerId:string,action:string){await tx.$executeRawUnsafe('INSERT INTO "AuditLog"(id,"userId",action,outcome) VALUES($1::uuid,$2::uuid,$3,\'success\')',randomUUID(),ownerId,'telegram.'+action)}
