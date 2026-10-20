@@ -37,3 +37,7 @@ The hosted worker no longer imports or runs the bank download job. New bank setu
 ## Interface cleanup
 
 Module titles and operational controls remain. Repeated private-workspace banners, phase labels, AI/promotional slogans, decorative frame borders and redundant helper paragraphs are removed. Demo data retains a concise identifying label. Form inputs, error messages, source provenance, authorization consent and data-deletion confirmation remain functional.
+
+## General tab
+
+Finances → General combines up to three accounts with exact current balances, the current transaction page, and up to three budgets overlapping the selected month. The currency filter applies to all sections. Account balances include all recorded transactions; budget spending covers each displayed budget's full date range and allocated expense categories. Budgets without allocations are labeled accordingly. View all opens each detailed tab, and transaction pagination and the existing 30-second stored-data refresh remain available. Accounts/budgets are independent of transaction-title search.
