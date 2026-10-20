@@ -21,3 +21,9 @@ The pipeline is a paginated view, not a full-board export. Bank history does not
 ## Verification
 
 Browser checks cover every record tab/form at 1024×600, the module-specific default views, long-note reading, four cards in one pipeline stage, and full four-card pages with visible titles and controls. Database checks cover every entity in a single round trip, empty data, complete filtered totals across pages, workspace dates, exact account balances and transaction category direction. Existing notification tests now explicitly anchor their historical weekly scheduler fixture rather than depending on the host clock.
+
+## Readability and appearance — October 19, 2026
+
+Finances now defaults to the combined ledger/charts/budget overview; Transactions is a full-width list. Assignments use six-row pages, show the total and visible range, and support direct page selection. All stored assignments remain reachable; the Canvas calendar feed still controls source coverage and does not supply undated/unexported work. Due dates and local times appear on separate lines, with full source details available.
+
+Shared labels, tables, controls, notes and module text are larger, with short-screen layouts adjusted to keep all controls inside one viewport. Settings → Appearance provides primary and secondary hex/color pickers, a preview, Save palette and Reset colors. Signed-in palettes persist in owner settings and are loaded on other devices at their next page load. Synthetic demo palettes use a separate /demo cookie. Palette inputs accept only six-digit hex colors; neutral text/backgrounds and semantic status colors remain readable. The original animated core, dashboard accents, navigation and spending charts use the chosen palette.

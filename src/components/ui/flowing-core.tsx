@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useRef } from "react";
+import {useAppearance} from "@/features/settings/appearance-provider";
 
 /** Original, decorative light ribbons. No AI activity or external telemetry. */
 export function FlowingCore({ paused }: { paused: boolean }) {
+  const {palette}=useAppearance();
   const ref = useRef<HTMLCanvasElement>(null);
   const elapsedRef = useRef(0);
   useEffect(() => {
@@ -20,9 +22,9 @@ export function FlowingCore({ paused }: { paused: boolean }) {
       context.globalCompositeOperation = "lighter";
       for (let band = 0; band < 3; band++) {
         const gradient = context.createLinearGradient(100, 80, 510, 520);
-        gradient.addColorStop(0, band === 2 ? "#8e4ef0" : "#15d9ed");
-        gradient.addColorStop(.5, band === 1 ? "#5468fa" : "#57f5eb");
-        gradient.addColorStop(1, band === 2 ? "#4c73fc" : "#159dce");
+        gradient.addColorStop(0, band === 2 ? palette.secondaryColor : palette.primaryColor);
+        gradient.addColorStop(.5, band === 1 ? palette.secondaryColor : palette.primaryColor);
+        gradient.addColorStop(1, band === 2 ? palette.secondaryColor : palette.primaryColor);
         context.strokeStyle = gradient;
         for (let strand = 0; strand < 14; strand++) {
           const phase = band * 2.05 + strand * .022;
@@ -42,7 +44,7 @@ export function FlowingCore({ paused }: { paused: boolean }) {
         }
       }
       context.globalAlpha = .3;
-      context.strokeStyle = "#4161cb";
+      context.strokeStyle = palette.secondaryColor;
       context.lineWidth = .7;
       for (let i = 0; i < 24; i++) {
         const angle = i * Math.PI / 12;
@@ -53,7 +55,7 @@ export function FlowingCore({ paused }: { paused: boolean }) {
         context.lineTo(x + Math.cos(angle) * 30, y + Math.sin(angle) * 30);
         context.lineTo(x + Math.cos(angle) * 50 + (i % 2 ? 15 : -15), y + Math.sin(angle) * 60);
         context.stroke();
-        context.fillStyle = i % 3 ? "#2dd9e9" : "#9570f9";
+        context.fillStyle = i % 3 ? palette.primaryColor : palette.secondaryColor;
         context.beginPath(); context.arc(x, y, 1.4 + .4 * Math.sin(time + i), 0, Math.PI * 2); context.fill();
       }
       context.globalAlpha = 1;
@@ -89,6 +91,6 @@ export function FlowingCore({ paused }: { paused: boolean }) {
     document.addEventListener("visibilitychange", sync);
     resize(); sync();
     return () => { stopped = true; cancelAnimationFrame(frame); observer.disconnect(); preference.removeEventListener("change", sync); document.removeEventListener("visibilitychange", sync); };
-  }, [paused]);
+  }, [paused,palette]);
   return <div className="flowing-core" aria-hidden="true"><div className="flowing-aura" /><canvas ref={ref} width={600} height={600} /><div className="flowing-wordmark"><strong>JARVIS</strong></div></div>;
 }

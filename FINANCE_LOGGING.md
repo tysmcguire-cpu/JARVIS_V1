@@ -24,7 +24,7 @@ Existing /income and /expense commands remain available for explicit account/cat
 
 ## Website
 
-The default Finance screen shows transactions on the left, with spending by category and daily spending charts on the right. Select the month and currency above the log. Search filters the log and both spending charts. Turning a log page does not change the charts: they use all matching entries in that month. Category slices show the five largest categories and a combined remainder; bar heights use daily expenses, including zero-spending days.
+The default Finances tab shows transactions on the left, budgets below the log, and spending by category and daily spending charts on the right. Transactions is a separate full-width transaction list without totals, budgets or charts. Select the month and currency above the log. Search filters the log and both spending charts. Turning a log page does not change the charts: they use all matching entries in that month. Category slices show the five largest categories and a combined remainder; bar heights use daily expenses, including zero-spending days.
 
 Income increases the recorded balance but is excluded from spending charts. Currency totals are never combined or converted. The Balance figure includes opening balances and all logged transactions in the selected currency, regardless of the displayed month/search. Income and Spent figures use the selected month/search. These are your recorded amounts, not live bank balances or statements.
 
@@ -38,6 +38,6 @@ The hosted worker no longer imports or runs the bank download job. New bank setu
 
 Module titles and operational controls remain. Repeated private-workspace banners, phase labels, AI/promotional slogans, decorative frame borders and redundant helper paragraphs are removed. Demo data retains a concise identifying label. Form inputs, error messages, source provenance, authorization consent and data-deletion confirmation remain functional.
 
-## General tab
+## Finances overview and budgets
 
-Finances → General combines up to three accounts with exact current balances, the current transaction page, and up to three budgets overlapping the selected month. The currency filter applies to all sections. Account balances include all recorded transactions; budget spending covers each displayed budget's full date range and allocated expense categories. Budgets without allocations are labeled accordingly. View all opens each detailed tab, and transaction pagination and the existing 30-second stored-data refresh remain available. Accounts/budgets are independent of transaction-title search.
+Finances replaces the former General tab and is the default overview. It retains the transaction charts/log and adds budgets overlapping the selected month and currency. One budget is displayed at a time with Previous/Next controls for up to three preview budgets; View all opens the full paginated Budgets tab. Spending covers the budget's entire date range and its allocated expense categories, and budgets without category limits are labeled accordingly. The Balance figure combines accounts in the selected currency; Accounts retains individual balances. Budgets remain independent of transaction-title search.

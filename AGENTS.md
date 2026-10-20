@@ -19,3 +19,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 <!-- END:nextjs-agent-rules -->
 
 Owner finance override: use manual transaction logging through Telegram (+400, -20 food) instead of automatic bank downloads. Finances defaults to the logged transactions on the left, with category pie/daily spending charts on the right. Do not re-enable Plaid workers or new bank setup. Preserve previous credentials only for explicit revocation. Keep general UI plain: remove slogans, phase labels and redundant decorative boxes.
+
+Latest owner finance/presentation override: the default Finances overview combines the transaction log, spending charts and budget preview. Transactions is a separate full-width list. Assignments use six-row pages with clear totals/ranges and direct page selection. Keep shared text readable and preserve Settings → Appearance account-persisted primary/secondary palette controls.

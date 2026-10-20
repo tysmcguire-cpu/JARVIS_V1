@@ -1,0 +1,10 @@
+'use client';
+import {useState,useTransition} from 'react';
+import {useAppearance} from './appearance-provider';
+import {defaultPalette,paletteSchema} from './appearance';
+import {saveAppearance} from './appearance-actions';
+export function AppearancePanel({demo}:{demo:boolean}){
+ const {palette,apply}=useAppearance(),[draft,setDraft]=useState(palette),[message,setMessage]=useState(''),[pending,start]=useTransition();
+ const valid=paletteSchema.safeParse(draft).success;
+ return <section className="appearance-panel" aria-label="Appearance settings"><h2>Color palette</h2><p>Choose the two accent colors used throughout JARVIS.</p><form onSubmit={e=>{e.preventDefault();if(!valid)return;start(async()=>{try{if(!demo)await saveAppearance(draft);apply(draft);if(demo)document.cookie='jarvis-demo-palette='+encodeURIComponent(JSON.stringify(draft))+'; Path=/demo; Max-Age=31536000; SameSite=Strict';setMessage(demo?'Saved for this demo browser.':'Palette saved to your account.')}catch{setMessage('Could not save palette. Try again.')}})}}><div className="palette-fields">{(['primaryColor','secondaryColor'] as const).map((key,i)=><label key={key}>{i===0?'Primary color':'Secondary color'}<div><input aria-label={i===0?'Primary color picker':'Secondary color picker'} type="color" value={/^#[0-9a-fA-F]{6}$/.test(draft[key])?draft[key]:palette[key]} onChange={e=>setDraft(d=>({...d,[key]:e.target.value}))}/><input aria-label={i===0?'Primary color hex':'Secondary color hex'} value={draft[key]} maxLength={7} spellCheck={false} onChange={e=>setDraft(d=>({...d,[key]:e.target.value}))}/></div></label>)}</div><div className="palette-preview" style={{background:valid?'linear-gradient(110deg,'+draft.primaryColor+','+draft.secondaryColor+')':undefined}} aria-label="Palette preview"/><p role="status">{message||(!valid?'Enter colors as #RRGGBB.':'Backgrounds and text keep their readable contrast.')}</p><div className="palette-buttons"><button type="button" disabled={pending} onClick={()=>setDraft(defaultPalette)}>Reset colors</button><button disabled={!valid||pending} type="submit">{pending?'Saving…':'Save palette'}</button></div></form></section>;
+}

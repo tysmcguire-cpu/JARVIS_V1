@@ -87,6 +87,8 @@ model AiSourceReference {
 }
 
 model UserSettings {
+  primaryColor String @default("#69d8f3") @db.VarChar(7)
+  secondaryColor String @default("#b1a0ff") @db.VarChar(7)
   notificationTelegramEnabled Boolean  @default(false)
   userId                      String   @id @db.Uuid
   user                        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
