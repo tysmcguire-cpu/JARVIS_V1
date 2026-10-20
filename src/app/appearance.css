@@ -17,31 +17,39 @@
 .appearance-root[data-background=black] :is(input,select,textarea){background:#0d0d0d}
 .background-options{display:flex;gap:14px;border:0;margin:0;padding:0;min-width:0}.background-options legend{font-size:15px;margin-bottom:8px}.background-options label{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}.background-options input{accent-color:var(--app-primary)}.background-swatch{width:24px;height:24px;border:1px solid #818181;border-radius:5px;background:#131313}.background-swatch[data-background=black]{background:#000}.background-swatch[data-background=white]{background:#fff}
 .appearance-root[data-background=white]{background:#fff;color:#292929;color-scheme:light}
-.appearance-root[data-background=white] :is(.app-shell,.workspace,.sidebar,.topbar,#main-content,.workspace-footer){background:#fff;border-color:#dbdbdb}
-.appearance-root[data-background=white] :is(p,span,strong,small,h1,h2,h3,label,dt,dd,td,th,button,input,select,textarea,a,time,legend,code){color:#292929!important;text-shadow:none}
-.appearance-root[data-background=white] :is(.panel,.tracking-table-wrap,.integration-panel,.notification-panel,.assistant-panel,.data-controls,.tracking-calendar,.note-reader,.pipeline-lane,.opportunity-card,.module-record-card){background:#fff;border-color:#dfdfdf}
-.appearance-root[data-background=white] :is(input,select,textarea,button){background:#f8f8f8;border-color:#cbcbcb;color-scheme:light}
+.appearance-root[data-background=white] :is(.app-shell,.workspace,.sidebar,.topbar,#main-content,.workspace-footer){background:#fff;border-color:var(--app-light-border)}
+.appearance-root[data-background=white] :is(p,span,strong,small,h1,h2,h3,label,dt,dd,td,th,button,input,select,textarea,a,time,legend,code){color:var(--app-detail-text)!important;text-shadow:none}
+.appearance-root[data-background=white] :is(.panel,.tracking-table-wrap,.integration-panel,.notification-panel,.assistant-panel,.data-controls,.tracking-calendar,.note-reader,.pipeline-lane,.opportunity-card,.module-record-card){background:#fff;border-color:var(--app-light-border)}
+.appearance-root[data-background=white] :is(input,select,textarea,button){background:#f8f8f8;border-color:var(--app-light-border);color-scheme:light}
 .appearance-root[data-background=white] :is(.tracking-tabs button[aria-pressed=true],.nav-item.active){background:color-mix(in srgb,var(--app-primary) 16%,white);border-color:color-mix(in srgb,var(--app-primary) 60%,#555555)}
 .appearance-root[data-background=white] :is(th,.calendar-grid>button,.note-index button[aria-pressed=true]){background:#f3f3f3!important}
-.appearance-root[data-background=white] :is(td,th,.overview-budgets,.note-index,.notification-inbox article,.assistant-history){border-color:#dfdfdf}
-.appearance-root[data-background=white] :is(.finance-bars text){fill:#333333}
+.appearance-root[data-background=white] :is(td,th,.overview-budgets,.note-index,.notification-inbox article,.assistant-history){border-color:var(--app-light-border)}
+.appearance-root[data-background=white] :is(.finance-bars text){fill:var(--app-detail-text)}
 .appearance-root[data-background=white] .flowing-aura{opacity:.35}
 .appearance-root[data-background=white] .appearance-panel{color:#292929}
 .appearance-root[data-background=white] .palette-buttons button{background:#f3f3f3}
 
 
 @media(max-height:740px){.appearance-panel{gap:8px}.appearance-panel form{gap:10px}.appearance-panel .palette-preview{height:28px}.background-options legend{margin-bottom:5px}.background-swatch{width:21px;height:21px}}
-.appearance-root[data-background=white] :is(.tracking-dialog,.authorization-dialog,.bank-dialog,.mfa-card){background:#fff;border-color:#c9c9c9;color:#292929}.appearance-root[data-background=white] :is(.finance-amount[data-kind=income],.module-status[data-status=done]){color:#176548!important}
-.appearance-root[data-background=white] :is(.brand-mark,.avatar){background:#f3f3f3!important;border-color:#cbcbcb;box-shadow:none}.appearance-root[data-background=white] .finance-totals{border-color:#dfdfdf}
+.appearance-root[data-background=white] :is(.tracking-dialog,.authorization-dialog,.bank-dialog,.mfa-card){background:#fff;border-color:var(--app-light-border);color:#292929}.appearance-root[data-background=white] :is(.finance-amount[data-kind=income],.module-status[data-status=done]){color:#176548!important}
+.appearance-root[data-background=white] :is(.brand-mark,.avatar){background:#f3f3f3!important;border-color:var(--app-light-border);box-shadow:none}.appearance-root[data-background=white] .finance-totals{border-color:var(--app-light-border)}
 
 .flowing-aura{transform-origin:center;background-position:center}
 .palette-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.palette-fields label>div{gap:7px}.palette-fields input:not([type=color]){width:calc(100% - 65px)}.palette-fields input[type=color]{width:58px;flex-shrink:0}
 /* Original center wordmark: thin, upright, widely spaced system lettering. */
 .appearance-root .flowing-wordmark strong{display:block;width:auto;max-width:none;margin:0;font-family:'Segoe UI',Arial,sans-serif;font-weight:300;font-style:normal;letter-spacing:.24em;transform:none;background:none;-webkit-text-fill-color:currentColor;color:color-mix(in srgb,var(--app-primary) 35%,white);filter:none;text-shadow:0 0 8px color-mix(in srgb,var(--app-primary) 50%,transparent),0 0 28px color-mix(in srgb,var(--app-secondary) 35%,transparent);line-height:1.25}
-.appearance-root[data-background=white] .flowing-wordmark strong{color:#292929!important;text-shadow:none}
+.appearance-root[data-background=white] .flowing-wordmark strong{color:var(--app-detail-text)!important;text-shadow:none}
 .appearance-root .finance-bars line{stroke:color-mix(in srgb,var(--app-tertiary) 45%,black)}
 .appearance-root .appearance-panel{color:color-mix(in srgb,var(--app-tertiary) 40%,white)}.appearance-root .appearance-panel p{color:color-mix(in srgb,var(--app-tertiary) 70%,white)}.appearance-root .palette-fields input{border-color:color-mix(in srgb,var(--app-tertiary) 65%,black);background:color-mix(in srgb,var(--app-tertiary) 10%,black);color:#f1f1f1}.appearance-root .palette-buttons button{background:color-mix(in srgb,var(--app-tertiary) 15%,black)}
-.appearance-root[data-background=white] .palette-fields input,.appearance-root[data-background=white] .palette-buttons button{background:#f5f5f5;border-color:#bcbcbc}
-.appearance-root[data-background=white] .appearance-panel p{color:#333!important}
+.appearance-root[data-background=white] .palette-fields input,.appearance-root[data-background=white] .palette-buttons button{background:#f5f5f5;border-color:var(--app-light-border)}
+.appearance-root[data-background=white] .appearance-panel p{color:var(--app-detail-text)!important}
 .wordmark-settings{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,1.2fr);gap:20px;align-items:center}.wordmark-settings label{display:flex;flex-direction:column;gap:6px;font-size:14px}.wordmark-settings select{font:inherit;background:color-mix(in srgb,var(--app-tertiary) 12%,black);color:#f4f4f4;border:1px solid color-mix(in srgb,var(--app-tertiary) 60%,black);padding:8px;border-radius:5px;width:100%}.wordmark-preview{display:flex;align-items:center;justify-content:center;min-height:48px;color:#f4f4f4;overflow:hidden}.appearance-root[data-background=white] .wordmark-settings select{background:#f5f5f5}.appearance-root[data-background=white] .wordmark-preview{color:#292929}.appearance-panel>p{font-size:13px}.appearance-panel .palette-preview{height:24px}.appearance-panel form{gap:12px}.appearance-panel{gap:10px}
 @media(max-height:740px){.appearance-panel form{gap:7px}.appearance-panel{gap:6px}.appearance-panel .palette-preview{height:14px}.wordmark-preview{min-height:37px}.wordmark-settings label{gap:3px}.wordmark-settings select{padding:5px}.appearance-panel .palette-buttons button{padding:7px 14px}.appearance-panel h2{font-size:20px}.appearance-panel .palette-fields label{gap:6px}}
+/* Detail text follows the third color in every mode, with a readable luminance floor. */
+.appearance-root{--app-detail-text:color-mix(in srgb,var(--app-tertiary) 46%,white)}
+.appearance-root .appearance-panel p{color:var(--app-detail-text)}
+.appearance-root[data-background=white]{--app-detail-text:color-mix(in srgb,var(--app-tertiary) 42%,black);--app-light-border:color-mix(in srgb,color-mix(in srgb,var(--app-tertiary) 65%,#666) 40%,white)}
+.appearance-root[data-background=white] .appearance-panel{color:var(--app-detail-text)}
+.appearance-root[data-background=white] .wordmark-preview{color:var(--app-detail-text)}
+.appearance-root[data-background=white] .finance-bars line{stroke:var(--app-light-border)}
+.appearance-root[data-background=white] .nav-caption,.appearance-root[data-background=white] .workspace-footer{color:var(--app-detail-text)}
