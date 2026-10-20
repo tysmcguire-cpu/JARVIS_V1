@@ -2,7 +2,12 @@
 import { revalidatePath } from 'next/cache';
 import { requireOwner,withOwnerRequest } from '@/features/auth/server';
 import { entityFor } from './config';
-import { readWorkspace, removeRecord, writeRecord } from './repository';
+import { readWorkspace, removeRecord, writeRecord,writeInlineNote } from './repository';
+export async function saveInlineNote(input:unknown,id:string,version:string){
+ await requireOwner();
+ try{const row=await writeInlineNote(input,id,version);revalidatePath('/notes');return {ok:true,message:'Note saved.',row}}
+ catch(error){return {ok:false,message:error instanceof Error&&!('code' in error)&&error.message.length<180?error.message:'Could not save. Your draft is still here; try again.'}}
+}
 import {writeBudget,removeBudget} from './budget-repository';
 export async function saveBudget(input:unknown,id?:string,version?:string){
  await requireOwner();

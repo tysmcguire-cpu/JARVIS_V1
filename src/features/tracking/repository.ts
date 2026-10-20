@@ -68,6 +68,14 @@ export async function removeRecord(key:string,id:string,updatedAt:string) {
   });
 }
 export function moduleForEntity(key:string) {return entities.find(e=>e.key===key)?.module;}
+export async function writeInlineNote(input:unknown,id:string,version:string){
+ const values=validateRecord('Note',input);recordId.parse(id);
+ return withOwnerDatabase(async(tx,owner)=>{
+  const rows=await tx.$queryRawUnsafe<import('./config').RecordRow[]>('UPDATE "Note" SET title=$1,tag=$2,content=$3,"updatedAt"=GREATEST(date_trunc(\'milliseconds\',clock_timestamp()),"updatedAt"+interval \'1 millisecond\') WHERE id=$4::uuid AND "userId"=$5::uuid AND "updatedAt"=$6::timestamptz RETURNING id,title,tag,content,to_char("updatedAt" AT TIME ZONE \'UTC\',\'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"\') AS "updatedAt"',values.title,values.tag,values.content,id,owner,version);
+  if(rows.length!==1)throw Error('This note changed or is unavailable. Copy your changes, then reload before saving.');
+  await tx.auditLog.create({data:{userId:owner,action:'tracking.Note.update',outcome:'success'}});return rows[0];
+ });
+}
 export async function readLinkedChoices(key:string,fieldName:string,search:string) {
  const entity=entityFor(key);const field=entity.fields.find(f=>f.name===fieldName&&f.target);if(!field||search.length>100)throw Error('Invalid linked-record search.');
  return withOwnerDatabase((tx,ownerId)=>tx.$queryRawUnsafe<{id:string;title:string;kind?:string}[]>(`SELECT id,title${field.target==='Category'?",kind":""} FROM "${field.target}" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY title,id LIMIT 50`,ownerId,`%${search.replace(/[\\%_]/g,'\\$&')}%`));

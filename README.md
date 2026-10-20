@@ -70,6 +70,12 @@ Sign in at `/login`, then open a workspace module. Create parent records first (
 
 The existing Supabase project is migrated for Phase 2. On the other computer, commit/push existing code before pulling, then run `pnpm install --frozen-lockfile` and `pnpm db:generate` with the app stopped (Windows locks Prisma engine files while running). Keep that computer's `.env` and original jarvis_app password. Its role already has the new tracking permissions. For a separate development project, follow Foundation provisioning, deploy migrations, run `pnpm db:tracking`, then both verification scripts. Never use the administrative DIRECT_URL as runtime DATABASE_URL. `db:verify-tracking` exercises synthetic CRUD in an intentionally rolled-back transaction; it saves no sample records.
 
+## Editing notes
+
+Select a note to edit its title, tag and contents directly in the existing reading pane. Use the toolbar for bold, italic, strikethrough, headings, paragraphs, lists, quotes and inline code, plus undo/redo. Choose **Save note** or press Ctrl/Cmd+S; **Discard changes** restores the last saved version. Saving is explicit, not automatic. Drafts stay in memory, and leaving an unsaved note prompts for confirmation.
+
+Long notes use Previous/Next section controls without scrolling or splitting their stored contents. The 8,000-character limit includes Markdown formatting. Existing plain-text notes remain supported. Pasted content is plain text; links, images and remote embeds are not enabled. No database migration is needed.
+
 ## Telegram on the primary computer
 
 This computer is the primary development workspace. Phase 3 command processing, protected pairing, Settings controls, local polling and a secure webhook endpoint are implemented. Telegram is enabled and paired locally. See TELEGRAM.md for BotFather setup, safe numeric-ID identification and pairing; never send bot tokens in chat. `pnpm telegram:poll` runs locally without a public tunnel. The app can continue running at localhost:3000 without Telegram. Real owner pairing, status replies and note synchronization are verified; live undo and restart/retry checks remain.

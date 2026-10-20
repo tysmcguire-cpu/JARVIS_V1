@@ -308,6 +308,14 @@ Owner reported the third color did not work correctly in light mode. Reproduced 
 
 Executed verification: five browser scenarios passed, including six desktop aspect ratios, motion controls, all wordmark previews/persistence, legacy third-color checks, and a new matrix across White/Current/Black with warm/cool third colors. The matrix verifies actual navigation/footer/table/chart-label colors, tinted light-mode borders, and text contrast of at least 4.5:1 against the workspace surface for pure black/white third-color selections. Warm/cool light and dark screenshots were visually reviewed. Lint, TypeScript/production build, three production boundary checks and client-secret scan passed. No schema, credentials, owner data or saved palette preference changed. Master specification unchanged; hosted acceptance follows deployment.
 
+## Inline Notes editing and formatting — October 20, 2026
+
+Preserved the Notes index/reading-pane layout and replaced Open/edit with direct title, tag and content editing. Added bold, italic, strikethrough, headings, paragraphs, bullet/numbered lists, quotes, inline code and undo/redo. Saves are explicit via Save note or Ctrl/Cmd+S; discard restores the saved baseline. Unsaved drafts receive navigation/close guards, failed saves retain their content, and timestamp checks prevent stale overwrites. The existing content field stores Markdown with its 8,000-character limit; no migration is required.
+
+Tiptap 3.32.0 is loaded only for Notes. Plain-text pasting and disabled link/image extensions keep remote markup inert. A complete document is paged through a clipped viewport, preserving the desktop-only 1024×600/no-scrolling override without splitting stored text or rich-text nodes. No private records, credentials or integrations were changed; the complete master specification is unchanged.
+
+Executed verification: all 209 unit/database tests, nine Notes/tracking/module browser regressions, lint, TypeScript, production build, three production boundary tests and the 46-asset client-secret scan passed. Browser coverage includes formatting/save round-trips, discard, keyboard save, undo/redo, unsaved navigation, full long-note access at minimum size and inert malicious stored/pasted markup. Minimum-size editor and final-page screenshots were visually reviewed. This change is local pending an owner-requested push/deployment.
+
 ## Primary hover highlights and pulsing outer ring — October 20, 2026
 
 Sidebar module hover/keyboard focus and record/settings tab hover now explicitly use the primary color for their highlight, border and accent text, overriding third-color detail tones. White backgrounds use a light primary tint with dark primary text; Current/Black use a dark primary tint with light primary text. Existing stored palette values remain unchanged.

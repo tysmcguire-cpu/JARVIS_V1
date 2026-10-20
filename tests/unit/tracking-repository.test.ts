@@ -14,7 +14,7 @@ vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:async(callback:(tx:unknown,id:s
  auditLog:{create:async({data}:{data:{userId:string;action:string;outcome:string}})=>transaction.query('INSERT INTO "AuditLog"(id,"userId",action,outcome)VALUES($1,$2,$3,$4)',[randomUUID(),data.userId,data.action,data.outcome])}
  };return callback(adapter,owner);
 })}));
-import { writeRecord,readWorkspace,removeRecord,readLinkedChoices } from '@/features/tracking/repository';
+import { writeRecord,readWorkspace,removeRecord,readLinkedChoices,writeInlineNote } from '@/features/tracking/repository';
 import {writeBudget,removeBudget} from '@/features/tracking/budget-repository';
 describe('actual tracking repository against PostgreSQL',()=>{
  it('creates, searches, updates with concurrency control, and deletes',async()=>{
@@ -83,5 +83,13 @@ it('makes every saved assignment reachable with six-row pagination and stable or
  });
  beforeAll(async()=>{database=new PGlite();await database.exec(`CREATE SCHEMA auth;CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE runtime;GRANT USAGE ON SCHEMA public,auth TO runtime;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;INSERT INTO auth.users VALUES('${owner}');`);await database.exec(readFileSync('prisma/migrations/20261015000000_foundation/migration.sql','utf8'));await database.exec(readFileSync('prisma/migrations/20261016000000_core_tracking/migration.sql','utf8'));await database.exec(readFileSync('prisma/migrations/20261016020000_integrations/migration.sql','utf8'));await database.exec(`GRANT SELECT ON "ApiConnection","ExternalRecord","UserSettings" TO runtime;INSERT INTO "User"(id,"updatedAt")VALUES('${owner}',now());GRANT SELECT,INSERT,UPDATE,DELETE ON ${entities.map(e=>'"'+e.key+'"').join(',')} TO runtime;GRANT INSERT ON "AuditLog" TO runtime;`);},30000);
  afterAll(async()=>database?.close());
+
+ it('persists inline note formatting atomically and preserves stale drafts without overwriting newer content',async()=>{
+  await writeRecord('Note',{title:'Inline database note',content:'Original',tag:'work'});const original=(await readWorkspace('Note',{search:'Inline database note'})).rows[0];
+  const updated=await writeInlineNote({title:'Inline database note',content:'## Heading\n\n**Bold** and *italic*\n\n- Item',tag:'edited'},original.id,original.updatedAt);expect(updated.content).toContain('**Bold**');expect(updated.updatedAt).not.toBe(original.updatedAt);
+  await expect(writeInlineNote({title:'Stale',content:'Must not replace',tag:''},original.id,original.updatedAt)).rejects.toThrow('changed');
+  await database.exec('REVOKE INSERT ON "AuditLog" FROM runtime');await expect(writeInlineNote({title:'Inline database note',content:'Must roll back',tag:''},updated.id,updated.updatedAt)).rejects.toThrow();await database.exec('GRANT INSERT ON "AuditLog" TO runtime');expect((await readWorkspace('Note',{search:'Inline database note'})).rows[0].content).toBe(updated.content);
+  await expect(writeInlineNote({title:'Inline database note',content:'x'.repeat(8001),tag:''},updated.id,updated.updatedAt)).rejects.toThrow('8000');
+ });
 
 });

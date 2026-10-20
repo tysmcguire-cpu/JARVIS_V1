@@ -50,6 +50,14 @@ Tracking CRUD grants apply only to the new domain tables; owner/settings remain 
 
 Record reads are paginated, sorting/search bounded, linked option search limited to 50 results per query, and calendars capped at 200 matching dates per month. Exact currency totals use PostgreSQL bigint and JavaScript bigint, separated by currency. Chart widths alone convert amounts to numbers. Row timestamps are normalized to milliseconds and monotonically increase to detect stale edits without silently replacing newer changes. Domain parent deletion is restricted; owner deletion still cascades through all domain records.
 
+## Inline Notes editor
+
+Notes retain the left index/right reading-pane layout, with directly editable title, tag and rich text. Tiptap 3.32.0 and its Markdown bridge load lazily only for Notes. The existing Note.content stores portable Markdown; plain-text records remain compatible. The editor supports basic formatting, undo/redo and explicit saves, with no image/link schemas or remote content. Clipboard HTML is discarded in favor of plain text.
+
+The complete document stays mounted while a clipped, line-aligned viewport pages through it. Selection changes reveal the caret's page. This preserves the desktop-only minimum 1024×600, single-viewport/no-scrolling owner override. Draft guards cover note selection, filters, reload, application navigation and browser closing. Failed saves preserve the draft.
+
+The inline action independently verifies the owner before validation; the repository independently establishes owner database scope. Parameterized updates require the previous timestamp, return a monotonic version and write their audit entry atomically. Stale updates fail without replacing newer content. No schema migration or external service is involved.
+
 ## Phase 3 Telegram boundary
 
 `src/features/telegram` owns configuration, deterministic parsing, owner pairing, command processing and plain-text transport. Browser actions use requireOwner/withOwnerDatabase; the webhook first verifies its header secret, then approved sender/private-chat IDs, then the persistent owner pairing. The polling runner obtains updates from the configured Telegram bot and uses the same ID/pairing checks. Bot commands use a separate server-only database boundary that sets the configured owner claim locally and independently verifies the real owner record. It does not manufacture a browser session.
