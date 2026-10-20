@@ -92,5 +92,5 @@ export function FlowingCore({ paused }: { paused: boolean }) {
     resize(); sync();
     return () => { stopped = true; cancelAnimationFrame(frame); observer.disconnect(); preference.removeEventListener("change", sync); document.removeEventListener("visibilitychange", sync); };
   }, [paused,palette]);
-  return <div className="flowing-core" aria-hidden="true"><div className="flowing-aura" /><canvas ref={ref} width={600} height={600} /><div className="flowing-wordmark"><strong className="jarvis-lettering"><span className="sr-only">JARVIS</span><svg viewBox="0 0 264 32" fill="none" aria-hidden="true"><g stroke="currentColor" strokeWidth="2.6" strokeLinecap="square" strokeLinejoin="round"><path d="M4 17V22Q4 26 8 26H28Q32 26 32 22V6"/><path d="M50 26L69 6H80V26M58 18H80"/><path d="M99 26V6H124Q130 6 130 12V14Q130 19 124 19H99M120 19L132 26"/><path d="M151 6V26H160L183 6"/><path d="M202 6V26"/><path d="M259 6H231Q226 6 226 11V12Q226 16 231 16H253Q259 16 259 21V22Q259 26 253 26H226"/></g><g fill="currentColor">{[41,89,141,192,215].map(x=><rect key={x} x={x} y="23" width="3" height="3"/>)}</g></svg></strong></div></div>;
+  return <div className="flowing-core" aria-hidden="true"><div className="flowing-aura" /><canvas ref={ref} width={600} height={600} /><div className="flowing-wordmark"><strong>JARVIS</strong></div></div>;
 }

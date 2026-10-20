@@ -11,6 +11,7 @@ import "./notifications.css";
 import "./finance-workspace.css";
 import "./simple-interface.css";
 import "./readability.css";
+import "./detail-palette.css";
 import "./appearance.css";
 export const metadata: Metadata = { title: "JARVIS · Personal Operating System", description: "Your private personal command center.", robots: { index: false, follow: false } };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

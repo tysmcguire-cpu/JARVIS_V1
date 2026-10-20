@@ -61,3 +61,5 @@ Read-only Chase/Plaid Transactions connection, encrypted owner-bound grant and O
 Appearance settings (20261019000000_appearance) add primaryColor and secondaryColor to UserSettings with six-digit hex constraints and existing cyan/violet defaults. Existing owner update authorization applies; an exact-action audit INSERT policy permits settings.appearance.update. Existing snapshots without palette fields restore with default colors.
 
 Migration 20261020000000_background adds UserSettings.background with the existing appearance as the default ('current') and a database constraint accepting only current/black/white. Existing owner-scoped settings updates and exact-action appearance audit policies apply. Older backups restore 'current' if the field is absent; older demo palette cookies also default to 'current'.
+
+Migration 20261020010000_tertiary_color adds UserSettings.tertiaryColor with a six-digit hex constraint and the existing muted blue-gray default. Existing owner-scoped settings writes/audit apply. Older saved demo palettes and backups default the missing third color; current primary/secondary colors and background preferences are preserved.
