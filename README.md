@@ -70,6 +70,10 @@ Sign in at `/login`, then open a workspace module. Create parent records first (
 
 The existing Supabase project is migrated for Phase 2. On the other computer, commit/push existing code before pulling, then run `pnpm install --frozen-lockfile` and `pnpm db:generate` with the app stopped (Windows locks Prisma engine files while running). Keep that computer's `.env` and original jarvis_app password. Its role already has the new tracking permissions. For a separate development project, follow Foundation provisioning, deploy migrations, run `pnpm db:tracking`, then both verification scripts. Never use the administrative DIRECT_URL as runtime DATABASE_URL. `db:verify-tracking` exercises synthetic CRUD in an intentionally rolled-back transaction; it saves no sample records.
 
+## Adding events from the calendar
+
+Select a day in Calendar, then choose **Add event**. The form fills both dates with the selected day; adjust dates, times and location before saving. Existing items remain visible in the day details. This works from Events, Tasks and Reminders and creates an internal JARVIS event.
+
 ## Editing notes
 
 Select a note to edit its title, tag and contents directly in the existing reading pane. Use the toolbar for bold, italic, strikethrough, headings, paragraphs, lists, quotes and inline code, plus undo/redo. Choose **Save note** or press Ctrl/Cmd+S; **Discard changes** restores the last saved version. Saving is explicit, not automatic. Drafts stay in memory, and leaving an unsaved note prompts for confirmation.

@@ -329,3 +329,9 @@ Executed verification: two dashboard layout/motion scenarios across six desktop 
 Moved the formatting toolbar above the note tag/title within the same editor pane. Renamed the Current background option to Original blue-gray and fixed its workspace, sidebar and panel surfaces independently of the third detail color. Kept the stored current enum for compatibility; no migration or owner preference write is required. Contrast protection includes the restored surfaces. The desktop-only single-screen override and complete master specification remain unchanged.
 
 Verification: 209 unit/database tests, five Notes/Appearance browser scenarios, lint, TypeScript/production build, three production boundary checks and the 46-asset client-secret scan passed. The minimum-size Notes screenshot was reviewed. The owner authorizes pushing/deploying completed verified changes automatically from now on.
+
+## Calendar day event creation — October 20, 2026
+
+Calendar day details now include Add event. Selecting it opens the existing validated event form with both dates set to the selected day. Tasks/Reminders switch to Events while preserving the viewed month; unrelated search/status filters clear so the created event can be seen. Existing day details and pagination remain. This writes only internal JARVIS records through the existing independently owner-verified action/repository. No schema, provider or credential changes are needed.
+
+Verified: 209 unit/database tests, four browser scenarios (including creation from all three tabs, date defaults, saved title/time, existing-item retention, cancellation, minimum-size dialog/page fit and tracking regressions), lint, TypeScript/production build, three production boundary checks and the 46-asset client-secret scan passed. Minimum-size calendar screenshot reviewed. The master specification and desktop-only/no-scrolling override remain unchanged. Owner-authorized push and Render deployment follow these checks.
