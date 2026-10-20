@@ -77,3 +77,6 @@
 .appearance-root[data-background=current] :is(.tracking-table-wrap,.panel,.integration-panel,.notification-panel,.assistant-panel,.data-controls,.tracking-calendar,.note-reader,.pipeline-lane,.module-record-card){background:#223344}
 .appearance-root[data-background=current] .orbital-console{background-color:#1b2938}
 .background-swatch[data-background=current]{background:#1b2938}
+
+.clock-format-setting{display:flex;align-items:center;gap:12px;font-size:14px}.clock-format-setting select{font:inherit;padding:6px 8px;background:color-mix(in srgb,var(--app-tertiary) 12%,black);color:var(--app-detail-text);border:1px solid var(--app-tertiary);border-radius:5px}.appearance-root[data-background=white] .clock-format-setting select{background:#f5f5f5}
+@media(max-height:740px){.appearance-panel form{gap:8px}.clock-format-setting{font-size:12px}.clock-format-setting select{padding:4px 7px}}

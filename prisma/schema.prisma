@@ -87,6 +87,7 @@ model AiSourceReference {
 }
 
 model UserSettings {
+  clockFormat String @default("24h") @db.VarChar(3)
   wordmarkStyle String @default("original") @db.VarChar(20)
   tertiaryColor String @default("#87a8bc") @db.VarChar(7)
   background String @default("current") @db.VarChar(10)

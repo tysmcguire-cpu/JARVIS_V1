@@ -95,3 +95,7 @@ The Assistant is available for local grounded analysis and on-demand weekly revi
 Open Settings → Integrations and CSV. CSV import supports account/category choice, column/date/sign mapping, paginated preview, duplicate review and atomic confirmation. It writes internal records without connecting a bank. Create the destination account and categories in Finances first.
 
 The five read-only adapters and synthetic tests are implemented, but no Calendar/Gmail/GitHub/Canvas/Drive account is connected. Authorization requires an owner-controlled credential-encryption key, approved provider token and resource selection. Google tokens come from an existing approved OAuth project. Synced snapshots do not overwrite manual tracking. See INTEGRATIONS_PHASE4.md for scope, key custody and limits. CSV needs no provider token or encryption key.
+
+## Clock display
+
+Settings → Appearance → Top-bar time format offers 24-hour (military) and 12-hour (AM/PM). Choose a format and Save palette. The account preference follows you across computers; existing accounts default to 24-hour. It changes only the local top-bar clock, not stored dates, timezone settings or notification schedules. Reset colors preserves the selected format.
