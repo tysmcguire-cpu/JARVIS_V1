@@ -4,6 +4,7 @@ import "./command-theme.css";
 import "./orbital-dashboard.css";
 import "./desktop-workspace.css";
 import "./tracking.css";
+import "./module-workspaces.css";
 import "./integrations.css";
 import "./assistant.css";
 import "./notifications.css";

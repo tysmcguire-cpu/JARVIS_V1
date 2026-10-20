@@ -21,7 +21,7 @@ test('every tracking tab fits the minimum desktop viewport',async({page},info)=>
  }
 });
 test('notes support create, search, edit, delete and empty states in isolated demo',async({page})=>{
- await page.goto('/demo/notes');await page.getByRole('button',{name:'+ Add notes',exact:true}).click();
+ await page.goto('/demo/notes');await page.getByRole('button',{name:'Table',exact:true}).click();await page.getByRole('button',{name:'+ Add notes',exact:true}).click();
  const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();await dialog.getByLabel('Title',{exact:true}).fill('Synthetic browser note');await dialog.getByLabel('Content',{exact:true}).fill('Synthetic body');await dialog.getByLabel('Tag',{exact:true}).fill('test');await dialog.getByRole('button',{name:'Save record',exact:true}).click();await expect(dialog).not.toBeVisible();
  await page.getByLabel('Search titles').fill('Synthetic browser note');await page.getByRole('button',{name:'Search',exact:true}).click();await expect(page.getByRole('cell',{name:'Synthetic browser note',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Edit Synthetic browser note',exact:true}).click();await dialog.getByLabel('Title',{exact:true}).fill('Synthetic edited note');await dialog.getByRole('button',{name:'Save record',exact:true}).click();await expect(page.getByRole('heading',{name:'No matching records'})).toBeVisible();

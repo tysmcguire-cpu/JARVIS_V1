@@ -1,3 +1,4 @@
+import {moduleSummary,type ModuleFacts} from './module-metrics';
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { withOwnerDatabase } from '@/lib/owner-db';
@@ -5,19 +6,19 @@ import { entities, entityFor, formatMoney, type WorkspaceData } from './config';
 import { recordId, validateRecord } from './validation';
 import {workspaceQuery} from './read-query';
 const quoted = (name: string) => `"${name}"`; // Names come exclusively from the static entity definitions.
-type ReadResult=Omit<WorkspaceData,"summary"|"chart"> & {statuses:{label:string;value:number}[];balances?:{currency:string;balance:string}[];spending?:{label:string;value:string}[];grade?:{earned:string;possible:string};budgetSpending?:{title:string;currency:string;spent:string}[]};
+type ReadResult=Omit<WorkspaceData,"summary"|"chart"> & {facts:ModuleFacts;statuses:{label:string;value:number}[];balances?:{currency:string;balance:string}[];spending?:{label:string;value:string}[];grade?:{earned:string;possible:string};budgetSpending?:{title:string;currency:string;spent:string}[]};
 export async function readWorkspace(key:string,input:unknown):Promise<WorkspaceData>{
  const {sql,params,entity}=workspaceQuery(key,input);
  return withOwnerDatabase(async(tx,owner)=>{
   params[0]=owner;const [{data}]=await tx.$queryRawUnsafe<{data:ReadResult}[]>(sql,...params);
-  const summary:WorkspaceData["summary"]=[{label:"Matching records",value:String(data.total)}];let chart:WorkspaceData["chart"]=data.statuses;
-  if(entity.fields.some(f=>f.name==="status"))summary.push({label:"Completed",value:String(data.statuses.find(s=>s.label==="done")?.value??0)});
+  const summary:WorkspaceData["summary"]=moduleSummary(key,data.total,data.facts);let chart:WorkspaceData["chart"]=data.statuses;
+
   if(data.balances)summary.push(...data.balances.map(r=>({label:"Account balance",value:formatMoney(BigInt(r.balance),r.currency)})));
   if(data.spending)chart=data.spending.map(r=>({label:r.label+" · "+formatMoney(BigInt(r.value),r.label.slice(0,3)),value:Number(r.value)/100}));
-  if(data.grade&&BigInt(data.grade.possible)>0n)summary.push({label:"Recorded points (unweighted)",value:(Number(data.grade.earned)/Number(data.grade.possible)*100).toFixed(1)+"%"});
+  if(entity.key!=="Grade"&&data.grade&&BigInt(data.grade.possible)>0n)summary.push({label:"Recorded points (unweighted)",value:(Number(data.grade.earned)/Number(data.grade.possible)*100).toFixed(1)+"%"});
   if(key==="Goal")chart=data.rows.map(r=>({label:r.title,value:Math.min(100,Number(r.current)/Number(r.target)*100)}));
   if(data.budgetSpending)summary.push(...data.budgetSpending.map(r=>({label:"Spent · "+r.title,value:formatMoney(BigInt(r.spent),r.currency)})));
-  return {rows:data.rows,total:data.total,page:data.page,pageSize:4,options:data.options,relationsTruncated:data.relationsTruncated,calendar:data.calendar,summary:summary.slice(0,5),chart};
+  return {rows:data.rows,total:data.total,page:data.page,pageSize:4,options:data.options,relationsTruncated:data.relationsTruncated,calendar:data.calendar,summary:summary.slice(0,5),today:data.facts.today,chart};
  });
 }
 export async function writeRecord(key: string, input: unknown, id?: string, expectedUpdatedAt?: string) {

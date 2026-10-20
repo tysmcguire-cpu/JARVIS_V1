@@ -1,0 +1,1 @@
+export function noteSections(content:string){const segments=content.match(/[^\n]{1,55}\n?|\n/g)??[];const pages:string[]=[];for(let i=0;i<segments.length;i+=5)pages.push(segments.slice(i,i+5).join(''));return pages.length?pages:['No content yet.']}
