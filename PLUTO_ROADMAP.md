@@ -7,8 +7,8 @@ Baseline: 7dd529712d5e1745358898a3106a693c929f996a. Branch feature/pluto-saas-v1
 | 0 Preserve/audit | Complete; 226 baseline tests passed | Clean baseline recorded, isolated checkout, owner checklist and evidence audit |
 | 1 Multi-user foundation | Implemented and locally tested; live acceptance pending | Separate environment guard, identity lifecycle, additive schema/RLS, independent tenant tests |
 | 2 Tracking | Implemented and locally tested; Auth deletion worker pending phase 5 | Existing modules operate under customer scope, cross-tenant read/write/export tests |
-| 3 Billing/cost control | Next | Stripe test flow, signature/replay, entitlements, atomic reservations |
-| 4 Intelligence | Pending | Metered authorized chat, durable weekly reports, bounded research |
+| 3 Billing/cost control | Implemented and locally tested; real Stripe acceptance pending | Stripe test flow, signature/replay, entitlements, atomic reservations |
+| 4 Intelligence | In progress | Metered authorized chat, durable weekly reports, bounded research |
 | 5 Integrations/Telegram | Pending | Tenant pairing/dispatch, read-only credentials, durable jobs |
 | 6 Administration | Pending | Explicit MFA role, aggregate metrics/API, revocation and audit |
 | 7 Voice/responsive/onboarding | Pending | Disabled paid voice architecture, accessible mobile UI, customer setup |

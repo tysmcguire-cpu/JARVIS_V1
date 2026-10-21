@@ -9,6 +9,12 @@ datasource db {
 }
 
 model User {
+ billingCustomer BillingCustomer?
+ subscription Subscription?
+ checkoutIntent CheckoutIntent?
+ billingEntries BillingLedger[]
+ revenueEvents RevenueMovement[]
+ usageEvents UsageReservation[]
   workspaceStates WorkspaceState[]
   notificationRules         NotificationRule[]
   notificationJobs          NotificationJob[]
@@ -794,4 +800,115 @@ model CustomerErasure {
  authDeletedAt DateTime? @db.Timestamptz(6)
  attempts Int @default(0)
  leaseUntil DateTime? @db.Timestamptz(6)
+}
+
+model PlanCatalog {
+ id String @id @db.VarChar(20)
+ monthlyPriceMinor Int
+ enabled Boolean
+ messages Int
+ tokens BigInt
+ voiceSeconds Int
+ researchCalls Int
+ reportsPerWeek Int
+ concurrency Int
+ spendMicros BigInt
+ subscriptions Subscription[]
+}
+model BudgetPolicy {
+ id Boolean @id @default(true)
+ enabled Boolean @default(false)
+ monthlySpendMicros BigInt @default(0)
+}
+model BillingCustomer {
+ userId String @id @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ stripeCustomerId String @unique @db.VarChar(100)
+ livemode Boolean
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ reconciledAt DateTime? @db.Timestamptz(6)
+ subscriptions Subscription[]
+ @@unique([userId,stripeCustomerId])
+}
+model Subscription {
+ userId String @id @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ stripeSubscriptionId String @unique @db.VarChar(100)
+ stripeCustomerId String @db.VarChar(100)
+ customer BillingCustomer @relation(fields:[userId,stripeCustomerId],references:[userId,stripeCustomerId],onDelete:Cascade)
+ plan String @db.VarChar(20)
+ catalog PlanCatalog @relation(fields:[plan],references:[id])
+ status String @db.VarChar(30)
+ periodEnd DateTime @db.Timestamptz(6)
+ monthlyAmountMicros BigInt
+ currency String @default("USD") @db.Char(3)
+ cancelAtPeriodEnd Boolean @default(false)
+ livemode Boolean
+ syncedAt DateTime @default(now()) @db.Timestamptz(6)
+}
+model CheckoutIntent {
+ userId String @id @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ requestId String @unique @db.Uuid
+ plan String @db.VarChar(20)
+ cadence String @db.VarChar(10)
+ expiresAt DateTime @db.Timestamptz(6)
+ stripeSessionId String? @db.VarChar(100)
+ url String?
+}
+model BillingEvent {
+ id String @id @db.VarChar(100)
+ kind String @db.VarChar(100)
+ createdAt DateTime @db.Timestamptz(6)
+ processedAt DateTime @default(now()) @db.Timestamptz(6)
+ livemode Boolean
+ movement RevenueMovement?
+}
+model BillingLedger {
+ objectId String @db.VarChar(100)
+ kind String @db.VarChar(30)
+ userId String? @db.Uuid
+ user User? @relation(fields:[userId],references:[id],onDelete:SetNull)
+ amount BigInt
+ currency String @db.Char(3)
+ occurredAt DateTime @db.Timestamptz(6)
+ livemode Boolean
+ @@id([objectId,kind])
+}
+model RevenueMovement {
+ eventId String @id @db.VarChar(100)
+ event BillingEvent @relation(fields:[eventId],references:[id])
+ userId String? @db.Uuid
+ user User? @relation(fields:[userId],references:[id],onDelete:SetNull)
+ kind String @db.VarChar(20)
+ deltaMicros BigInt
+ occurredAt DateTime @db.Timestamptz(6)
+ livemode Boolean
+}
+model UsageReservation {
+ id String @id @db.Uuid
+ userId String? @db.Uuid
+ user User? @relation(fields:[userId],references:[id],onDelete:SetNull)
+ requestKey String @db.VarChar(160)
+ kind String @db.VarChar(20)
+ plan String @db.VarChar(20)
+ periodStart DateTime @db.Date
+ state String @default("reserved") @db.VarChar(20)
+ tokensReserved BigInt
+ tokensActual BigInt?
+ inputTokens BigInt?
+ outputTokens BigInt?
+ costReservedMicros BigInt
+ costActualMicros BigInt?
+ voiceReservedSeconds Int
+ voiceActualSeconds Int?
+ researchReservedCalls Int
+ researchActualCalls Int?
+ model String? @db.VarChar(100)
+ leaseUntil DateTime @db.Timestamptz(6)
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ completedAt DateTime? @db.Timestamptz(6)
+ @@unique([userId,requestKey])
+ @@index([userId,periodStart],map:"usage_customer_period")
+ @@index([periodStart],map:"usage_global_period")
 }

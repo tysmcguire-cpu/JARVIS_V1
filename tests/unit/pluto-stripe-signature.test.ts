@@ -1,0 +1,12 @@
+import {beforeEach,afterEach,it,expect,vi} from 'vitest';
+import Stripe from 'stripe';
+const apply=vi.hoisted(()=>vi.fn());vi.mock('server-only',()=>({}));vi.mock('@/features/billing/service',()=>({applyStripeEvent:apply}));
+import {POST} from '@/app/api/stripe/webhook/route';
+import {stripeClient} from '@/features/billing/stripe';
+const secret='whsec_synthetic_signature_test_only';
+beforeEach(()=>{vi.resetAllMocks();vi.stubEnv('STRIPE_SECRET_KEY','sk_test_synthetic_local_only');vi.stubEnv('STRIPE_WEBHOOK_SECRET',secret);vi.stubEnv('PLUTO_BILLING_MODE','test');vi.stubEnv('PLUTO_BILLING_LIVE_APPROVED','false');apply.mockResolvedValue({duplicate:false})});afterEach(()=>vi.unstubAllEnvs());
+function request(livemode=false,signature?:string,timestamp?:number){const body=JSON.stringify({id:'evt_signature_synthetic',object:'event',type:'customer.subscription.updated',created:Math.floor(Date.now()/1000),livemode,data:{object:{id:'sub_synthetic',customer:'cus_synthetic'}}});return new Request('https://pluto.example.invalid/api/stripe/webhook',{method:'POST',body,headers:{'stripe-signature':signature??Stripe.webhooks.generateTestHeaderString({payload:body,secret,...timestamp?{timestamp}:{}})}})}
+it('verifies the exact raw-body signature before processing',async()=>{expect((await POST(request())).status).toBe(200);expect(apply).toHaveBeenCalledOnce();expect((await POST(request(false,'not-a-signature'))).status).toBe(400);expect(apply).toHaveBeenCalledOnce()});
+it('rejects stale signatures and wrong billing modes without database writes',async()=>{expect((await POST(request(false,undefined,1))).status).toBe(400);expect((await POST(request(true))).status).toBe(400);expect(apply).not.toHaveBeenCalled()});
+it('defaults to test mode and cannot activate live billing through an invalid mode value',()=>{vi.stubEnv('PLUTO_BILLING_MODE','invalid');vi.stubEnv('STRIPE_SECRET_KEY','sk_live_synthetic_not_real');expect(()=>stripeClient()).toThrow();vi.stubEnv('PLUTO_BILLING_MODE','live');expect(()=>stripeClient()).toThrow('approved')});
+it('rejects oversized payloads and fails closed on missing configuration',async()=>{expect((await POST(new Request('https://pluto.example.invalid/api/stripe/webhook',{method:'POST',body:'x'.repeat(262145)}))).status).toBe(413);vi.stubEnv('STRIPE_WEBHOOK_SECRET','');expect((await POST(request())).status).toBe(503);expect(apply).not.toHaveBeenCalled()});

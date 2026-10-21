@@ -1,0 +1,3 @@
+import 'server-only';
+export function priceFor(plan:'plus'|'pro',cadence:'monthly'|'annual',env:Record<string,string|undefined>=process.env){const price=env[`PLUTO_STRIPE_PRICE_${plan.toUpperCase()}_${cadence.toUpperCase()}`];if(!price||!/^price_[A-Za-z0-9]+$/.test(price))throw Error('This billing interval is not configured.');return price}
+export function planForPrice(price:string,env:Record<string,string|undefined>=process.env){for(const plan of ['plus','pro'] as const)for(const cadence of ['monthly','annual'] as const)if(env[`PLUTO_STRIPE_PRICE_${plan.toUpperCase()}_${cadence.toUpperCase()}`]===price)return {plan,cadence};throw Error('Unrecognized subscription price.')}

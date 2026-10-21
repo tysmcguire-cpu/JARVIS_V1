@@ -1,0 +1,58 @@
+import 'server-only';
+import type Stripe from 'stripe';
+import type {Prisma} from '@prisma/client';
+import {randomUUID} from 'node:crypto';
+import {withBillingDatabase} from './database';
+import {stripeClient,billingSite} from './stripe';
+import {planForPrice,priceFor} from './prices';
+type Tx=Prisma.TransactionClient;
+export function subscriptionSnapshot(subscription:Stripe.Subscription){
+ if(subscription.items.data.length!==1)throw Error('Unexpected subscription item count.');
+ const item=subscription.items.data[0],price=item.price,selection=planForPrice(price.id);
+ if(price.currency!=='usd'||price.unit_amount===null||item.quantity!==1||price.recurring?.interval!==(selection.cadence==='annual'?'year':'month')||price.recurring.interval_count!==1)throw Error('Subscription price configuration mismatch.');
+ return {id:subscription.id,customer:typeof subscription.customer==='string'?subscription.customer:subscription.customer.id,plan:selection.plan,status:subscription.status,periodEnd:new Date(item.current_period_end*1000),monthlyAmountMicros:BigInt(price.unit_amount)*10000n/(selection.cadence==='annual'?12n:1n),currency:'USD',cancelAtPeriodEnd:subscription.cancel_at_period_end,livemode:subscription.livemode};
+}
+async function synchronizeLocked(tx:Tx,customerId:string,eventId:string,stripe:Stripe,occurredAt:Date){
+ const [customer]=await tx.$queryRawUnsafe<{userId:string;livemode:boolean}[]>('SELECT "userId",livemode FROM "BillingCustomer" WHERE "stripeCustomerId"=$1',customerId);if(!customer)return false;
+ const list=await stripe.subscriptions.list({customer:customerId,status:'all',limit:100});if(list.has_more)throw Error('Subscription reconciliation exceeded its bound.');
+ const subscriptions=list.data.sort((a,b)=>b.created-a.created),active=subscriptions.filter(s=>s.status==='active');if(active.length>1)throw Error('Multiple active subscriptions require billing review.');
+ await tx.$executeRawUnsafe('UPDATE \"BillingCustomer\" SET \"reconciledAt\"=now() WHERE \"stripeCustomerId\"=$1',customerId);
+ const selected=active[0]??subscriptions[0];if(!selected)return false;
+ const snapshot=subscriptionSnapshot(selected);const [catalog]=await tx.$queryRawUnsafe<{monthlyPriceMinor:number}[]>('SELECT \"monthlyPriceMinor\" FROM \"PlanCatalog\" WHERE id=$1 AND enabled=true',snapshot.plan);const interval=selected.items.data[0].price.recurring?.interval,approved=interval==='month'?catalog?.monthlyPriceMinor:Number(process.env[`PLUTO_STRIPE_${snapshot.plan.toUpperCase()}_ANNUAL_MINOR`]);if(!Number.isSafeInteger(approved)||approved<=0||selected.items.data[0].price.unit_amount!==approved)throw Error('Canonical price does not match the approved catalog.');if(snapshot.customer!==customerId||snapshot.livemode!==customer.livemode)throw Error('Billing identity mismatch.');
+ const [old]=await tx.$queryRawUnsafe<{monthlyAmountMicros:bigint;status:string;periodEnd:Date}[]>('SELECT "monthlyAmountMicros",status,"periodEnd" FROM "Subscription" WHERE "userId"=$1::uuid FOR UPDATE',customer.userId);
+ await tx.$executeRawUnsafe('INSERT INTO "Subscription"("userId","stripeSubscriptionId","stripeCustomerId",plan,status,"periodEnd","monthlyAmountMicros",currency,"cancelAtPeriodEnd",livemode)VALUES($1::uuid,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT("userId") DO UPDATE SET "stripeSubscriptionId"=EXCLUDED."stripeSubscriptionId",plan=EXCLUDED.plan,status=EXCLUDED.status,"periodEnd"=EXCLUDED."periodEnd","monthlyAmountMicros"=EXCLUDED."monthlyAmountMicros",currency=EXCLUDED.currency,"cancelAtPeriodEnd"=EXCLUDED."cancelAtPeriodEnd",livemode=EXCLUDED.livemode,"syncedAt"=now()',customer.userId,snapshot.id,customerId,snapshot.plan,snapshot.status,snapshot.periodEnd,snapshot.monthlyAmountMicros,snapshot.currency,snapshot.cancelAtPeriodEnd,snapshot.livemode);
+ const oldMrr=old?.status==='active'&&old.periodEnd>new Date()?BigInt(old.monthlyAmountMicros):0n,nextMrr=snapshot.status==='active'&&snapshot.periodEnd>new Date()?snapshot.monthlyAmountMicros:0n,delta=nextMrr-oldMrr;
+ if(delta)await tx.$executeRawUnsafe('INSERT INTO "RevenueMovement"("eventId","userId",kind,"deltaMicros","occurredAt",livemode)VALUES($1,$2::uuid,$3,$4,$5,$6) ON CONFLICT("eventId") DO NOTHING',eventId,customer.userId,!oldMrr?'new':!nextMrr?'churn':delta>0?'expansion':'contraction',delta,occurredAt,snapshot.livemode);
+ await tx.$executeRawUnsafe('UPDATE "CheckoutIntent" SET "expiresAt"=now() WHERE "userId"=$1::uuid',customer.userId);return true;
+}
+export async function applyStripeEvent(event:Stripe.Event,stripe:Stripe=stripeClient()){
+ const object=event.data.object as {id?:string;customer?:string|{id:string}},customerId=typeof object.customer==='string'?object.customer:object.customer?.id;
+ return withBillingDatabase(async tx=>{
+  // Signature verification is mandatory at the route before this internal function.
+  await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text','stripe:'+(customerId??event.id));
+  if((await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "BillingEvent" WHERE id=$1',event.id)).length)return {duplicate:true};
+  await tx.$executeRawUnsafe('INSERT INTO "BillingEvent"(id,kind,"createdAt",livemode)VALUES($1,$2,$3,$4)',event.id,event.type,new Date(event.created*1000),event.livemode);
+  if(!customerId)return {duplicate:false};
+  await synchronizeLocked(tx,customerId,event.id,stripe,new Date());
+  const [customer]=await tx.$queryRawUnsafe<{userId:string}[]>('SELECT "userId" FROM "BillingCustomer" WHERE "stripeCustomerId"=$1',customerId);if(!customer)return {duplicate:false};
+  if(['invoice.paid','invoice.payment_failed'].includes(event.type)&&object.id){const invoice=await stripe.invoices.retrieve(object.id);if((typeof invoice.customer==='string'?invoice.customer:invoice.customer?.id)!==customerId)throw Error('Invoice identity mismatch');await tx.$executeRawUnsafe('INSERT INTO "BillingLedger"("objectId",kind,"userId",amount,currency,"occurredAt",livemode)VALUES($1,$2,$3::uuid,$4,$5,$6,$7) ON CONFLICT("objectId",kind) DO UPDATE SET amount=EXCLUDED.amount',invoice.id,event.type==='invoice.paid'?'cash_collected':'payment_failed',customer.userId,BigInt(event.type==='invoice.paid'?invoice.amount_paid:invoice.amount_due),invoice.currency.toUpperCase(),new Date(event.created*1000),event.livemode)}
+  if(event.type==='charge.refunded'&&object.id){const charge=await stripe.charges.retrieve(object.id);if((typeof charge.customer==='string'?charge.customer:charge.customer?.id)!==customerId)throw Error('Refund identity mismatch');await tx.$executeRawUnsafe('INSERT INTO "BillingLedger"("objectId",kind,"userId",amount,currency,"occurredAt",livemode)VALUES($1,\'refund\',$2::uuid,$3,$4,$5,$6) ON CONFLICT("objectId",kind) DO UPDATE SET amount=EXCLUDED.amount',charge.id,customer.userId,-BigInt(charge.amount_refunded),charge.currency.toUpperCase(),new Date(event.created*1000),event.livemode)}
+  return {duplicate:false};
+ });
+}
+export async function reconcileCustomer(customerId:string,stripe:Stripe=stripeClient()){
+ return withBillingDatabase(async tx=>{await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text','stripe:'+customerId);const id='reconcile:'+customerId+':'+Math.floor(Date.now()/3600000);await tx.$executeRawUnsafe('INSERT INTO "BillingEvent"(id,kind,"createdAt",livemode)VALUES($1,\'pluto.reconciliation\',now(),$2) ON CONFLICT(id) DO NOTHING',id,(process.env.PLUTO_BILLING_MODE??'test')==='live');return synchronizeLocked(tx,customerId,id,stripe,new Date())});
+}
+export async function checkoutForCustomer(userId:string,plan:'plus'|'pro',cadence:'monthly'|'annual',stripe:Stripe=stripeClient()){
+ const priceId=priceFor(plan,cadence),price=await stripe.prices.retrieve(priceId);
+ const [catalog]=await withBillingDatabase(tx=>tx.$queryRawUnsafe<{monthlyPriceMinor:number}[]>('SELECT \"monthlyPriceMinor\" FROM \"PlanCatalog\" WHERE id=$1 AND enabled=true',plan));
+ const expected=cadence==='monthly'?catalog?.monthlyPriceMinor:Number(process.env[`PLUTO_STRIPE_${plan.toUpperCase()}_ANNUAL_MINOR`]);
+ if(!Number.isSafeInteger(expected)||expected<=0||price.unit_amount!==expected)throw Error('Stripe price does not match the approved catalog amount.');
+ if(!price.active||price.currency!=='usd'||price.recurring?.interval!==(cadence==='annual'?'year':'month')||price.recurring.interval_count!==1)throw Error('Billing price is not configured correctly.');
+ const customer=await withBillingDatabase(async tx=>{await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',userId+':checkout');await tx.$queryRawUnsafe('SELECT public.pluto_billing_customer_active($1::uuid)',userId);let [row]=await tx.$queryRawUnsafe<{stripeCustomerId:string;livemode:boolean}[]>('SELECT "stripeCustomerId",livemode FROM "BillingCustomer" WHERE "userId"=$1::uuid',userId);if(!row){const created=await stripe.customers.create({}, {idempotencyKey:'pluto-customer:'+userId});await tx.$executeRawUnsafe('INSERT INTO "BillingCustomer"("userId","stripeCustomerId",livemode)VALUES($1::uuid,$2,$3)',userId,created.id,created.livemode);row={stripeCustomerId:created.id,livemode:created.livemode}}return row});
+ const existing=await stripe.subscriptions.list({customer:customer.stripeCustomerId,status:'all',limit:100});if(existing.has_more||existing.data.some(s=>!['canceled','incomplete_expired'].includes(s.status)))throw Error('Manage the existing subscription in the customer portal.');
+ const intent=await withBillingDatabase(async tx=>{await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',userId+':checkout');await tx.$queryRawUnsafe('SELECT public.pluto_billing_customer_active($1::uuid)',userId);const [current]=await tx.$queryRawUnsafe<{requestId:string;plan:string;cadence:string;expiresAt:Date;url:string|null}[]>('SELECT * FROM "CheckoutIntent" WHERE "userId"=$1::uuid',userId);if(current&&current.expiresAt>new Date()){if(current.plan!==plan||current.cadence!==cadence)throw Error('Finish or wait for the existing checkout to expire.');return current}const next={requestId:randomUUID(),plan,cadence,expiresAt:new Date(Math.floor(Date.now()/1000)*1000+35*60000),url:null};await tx.$executeRawUnsafe('INSERT INTO "CheckoutIntent"("userId","requestId",plan,cadence,"expiresAt")VALUES($1::uuid,$2::uuid,$3,$4,$5)ON CONFLICT("userId")DO UPDATE SET "requestId"=EXCLUDED."requestId",plan=EXCLUDED.plan,cadence=EXCLUDED.cadence,"expiresAt"=EXCLUDED."expiresAt",url=NULL,"stripeSessionId"=NULL',userId,next.requestId,plan,cadence,next.expiresAt);return next});
+ if(intent.url)return intent.url;
+ const session=await stripe.checkout.sessions.create({mode:'subscription',customer:customer.stripeCustomerId,line_items:[{price:priceId,quantity:1}],success_url:billingSite()+'/settings?billing=complete',cancel_url:billingSite()+'/settings?billing=canceled',expires_at:Math.floor(intent.expiresAt.getTime()/1000)},{idempotencyKey:'pluto-checkout:'+intent.requestId});if(!session.url||new URL(session.url).protocol!=='https:'||new URL(session.url).hostname!=='checkout.stripe.com')throw Error('Checkout unavailable');
+ await withBillingDatabase(tx=>tx.$executeRawUnsafe('UPDATE "CheckoutIntent" SET url=$3,"stripeSessionId"=$4 WHERE "userId"=$1::uuid AND "requestId"=$2::uuid',userId,intent.requestId,session.url,session.id));return session.url;
+}

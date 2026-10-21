@@ -25,3 +25,6 @@ Status: commercial development only. Not ready for public launch. Do not change 
 
 ## Decisions awaiting you (development continues with safe defaults)
 Annual discount; business jurisdiction/currency/tax settings; final brand/domain; retention windows; maximum monthly AI spend; invitation-only beta cohort; whether customers may enable Telegram on Free. Safe defaults: USD, Free/Plus/Pro only, no trials, Ultimate inactive, no external actions, all paid providers/public registration/checkout disabled.
+
+## Billing implementation specifics
+Use separate pluto_billing_runtime PostgreSQL credentials (member of pluto_billing only), in PLUTO_BILLING_DATABASE_URL. Configure Stripe TEST API/signing keys, monthly price IDs and Portal products/proration/cancellation. Annual billing additionally needs approved total cents in PLUTO_STRIPE_PLUS_ANNUAL_MINOR / PLUTO_STRIPE_PRO_ANNUAL_MINOR plus annual price IDs. Public checkout is OFF. Before AI activation, approve and configure BudgetPolicy's global USD microdollar cap; its initial value is zero and disabled. No real Stripe API call, paid provider request or commercial migration has been executed.
