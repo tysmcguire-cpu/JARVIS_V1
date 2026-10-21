@@ -74,3 +74,15 @@ it('creates bounded month-end event series once and includes tasks and reminders
  expect(eventSeriesDates('2024-01-31','2024-02-01','monthly',2)[1]).toEqual({startDate:'2024-02-29',endDate:'2024-03-01'});expect(()=>eventSeriesDates('2026-01-01','2026-01-01','daily',53)).toThrow();
  expect([...eventConflicts([{id:'a',key:'Event',date:'2026-01-01',time:'10:00',endTime:'11:00'},{id:'b',key:'Event',date:'2026-01-01',time:'10:30',endTime:'11:30'},{id:'c',key:'Event',date:'2026-01-01',time:'11:30',endTime:'12:00'}])]).toEqual(['a','b']);
 });
+it('returns ordered schedule times and exact zero-filled daily spending without counting transfers',async()=>{
+ const before=await readHub(),today=before.today,accounts=await financeAccounts(),checking=accounts.find(a=>a.title==='Checking')!,savings=accounts.find(a=>a.title==='Savings')!,euro=accounts.find(a=>a.currency==='EUR')!;
+ await writeRecord('Category',{title:'Chart groceries',kind:'expense'});const category=(await readWorkspace('Category',{search:'Chart groceries'})).rows[0];
+ const original=before.dailySpending!.find(s=>s.currency==='USD')!.days.at(-1)!.amount;
+ await writeRecord('Transaction',{title:'Chart expense',accountId:checking.id,categoryId:category.id,amount:'15.10',date:today});
+ await writeRecord('Transaction',{title:'Euro chart expense',accountId:euro.id,categoryId:category.id,amount:'1.99',date:today});
+ await transferMoney({from:checking.id,to:savings.id,amount:'123.45',date:today,title:'Chart transfer',requestId:randomUUID()});
+ for(const time of ['14:00','09:00'])await writeRecord('Event',{title:'Schedule '+time,startDate:today,endDate:today,startTime:time,endTime:time==='14:00'?'15:00':'10:00',location:'Desk'});
+ const hub=await readHub(),usd=hub.dailySpending!.find(s=>s.currency==='USD')!,eur=hub.dailySpending!.find(s=>s.currency==='EUR')!;
+ expect(usd.days).toHaveLength(7);expect(usd.days.at(-1)).toEqual({date:today,amount:(BigInt(original)+1510n).toString()});expect(eur.days.at(-1)!.amount).toBe('199');expect(usd.days.every(d=>/^\d+$/.test(d.amount))).toBe(true);
+ expect(hub.groups.schedule.rows.filter(r=>r.title.startsWith('Schedule')).map(r=>r.time)).toEqual(['09:00','14:00']);
+});
