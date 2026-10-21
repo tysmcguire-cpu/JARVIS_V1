@@ -1,7 +1,7 @@
 import {z} from 'zod';
 export const widgetNames=['deadlines','tasks','schedule','spending','notifications','projects','goals','notes'] as const;
 export const canvasKinds=['schedule','priorities','inbox','spending','projects','goals','notes','tasks','deadlines'] as const;
-export const canvasWidgetSchema=z.object({kind:z.enum(canvasKinds),side:z.enum(['left','right']),weight:z.number().min(1).max(8),width:z.number().min(26).max(32)});
+export const canvasWidgetSchema=z.object({kind:z.enum(canvasKinds),side:z.enum(['left','right']),weight:z.number().min(1).max(8),width:z.number().min(13).max(32),height:z.number().min(5).max(100).optional()});
 export type CanvasWidget=z.infer<typeof canvasWidgetSchema>;
 export const initialCanvas:CanvasWidget[]=[{kind:'schedule',side:'left',weight:5,width:31},{kind:'priorities',side:'right',weight:5,width:31},{kind:'inbox',side:'left',weight:1,width:31},{kind:'spending',side:'right',weight:1,width:31}];
 export const dashboardSchema=z.object({layout:z.enum(['default','today','custom']).default('default'),core:z.boolean().default(true),canvas:z.array(canvasWidgetSchema).max(6).refine(rows=>new Set(rows.map(r=>r.kind)).size===rows.length&&['left','right'].every(side=>rows.filter(r=>r.side===side).length<=3),'Choose unique widgets, up to three on each side.').optional(),widgets:z.array(z.object({kind:z.enum(widgetNames),wide:z.boolean().default(false)})).max(6).refine(rows=>new Set(rows.map(r=>r.kind)).size===rows.length,'Choose each widget once.').refine(rows=>rows.reduce((n,w)=>n+(w.wide?2:1),0)<=6,'Maximum six widget spaces.')});

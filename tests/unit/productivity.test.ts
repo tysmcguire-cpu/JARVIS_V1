@@ -1,3 +1,4 @@
+import {saveDashboardLayout} from '@/features/settings/dashboard-layout-actions';
 import {beforeAll,afterAll,it,expect,vi} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 import {readFileSync,readdirSync} from 'node:fs';
@@ -6,6 +7,7 @@ import {entities} from '@/features/tracking/config';
 import {dashboardSchema,defaultDashboard} from '@/features/productivity/contracts';
 import {eventSeriesDates,eventConflicts} from '@/features/tracking/event-series';
 let database:PGlite;const owner=randomUUID(),other=randomUUID();let actor=owner;
+vi.mock('next/cache',()=>({revalidatePath:vi.fn()}));
 vi.mock('server-only',()=>({}));
 vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:async(work:(tx:unknown,id:string)=>Promise<unknown>)=>database.transaction(async tx=>{
  await tx.exec(`SET LOCAL ROLE runtime;SET LOCAL request.jwt.claim.sub='${actor}'`);
@@ -93,3 +95,5 @@ it('accepts previous dashboards and validates bounded custom canvas preferences'
  expect(dashboardSchema.parse({...defaultDashboard,canvas}).canvas).toEqual(canvas);
  for(const invalid of [[{...canvas[0],width:99}],[{...canvas[0],weight:0}],[...canvas,canvas[0]],['schedule','spending','notes','goals'].map(kind=>({...canvas[0],kind}))])expect(dashboardSchema.safeParse({...defaultDashboard,canvas:invalid}).success).toBe(false);
 });
+
+it('changes dashboard mode from Settings without losing saved widget geometry',async()=>{const current=await readPersonalState('dashboard'),canvas=[{kind:'schedule',side:'left',weight:1,width:13,height:5}];await savePersonalState('dashboard',{...defaultDashboard,layout:'custom',canvas},current.version);await saveDashboardLayout('default');expect((await readPersonalState('dashboard')).value).toMatchObject({layout:'default',canvas});await saveDashboardLayout('custom');expect((await readPersonalState('dashboard')).value).toMatchObject({layout:'custom',canvas});await expect(saveDashboardLayout('other')).rejects.toThrow()});

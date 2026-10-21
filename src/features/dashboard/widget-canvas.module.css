@@ -1,4 +1,4 @@
-.canvas{position:absolute;inset:5px 22px 72px;z-index:4;pointer-events:none;color:var(--app-detail-text)}
+.canvas{position:absolute;inset:58px 22px 12px;z-index:4;pointer-events:none;color:var(--app-detail-text)}
 .controls{position:absolute;top:0;right:0;display:flex;gap:7px;align-items:center;pointer-events:auto;z-index:8}
 .controls button,.toolbar button{font:inherit;color:var(--app-detail-text);border:1px solid color-mix(in srgb,var(--app-primary) 35%,transparent);border-radius:7px;background:color-mix(in srgb,var(--app-surface) 80%,transparent);padding:6px 10px;font-size:12px;cursor:pointer}
 .controls button:hover,.toolbar button:hover{color:var(--app-primary);border-color:var(--app-primary)}
@@ -15,6 +15,12 @@
 @container (height < 245px){.content ol{margin-top:7px}.content ol li{min-height:45px}.content ol li:nth-child(n+3){display:none}.content ul li:nth-child(n+2){display:none}.content section>div+div{margin-top:4px;padding-top:6px}.content section p{margin-top:3px}.content section footer{display:none}}
 @container (height < 170px){.content ol li:nth-child(n+2){display:none}.content section>div+div{padding-top:3px}.content ul{margin-top:3px}.content ul a{padding:3px 0}.content section p{display:none}.content section>div>div>span{font-size:10px}}
 @container (height < 135px){.content ul,.content ol,.content section>div>p,.content section>div>svg{display:none}.content section>div+div{border:0;margin:2px 0;padding:0}.content section>div{margin-top:3px}.content section{padding-top:24px}}
-@media(max-height:740px){.canvas{inset:0 12px 61px}.column{top:36px;gap:9px}.frame{min-height:100px}.controls button{padding:4px 8px}.content>section{padding-top:25px;padding-bottom:17px}.menu{top:30px;gap:0;padding:6px}.menu button{padding:3px 6px}}
+@media(max-height:740px){.canvas{inset:52px 12px 8px}.column{top:36px;gap:9px}.frame{min-height:100px}.controls button{padding:4px 8px}.content>section{padding-top:25px;padding-bottom:17px}.menu{top:30px;gap:0;padding:6px}.menu button{padding:3px 6px}}
 .canvas{--today-line:color-mix(in srgb,var(--app-tertiary) 20%,transparent);--today-muted:var(--app-detail-text)}
-.frame:only-child{flex-grow:0!important;flex-basis:calc(100% * var(--widget-weight) / 8)}
+.frame[data-explicit-height=false]:only-child{flex-grow:0!important;flex-basis:calc(100% * var(--widget-weight) / 8)}
+
+@container (height < 85px){.content>section{padding:17px 9px 0!important}.content section>div:not(:first-child),.content ul,.content ol,.content section p,.content section footer{display:none}.content section>div:first-child{margin:0}.content h2{font-size:11px}.content header{min-height:20px;gap:4px;padding-right:22px}.content header>span:not(:first-child){display:none}.content header svg{width:12px;height:12px}.content header a{width:18px;height:20px}.toolbar{top:1px;right:3px}.toolbar button{font-size:11px;min-width:18px}.resize{height:18px;width:20px;font-size:13px;line-height:16px}.content section>div:first-child>div{display:none}}
+@container (width < 225px){.content>section{padding-left:9px;padding-right:9px}.content h2{font-size:12px}.content header{gap:4px}.content header>span:not(:first-child){display:none}.content section>div{flex-wrap:wrap}.content svg{max-width:100%}.content li small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+.frame[data-explicit-height=true]{min-height:54px}
+@media(max-height:740px){.frame[data-explicit-height=true]{min-height:50px}}

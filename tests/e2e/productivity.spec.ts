@@ -1,27 +1,28 @@
+import {chooseDashboard} from './dashboard-helpers';
 import {test,expect} from '@playwright/test';
 import {defaultPalette} from '../../src/features/settings/appearance';
 test('custom dashboard supports direct resizing, adding, removing and saved layouts',async({page})=>{
- await page.setViewportSize({width:1440,height:900});await page.goto('/demo');await page.getByLabel('Dashboard layout').selectOption('custom');
+ await page.setViewportSize({width:1440,height:900});await page.goto('/demo');await chooseDashboard(page,'custom');
  await expect(page.getByRole('heading',{name:'Today',exact:true})).toHaveCount(0);
  await expect(page.locator('[data-widget]')).toHaveCount(4);
  const handle=page.getByRole('button',{name:'Resize Schedule',exact:true});const before=await page.locator('[data-widget="schedule"]').boundingBox();const box=await handle.boundingBox();
  await page.mouse.move(box!.x+10,box!.y+10);await page.mouse.down();await page.mouse.move(box!.x-40,box!.y-60,{steps:8});await page.mouse.up();
  const after=await page.locator('[data-widget="schedule"]').boundingBox();expect(after!.width).toBeLessThan(before!.width);expect(after!.height).toBeLessThan(before!.height);
  await page.getByRole('button',{name:'Add widget',exact:false}).click();await page.getByRole('group',{name:'Available widgets'}).getByRole('button',{name:'Projects',exact:true}).click();await expect(page.locator('[data-widget="projects"]')).toBeVisible();
- await page.getByRole('button',{name:'Save layout',exact:true}).click();await expect(page.getByRole('button',{name:'Save layout',exact:true})).toHaveCount(0);await page.reload();await expect(page.getByLabel('Dashboard layout')).toHaveValue('custom');await expect(page.locator('[data-widget="projects"]')).toBeVisible();
+ await page.getByRole('button',{name:'Save layout',exact:true}).click();await expect(page.getByRole('button',{name:'Save layout',exact:true})).toHaveCount(0);await page.reload();await expect(page.getByLabel('Dashboard layout')).toHaveCount(0);await expect(page.locator('[data-widget="projects"]')).toBeVisible();
  expect((await page.locator('[data-widget="schedule"]').boundingBox())!.width).toBeCloseTo(after!.width,0);
  await page.getByRole('button',{name:'Remove Projects',exact:true}).click();await expect(page.locator('[data-widget="projects"]')).toHaveCount(0);await page.getByRole('button',{name:'Discard',exact:true}).click();await expect(page.locator('[data-widget="projects"]')).toBeVisible();
  await page.getByRole('button',{name:'Resize Schedule',exact:true}).focus();await page.keyboard.press('ArrowLeft');await expect(page.getByRole('button',{name:'Save layout',exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:'test-results/custom-resizable-dashboard.png'});
  await page.getByRole('button',{name:'Remove Notifications',exact:true}).click();await page.getByRole('button',{name:'Remove Projects',exact:true}).click();const soloBefore=await page.locator('[data-widget="schedule"]').boundingBox();await page.getByRole('button',{name:'Resize Schedule',exact:true}).press('ArrowUp');expect((await page.locator('[data-widget="schedule"]').boundingBox())!.height).toBeLessThan(soloBefore!.height);
- await page.getByLabel('Dashboard layout').selectOption('default');await expect(page.locator('.flowing-core')).toBeVisible();await expect(page.getByRole('navigation',{name:'Workspace modules'}).getByRole('link')).toHaveCount(10);
+ await chooseDashboard(page,'default');await expect(page.locator('.flowing-core')).toBeVisible();await expect(page.getByRole('navigation',{name:'Workspace modules'}).getByRole('link')).toHaveCount(10);
 });
 
 test('Today supports every background and calendar creates an explicit repeating series',async({page})=>{
  await page.setViewportSize({width:1024,height:600});
  for(const background of ['white','black','current']){
-  await page.context().addCookies([{name:'jarvis-demo-palette',value:JSON.stringify({...defaultPalette,background}),url:'http://127.0.0.1:3100'}]);await page.goto('/demo');await page.getByLabel('Dashboard layout').selectOption('custom');await expect(page.getByRole('heading',{name:'Open tasks',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);await page.screenshot({path:`test-results/productivity-today-${background}.png`});
+  await page.context().addCookies([{name:'jarvis-demo-palette',value:JSON.stringify({...defaultPalette,background}),url:'http://127.0.0.1:3100'}]);await page.goto('/demo');await chooseDashboard(page,'custom');await expect(page.getByRole('heading',{name:'Open tasks',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);await page.screenshot({path:`test-results/productivity-today-${background}.png`});
  }
  await page.goto('/demo/calendar');await page.getByRole('button',{name:'+ Add events',exact:true}).click();const dialog=page.getByRole('dialog');await dialog.getByLabel('Event',{exact:true}).fill('Weekly planning');await dialog.getByLabel('Start date',{exact:true}).fill('2026-11-01');await dialog.getByLabel('End date',{exact:true}).fill('2026-11-01');await dialog.getByLabel('Event repeat',{exact:true}).selectOption('weekly');await dialog.getByLabel('Event occurrences').fill('3');await dialog.getByRole('button',{name:'Continue',exact:true}).click();await dialog.getByLabel('Start time',{exact:true}).fill('10:00');await dialog.getByLabel('End time',{exact:true}).fill('11:00');await dialog.getByLabel('Location',{exact:true}).fill('Desk');await dialog.getByRole('button',{name:'Save record',exact:true}).click();await expect(dialog).not.toBeVisible();await page.getByLabel('Month',{exact:true}).fill('2026-11');for(const date of ['01','08','15'])await expect(page.locator('.calendar-grid').getByRole('button',{name:new RegExp('^2026-11-'+date+':')})).toContainText('Weekly planning');await page.getByRole('button',{name:'Agenda',exact:true}).click();await expect(page.locator('.calendar-agenda')).toContainText('Weekly planning');
 });
@@ -34,13 +35,22 @@ test('notes scroll continuously and recovery drafts restore without replacing th
 });
 
 test('previous Today preferences migrate to Custom and six widgets stay bounded at resize limits',async({page})=>{
- await page.setViewportSize({width:1024,height:600});await page.addInitScript(()=>{if(!sessionStorage.getItem('legacy-layout')){localStorage.setItem('jarvis-demo-dashboard',JSON.stringify({layout:'today',core:true,widgets:[]}));sessionStorage.setItem('legacy-layout','1')}});await page.goto('/demo');await expect(page.getByLabel('Dashboard layout')).toHaveValue('custom');await expect(page.locator('[data-widget]')).toHaveCount(4);
+ await page.setViewportSize({width:1024,height:600});await page.addInitScript(()=>{if(!sessionStorage.getItem('legacy-layout')){localStorage.setItem('jarvis-demo-dashboard',JSON.stringify({layout:'today',core:true,widgets:[]}));sessionStorage.setItem('legacy-layout','1')}});await page.goto('/demo');await expect(page.getByLabel('Dashboard layout')).toHaveCount(0);await expect(page.locator('[data-widget]')).toHaveCount(4);
  for(const name of ['Projects','Goals']){await page.getByRole('button',{name:'Add widget',exact:false}).click();await page.getByRole('group',{name:'Available widgets'}).getByRole('button',{name,exact:true}).click()}
  await expect(page.locator('[data-widget]')).toHaveCount(6);await page.getByRole('button',{name:'Add widget',exact:false}).click();await expect(page.getByRole('group',{name:'Available widgets'}).getByRole('button',{name:'Recent notes',exact:true})).toBeDisabled();await page.getByRole('button',{name:'Close',exact:true}).click();
  const handle=page.getByRole('button',{name:'Resize Schedule',exact:true});await handle.focus();for(let i=0;i<20;i++){await handle.press('ArrowDown');await handle.press('ArrowRight')}
- for(const node of await page.locator('[data-widget]').all()){const r=await node.boundingBox();expect(r!.y).toBeGreaterThan(0);expect(r!.y+r!.height).toBeLessThan(550);expect(r!.width).toBeGreaterThan(220)}
+ for(const node of await page.locator('[data-widget]').all()){const r=await node.boundingBox();expect(r!.y).toBeGreaterThan(0);expect(r!.y+r!.height).toBeLessThan(575);expect(r!.width).toBeGreaterThan(115)}
  for(const button of await page.getByRole('button',{name:/^(Resize|Remove) /}).all())await expect(button).toBeInViewport();
  expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.getByRole('button',{name:'Save layout',exact:true}).click();await expect(page.getByRole('button',{name:'Save layout',exact:true})).toHaveCount(0);await page.reload();await expect(page.locator('[data-widget]')).toHaveCount(6);
  await page.screenshot({path:'test-results/custom-six-widgets-small.png'});
+});
+
+test('settings selects the dashboard and widgets can shrink to half their previous minimum dimensions',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});await chooseDashboard(page,'custom');await expect(page.getByLabel('Dashboard layout')).toHaveCount(0);
+ const tabs=await page.getByRole('navigation',{name:'Workspace modules'}).boundingBox(),panel=await page.locator('[data-widget="schedule"]').boundingBox();expect(tabs!.y+tabs!.height).toBeLessThan(panel!.y);
+ for(const name of ['Schedule','Notifications']){const handle=page.getByRole('button',{name:'Resize '+name,exact:true});for(let i=0;i<24;i++){await handle.press('ArrowLeft');await handle.press('ArrowUp')}}
+ for(const kind of ['schedule','inbox']){const box=await page.locator(`[data-widget="${kind}"]`).boundingBox();expect(box!.width).toBeLessThan(190);expect(box!.height).toBeLessThanOrEqual(55);await expect(page.locator(`[data-widget="${kind}"]`).getByRole('button',{name:/Resize/})).toBeInViewport()}
+ await page.getByRole('button',{name:'Save layout',exact:true}).click();await expect(page.getByRole('button',{name:'Save layout',exact:true})).toHaveCount(0);await chooseDashboard(page,'default');await expect(page.getByRole('button',{name:/Add widget/})).toHaveCount(0);await chooseDashboard(page,'custom');expect((await page.locator('[data-widget="schedule"]').boundingBox())!.height).toBeLessThanOrEqual(55);
+ expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/custom-compact-top-tabs.png'});
 });
