@@ -7,7 +7,7 @@ export async function withCustomerDatabase<T>(query:(tx:Prisma.TransactionClient
  const customer=await requireCustomer();
  return db.$transaction(async tx=>{
   await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub', ${customer.id}, true)`;
-  const rows=await tx.$queryRawUnsafe<{status:string}[]>('SELECT status FROM "User" WHERE id=$1::uuid',customer.id);
+  const rows=await tx.$queryRawUnsafe<{status:string}[]>('SELECT status FROM "User" WHERE id=$1::uuid FOR SHARE',customer.id);
   if(!rows.length)redirect('/onboarding');
   if(rows[0].status!=='active')throw Error('This account is unavailable.');
   return query(tx,customer.id);

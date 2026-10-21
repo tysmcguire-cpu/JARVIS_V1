@@ -9,7 +9,7 @@ export async function completeOnboarding(form:FormData){
  await db.$transaction(async tx=>{
   await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub', ${customer.id}, true)`;
   await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',customer.id+':onboarding');
-  const current=await tx.$queryRawUnsafe<{status:string}[]>('SELECT status FROM "User" WHERE id=$1::uuid',customer.id);
+  const current=await tx.$queryRawUnsafe<{status:string}[]>('SELECT status FROM "User" WHERE id=$1::uuid FOR UPDATE',customer.id);
   if(current.length&&current[0].status!=='active')throw Error('Account is unavailable.');
   await tx.$executeRawUnsafe('INSERT INTO "User"(id,"displayName","updatedAt") VALUES($1::uuid,$2,now()) ON CONFLICT(id) DO UPDATE SET "displayName"=EXCLUDED."displayName","updatedAt"=now()',customer.id,input.displayName);
   await tx.$executeRawUnsafe('INSERT INTO "UserSettings"("userId",timezone,currency,"updatedAt") VALUES($1::uuid,$2,$3,now()) ON CONFLICT("userId") DO NOTHING',customer.id,input.timezone,input.currency);

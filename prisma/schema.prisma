@@ -783,3 +783,15 @@ model CsvImportKey {
 
   @@unique([userId, accountId, externalKey])
 }
+
+model PlutoInstallation {
+ id Boolean @id @default(true)
+ projectRef String @unique
+}
+model CustomerErasure {
+ userId String @id @db.Uuid
+ requestedAt DateTime @default(now()) @db.Timestamptz(6)
+ authDeletedAt DateTime? @db.Timestamptz(6)
+ attempts Int @default(0)
+ leaseUntil DateTime? @db.Timestamptz(6)
+}
