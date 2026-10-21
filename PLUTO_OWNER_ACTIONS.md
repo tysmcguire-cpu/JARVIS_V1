@@ -40,3 +40,7 @@ Provision separate pluto_worker_runtime (member pluto_worker) and pluto_erasure_
 ## Administrator setup
 Use a separate commercial Auth identity, verify email and enroll MFA, then explicitly provision its UUID with the protected scripts/pluto-admin.ts command. Configure separate admin dashboard/API runtime logins, never a customer or billing login. Optional metrics API credentials are issued to a private file outside Git, expire after 30 days and can be revoked. PLUTO_ADMIN.md documents the future personal-JARVIS connection; personal code is unchanged. Operating-cost estimates begin NULL and require your real monthly inputs.
 
+
+## Voice and customer experience acceptance
+Choose whether to approve push-to-talk transcription costs after a measured beta test. PLUTO_VOICE_COST_APPROVED, voice/chat flags, active plan, sharing consent, provider keys and spending budgets all gate activation. No realtime service is enabled. Test real microphones, stop controls and local speech availability on chosen devices before allowing customers to use voice. Validate real email verification, onboarding, profile/module preferences and account recovery in the separate project.
+

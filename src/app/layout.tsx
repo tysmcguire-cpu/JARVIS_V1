@@ -21,6 +21,7 @@ import "./module-polish.css";
 import "./module-rail.css";
 import "./grade-calculator.css";
 import "./module-scrolling.css";
+import "./commercial-responsive.css";
 export const metadata: Metadata = { title: product.name+" · Personal Operating System", description: "Your private personal command center.", robots: { index: false, follow: false } };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en" className="dark"><body>{children}</body></html>;

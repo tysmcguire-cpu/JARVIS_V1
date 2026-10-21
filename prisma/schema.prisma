@@ -9,6 +9,8 @@ datasource db {
 }
 
 model User {
+ voiceSessions VoiceSession[]
+ voiceTurns VoiceTurn[]
  productCustomer ProductCustomer?
  productActivity ProductActivity[]
  telegramPairing TelegramPairing?
@@ -115,6 +117,7 @@ model AiSourceReference {
 }
 
 model UserSettings {
+ enabledModules String[] @default(["finances","education","calendar","career","projects","goals","notes","assistant"])
   clockFormat String @default("24h") @db.VarChar(3)
   wordmarkStyle String @default("original") @db.VarChar(20)
   tertiaryColor String @default("#87a8bc") @db.VarChar(7)
@@ -1064,4 +1067,32 @@ model ProductActivity {
  count Int @default(1)
  @@id([userId,day,feature])
  @@index([day,userId],map:"product_activity_day")
+}
+model VoiceSession {
+ id String @id @db.Uuid
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ domains String[]
+ expiresAt DateTime @db.Timestamptz(6)
+ closedAt DateTime? @db.Timestamptz(6)
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ turns VoiceTurn[]
+ @@unique([id,userId])
+ @@index([userId,expiresAt],map:"voice_customer_session")
+}
+model VoiceTurn {
+ id String @id @db.Uuid
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ sessionId String @db.Uuid
+ session VoiceSession @relation(fields:[sessionId,userId],references:[id,userId],onDelete:Cascade)
+ requestId String @db.Uuid
+ transcript String? @db.VarChar(1000)
+ answer Json?
+ status String
+ sttUsageId String? @db.Uuid
+ chatUsageId String? @db.Uuid
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ @@unique([userId,requestId])
+ @@index([userId,sessionId,createdAt],map:"voice_customer_turn")
 }

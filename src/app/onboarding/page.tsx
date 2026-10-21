@@ -1,4 +1,5 @@
 export const dynamic='force-dynamic';
-import {completeOnboarding} from '@/features/auth/onboarding-actions';
+import {OnboardingWizard} from '@/features/auth/onboarding-wizard';
+import {features} from '@/features/commercial/flags';
 import {requireCustomer} from '@/features/auth/server';
-export default async function Onboarding(){await requireCustomer();return <main className="login-screen"><section className="login-card"><h1>Welcome to Pluto</h1><p>Start with free personal tracking. Connections are optional.</p><form action={completeOnboarding} className="login-form"><label>Your name<input name="displayName" autoComplete="name" required maxLength={100}/></label><label>Timezone<input name="timezone" defaultValue="UTC" required maxLength={100}/></label><label>Currency<select name="currency">{['USD','EUR','GBP','CAD','AUD'].map(c=><option key={c}>{c}</option>)}</select></label><button>Open my workspace</button></form></section></main>}
+export default async function Onboarding(){await requireCustomer();return <main className="login-screen"><OnboardingWizard checkout={features.checkout()}/></main>}

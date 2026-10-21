@@ -3,10 +3,11 @@ import {useState,type CSSProperties,type ReactNode} from 'react';
 import {NavigationLink as Link} from '@/features/shell/navigation-link';
 import {ArrowUpRight,Bell,BookOpen,BriefcaseBusiness,CalendarDays,FolderKanban,NotebookPen,Pause,Play,Settings,Sparkles,Target,Wallet} from 'lucide-react';
 import {FlowingCore} from '@/components/ui/flowing-core';
+import {useEnabledModules} from '@/features/settings/modules-provider';
 import {navigation} from '@/features/shell/navigation';
 import styles from './dashboard.module.css';
 const outerWaves=[0,Math.PI*2/3,Math.PI*4/3].map(phase=>Array.from({length:121},(_,i)=>{const a=i/120*Math.PI*2,r=280+7*Math.sin(a*6+phase)+3*Math.sin(a*11-phase);return (i?'L':'M')+(300+Math.cos(a)*r).toFixed(2)+' '+(300+Math.sin(a)*r).toFixed(2)}).join(' ')+' Z');
-const modules=[
+const allModules=[
  {slug:'finances',icon:Wallet,color:'#6ee0bb'},
  {slug:'education',icon:BookOpen,color:'#b1a0ff'},
  {slug:'calendar',icon:CalendarDays,color:'#69d8f3'},
@@ -19,6 +20,7 @@ const modules=[
  {slug:'settings',icon:Settings,color:'#88b9cc'}
 ] as const;
 export function OrbitalDashboard({demo,layout='default',tools,widgets}:{demo:boolean;layout?:string;tools?:ReactNode;widgets?:ReactNode}){
+ const enabled=useEnabledModules(),modules=allModules.filter(m=>enabled(m.slug));
  const [selected,setSelected]=useState<string|null>(null),[paused,setPaused]=useState(false);
  const label=(slug:string)=>navigation.find(m=>m.slug===slug)!.label;
  return <div className={styles.dashboard} data-paused={paused} data-layout={layout}>

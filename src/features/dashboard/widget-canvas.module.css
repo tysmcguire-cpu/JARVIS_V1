@@ -24,3 +24,4 @@
 
 .frame[data-explicit-height=true]{min-height:54px}
 @media(max-height:740px){.frame[data-explicit-height=true]{min-height:50px}}
+@media(max-width:1023px){.canvas{inset:58px 7px 8px}.column{width:48%;top:44px;gap:9px}.frame{width:100%!important;min-height:85px}.controls button{min-height:36px;padding:6px}.toolbar button{min-width:27px;min-height:26px}.toolbar{top:1px;right:3px}.content>section{padding-top:30px}.resize{height:27px;width:27px}.menu{max-height:55dvh;overflow:auto;z-index:20}}

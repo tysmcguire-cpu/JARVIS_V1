@@ -11,7 +11,7 @@ const config: NextConfig = {
       { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
       { key: "X-Frame-Options", value: "DENY" },
       { key: "Referrer-Policy", value: "no-referrer" },
-      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+      { key: "Permissions-Policy", value: `camera=(), microphone=${process.env.PLUTO_VOICE_ENABLED==='true'&&process.env.PLUTO_VOICE_COST_APPROVED==='approved'?'(self)':'()'}, geolocation=()` },
       { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'" }
     ] }];
   }
