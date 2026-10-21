@@ -1,42 +1,12 @@
 import {setTimeout as pause} from 'node:timers/promises';
 import {loadEnvironment} from './load-environment';
 loadEnvironment();
-
-async function main() {
-  const {canvasFeedTick} = await import('../src/features/integrations/canvas-feed-worker');
-  const feeds = !!process.env.PLUTO_OWNER_ID;
-  const {notificationTick} = await import('../src/features/notifications/worker');
-  const {getTelegramConfig} = await import('../src/features/telegram/config');
-  const {flushReplies} = await import('../src/features/telegram/service');
-  const {db} = await import('../src/lib/db');
-  const notifications = process.env.PLUTO_NOTIFICATIONS_ENABLED === 'true';
-  const telegram = getTelegramConfig();
-  const replies = !!telegram && !!process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!notifications && !replies && !feeds) throw Error('No background task enabled');
-  const controller = new AbortController();
-  process.once('SIGTERM', () => controller.abort());
-  process.once('SIGINT', () => controller.abort());
-  let failures = 0;
-  console.info(`Hosted background processing running: notifications ${notifications ? 'enabled' : 'disabled'}, webhook reply retries ${replies ? 'enabled' : 'disabled'}.`);
-  try {
-    while (!controller.signal.aborted) {
-      // A stalled task fails the supervised service rather than silently missing schedules.
-      const watchdog = setTimeout(() => {console.error('Background processing stalled; restarting service.');process.exit(1)}, 120000);
-      let failed = false;
-      try {if (feeds) await canvasFeedTick()} catch {failed = true}
-      try {if (notifications) await notificationTick()} catch {failed = true}
-      try {if (replies && !controller.signal.aborted) await flushReplies(telegram!)} catch {failed = true}
-      clearTimeout(watchdog);
-      if (failed) {
-        failures++;
-        if (failures === 1 || failures % 20 === 0) console.error('Background task temporarily unavailable; retrying. Private details suppressed.');
-      } else {
-        if (failures) console.info('Background processing recovered.');
-        failures = 0;
-      }
-      if (process.argv.includes('--once')) {if (failed) process.exitCode = 1;break}
-      try {await pause(30000, undefined, {signal:controller.signal})} catch {break}
-    }
-  } finally {await db.$disconnect()}
+async function main(){
+ const {commercialWorkerTick}=await import('../src/features/commercial/worker');
+ const {closeWorkerDatabase}=await import('../src/lib/worker-db');
+ if(process.env.PLUTO_WORKERS_ENABLED!=='true')throw Error('Commercial workers disabled');
+ const controller=new AbortController();process.once('SIGTERM',()=>controller.abort());process.once('SIGINT',()=>controller.abort());
+ console.info('Pluto commercial workers starting. Per-customer leases and opt-ins apply.');
+ try{do{const watchdog=setTimeout(()=>{console.error('Worker stalled; restart required.');process.exit(1)},240000);try{await commercialWorkerTick()}catch{console.error('Commercial worker temporarily unavailable. Details suppressed.')}finally{clearTimeout(watchdog)}if(process.argv.includes('--once'))break;try{await pause(30000,undefined,{signal:controller.signal})}catch{break}}while(!controller.signal.aborted)}finally{await closeWorkerDatabase();await (await import('../src/features/commercial/erasure')).closeErasureDatabase()}
 }
-main().catch(() => {console.error('Hosted background processing could not start. Private details suppressed.');process.exitCode=1});
+main().catch(()=>{console.error('Commercial worker could not start. Check separate runtime credentials and flags.');process.exitCode=1});

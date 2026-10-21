@@ -9,6 +9,8 @@ datasource db {
 }
 
 model User {
+ telegramPairing TelegramPairing?
+ workerLease WorkerLease?
  aiPreferences AiPreferences?
  chatThreads ChatThread[]
  chatTurns ChatTurn[]
@@ -676,6 +678,7 @@ model TelegramIdentity {
 }
 
 model TelegramMessage {
+  leaseToken String? @db.Uuid
   id            String    @id @default(uuid()) @db.Uuid
   userId        String    @db.Uuid
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -800,6 +803,7 @@ model PlutoInstallation {
  projectRef String @unique
 }
 model CustomerErasure {
+  token String? @db.Uuid
  userId String @id @db.Uuid
  requestedAt DateTime @default(now()) @db.Timestamptz(6)
  authDeletedAt DateTime? @db.Timestamptz(6)
@@ -808,6 +812,8 @@ model CustomerErasure {
 }
 
 model PlanCatalog {
+  integrationMax Int @default(1)
+  telegramDaily Int @default(20)
  id String @id @db.VarChar(20)
  monthlyPriceMinor Int
  enabled Boolean
@@ -982,4 +988,23 @@ model ResearchResult {
  query String @db.VarChar(300)
  result Json
  createdAt DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model TelegramPairing {
+ userId String @id @db.Uuid
+ botId String @db.VarChar(30)
+ hash String @unique @db.VarChar(64)
+ expiresAt DateTime @db.Timestamptz(6)
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+}
+model WorkerLease {
+ userId String @id @db.Uuid
+ token String? @db.Uuid
+ leaseUntil DateTime? @db.Timestamptz(6)
+ nextAt DateTime @default(now()) @db.Timestamptz(6)
+ attempts Int @default(0)
+ lastSuccessAt DateTime? @db.Timestamptz(6)
+ lastFailureAt DateTime? @db.Timestamptz(6)
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
 }

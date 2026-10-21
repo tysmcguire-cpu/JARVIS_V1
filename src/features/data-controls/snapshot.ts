@@ -5,7 +5,7 @@ import {answerSchema,validAnswer} from '@/features/assistant/contract';
 import {defaultRuleSettings,ruleSettingsSchema,type Kind} from '@/features/notifications/rules';
 export const snapshotTables=['User','UserSettings','WorkspaceState','FinancialAccount','Category','CsvImportBatch','CsvImportKey',...entities.filter(e=>!['FinancialAccount','Category'].includes(e.key)).map(e=>e.key),'ApiConnection','ExternalRecord','SyncLog','TelegramIdentity','TelegramMessage','AiConversation','AiSourceReference','NotificationRule','NotificationJob','NotificationDelivery','AuditLog'] as const;
 export const maxSnapshotBytes=16*1024*1024;
-const excluded:Record<string,string[]>={ApiConnection:['tokenCiphertext','cursor','leaseToken','leaseUntil'],TelegramIdentity:['pairingHash','pairingExpiresAt'],TelegramMessage:['leaseUntil'],NotificationJob:['leaseToken','leaseUntil']};
+const excluded:Record<string,string[]>={ApiConnection:['tokenCiphertext','cursor','leaseToken','leaseUntil'],TelegramIdentity:['pairingHash','pairingExpiresAt'],TelegramMessage:['leaseToken','leaseUntil'],NotificationJob:['leaseToken','leaseUntil']};
 export const snapshotSchema=z.object({format:z.literal('pluto-data-v1'),ownerId:z.uuid(),exportedAt:z.iso.datetime(),tables:z.record(z.string(),z.array(z.record(z.string(),z.unknown())).max(5000))}).strict();
 export type Snapshot=z.infer<typeof snapshotSchema>;
 type Tx=Pick<Prisma.TransactionClient,'$queryRawUnsafe'|'$executeRawUnsafe'>;

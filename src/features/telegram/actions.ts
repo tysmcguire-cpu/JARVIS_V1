@@ -1,28 +1,13 @@
 'use server';
-import { randomBytes } from 'node:crypto';
-import { withCustomerDatabase } from '@/lib/customer-db';
-import { requireCustomer } from '@/features/auth/server';
-import { getTelegramConfig, hashCode } from './config';
+import {randomBytes} from 'node:crypto';
+import {withCustomerDatabase} from '@/lib/customer-db';
+import {requireCustomer} from '@/features/auth/server';
+import {hashCode} from './config';
+import {commercialBot} from './commercial';
 export async function createTelegramPairing(){
- const owner=await requireCustomer();const config=getTelegramConfig();if(!config||config.ownerId!==owner.id)return {ok:false,code:'',message:'Configure the Telegram bot token and approved user/chat IDs locally first.'};
- const code=randomBytes(24).toString('base64url');
- try{await withCustomerDatabase(async(tx,ownerId)=>{
- await tx.$executeRawUnsafe('INSERT INTO "TelegramIdentity"("userId","botId","telegramUserId","chatId","pairingHash","pairingExpiresAt","updatedAt")VALUES($1::uuid,$2,$3,$4,$5,now()+interval \'10 minutes\',now()) ON CONFLICT("userId") DO UPDATE SET "botId"=EXCLUDED."botId","telegramUserId"=EXCLUDED."telegramUserId","chatId"=EXCLUDED."chatId","pairingHash"=EXCLUDED."pairingHash","pairingExpiresAt"=EXCLUDED."pairingExpiresAt","pairedAt"=NULL,"updatedAt"=now()',ownerId,config.botId,config.userId,config.chatId,hashCode(code));
- await tx.auditLog.create({data:{userId:ownerId,action:'telegram.pairing_requested',outcome:'success'}});
- await tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET "canceledAt"=now() WHERE "userId"=$1::uuid AND "deliveredAt" IS NULL',ownerId);
- });return {ok:true,code,message:'Send this command to your bot within 10 minutes. The code is single-use.'};}catch{return {ok:false,code:'',message:'Pairing is unavailable. Check the Telegram database setup.'}}
+ await requireCustomer();const bot=commercialBot();if(!bot)return {ok:false,code:'',message:'The commercial Telegram bot is not configured.'};const code=randomBytes(24).toString('base64url');
+ try{await withCustomerDatabase(async(tx,id)=>{await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',id+':telegram');const [count]=await tx.$queryRawUnsafe<{n:string}[]>('SELECT count(*)::text AS n FROM "AuditLog" WHERE "userId"=$1::uuid AND action=\'telegram.pairing_requested\' AND "createdAt">now()-interval \'1 hour\'',id);if(Number(count.n)>=10)throw Error('Pairing limit');await tx.$executeRawUnsafe('DELETE FROM "TelegramPairing" WHERE "userId"=$1::uuid',id);await tx.$executeRawUnsafe('INSERT INTO "TelegramPairing"("userId","botId",hash,"expiresAt")VALUES($1::uuid,$2,$3,now()+interval \'10 minutes\')',id,bot.botId,hashCode(code));await tx.auditLog.create({data:{userId:id,action:'telegram.pairing_requested',outcome:'success'}})});return {ok:true,code,message:'Send /start CODE to the separate Pluto bot within 10 minutes. Do not share this single-use code.'}}catch{return {ok:false,code:'',message:'Pairing unavailable or rate limited.'}}
 }
-export async function disconnectTelegram(){
- await requireCustomer();try{await withCustomerDatabase(async(tx,ownerId)=>{await tx.auditLog.create({data:{userId:ownerId,action:'telegram.disconnect',outcome:'success'}});await tx.$executeRawUnsafe('UPDATE "TelegramIdentity" SET "pairedAt"=NULL,"pairingHash"=NULL,"pairingExpiresAt"=NULL,"updatedAt"=now() WHERE "userId"=$1::uuid',ownerId);await tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET "canceledAt"=now() WHERE "userId"=$1::uuid AND "deliveredAt" IS NULL',ownerId)});return {ok:true,message:'Telegram disconnected. Pending replies canceled.'}}catch{return {ok:false,message:'Could not disconnect. Try again.'}}
-}
-export async function readTelegramStatus(){
- await requireCustomer();const config=getTelegramConfig();if(!config)return {configured:false,paired:false,pending:0,paused:0};
- return withCustomerDatabase(async(tx,ownerId)=>{
- const identity=await tx.$queryRawUnsafe<{paired:boolean}[]>('SELECT "pairedAt" IS NOT NULL AS paired FROM "TelegramIdentity" WHERE "userId"=$1::uuid AND "botId"=$2 AND "telegramUserId"=$3 AND "chatId"=$4',ownerId,config.botId,config.userId,config.chatId);
- const counts=await tx.$queryRawUnsafe<{pending:bigint;paused:bigint}[]>('SELECT count(*) FILTER(WHERE attempts<10) AS pending,count(*) FILTER(WHERE attempts>=10) AS paused FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "deliveredAt" IS NULL AND "canceledAt" IS NULL',ownerId,config.botId);
- return {configured:true,paired:identity[0]?.paired??false,pending:Number(counts[0].pending),paused:Number(counts[0].paused)};
- });
-}
-export async function retryTelegramReplies(){
- await requireCustomer();await withCustomerDatabase((tx,ownerId)=>tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET attempts=0,"nextAttemptAt"=now() WHERE "userId"=$1::uuid AND "deliveredAt" IS NULL AND "canceledAt" IS NULL AND attempts>=10',ownerId));
-}
+export async function disconnectTelegram(){await requireCustomer();try{await withCustomerDatabase(async(tx,id)=>{await tx.$executeRawUnsafe('DELETE FROM "TelegramPairing" WHERE "userId"=$1::uuid',id);await tx.$executeRawUnsafe('DELETE FROM "TelegramIdentity" WHERE "userId"=$1::uuid',id);await tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET "canceledAt"=now() WHERE "userId"=$1::uuid AND "deliveredAt" IS NULL',id);await tx.auditLog.create({data:{userId:id,action:'telegram.disconnect',outcome:'success'}})});return {ok:true,message:'Telegram disconnected. Pending replies canceled.'}}catch{return {ok:false,message:'Could not disconnect. Try again.'}}}
+export async function readTelegramStatus(){await requireCustomer();const bot=commercialBot();if(!bot)return {configured:false,paired:false,pending:0,paused:0};return withCustomerDatabase(async(tx,id)=>{const [identity]=await tx.$queryRawUnsafe<{paired:boolean}[]>('SELECT "pairedAt" IS NOT NULL AS paired FROM "TelegramIdentity" WHERE "userId"=$1::uuid AND "botId"=$2',id,bot.botId);const [counts]=await tx.$queryRawUnsafe<{pending:string;paused:string}[]>('SELECT count(*) FILTER(WHERE attempts<10)::text AS pending,count(*) FILTER(WHERE attempts>=10)::text AS paused FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "deliveredAt" IS NULL AND "canceledAt" IS NULL',id,bot.botId);return {configured:true,paired:identity?.paired??false,pending:Number(counts.pending),paused:Number(counts.paused)}})}
+export async function retryTelegramReplies(){await requireCustomer();await withCustomerDatabase((tx,id)=>tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET attempts=0,"nextAttemptAt"=now() WHERE "userId"=$1::uuid AND "deliveredAt" IS NULL AND "canceledAt" IS NULL AND attempts>=10',id))}

@@ -21,3 +21,7 @@ Concurrent requests run against embedded PostgreSQL's transaction scheduler; rea
 ## Phase 4 local acceptance
 All 270 unit/database tests passed (49 files). Four desktop browser scenarios passed for chat/report/research/voice-disabled UI, default-off sharing and existing local analysis. Prisma validation/generation, typecheck, ESLint and production build passed. Model/search calls used mocks only. Tests cover immutable facts, invalid citations, byte bounds, cost bounds, consent, request replay, customer history/report ownership, single report generation, safe research links and commercial portability export. A pre-existing probabilistic backup-tamper test now always flips a ciphertext byte. Export now preflights counts/bytes before aggregate construction. No real paid or live infrastructure call occurred.
 
+
+## Phase 5 local acceptance
+All 277 unit/database tests passed (50 files) before the reply-fencing refinement. The 18 affected Telegram/worker tests passed again after fencing. Seven new cases cover hashed/expired/single-use pairing, cross-customer chat takeover denial, isolated ledgers, replay, daily limits, connector limits, dispatcher fencing, local-period paid report scheduling and restricted Auth erasure. TypeScript and ESLint passed. Prisma validation/generation passed. No actual Telegram, Auth deletion, provider sync, Stripe reconciliation or hosted scheduler call was made.
+

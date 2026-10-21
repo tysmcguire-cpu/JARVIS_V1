@@ -1,12 +1,12 @@
 import 'server-only';
 import {randomUUID} from 'node:crypto';
-import {z} from 'zod';
-import {db} from '@/lib/db';
-import {getTelegramConfig} from '@/features/telegram/config';
+
+import {withWorkerCustomer} from '@/lib/worker-db';
+import {commercialBot} from '@/features/telegram/commercial';
 import {sendReply,TelegramDeliveryError} from '@/features/telegram/transport';
 import {readSettings,scheduleNotifications,jobStillValid,type Tx,type Payload} from './engine';
 import {retryDelay} from './schedule';
-export async function withNotificationDatabase<T>(ownerInput:string,run:(tx:Tx)=>Promise<T>){const owner=z.uuid().parse(ownerInput);return db.$transaction(async tx=>{await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub',${owner},true)`;const valid=await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "User" WHERE id=$1::uuid AND synthetic=false',owner);if(!valid.length)throw Error('Owner unavailable');return run(tx)},{timeout:30000})}
+export async function withNotificationDatabase<T>(id:string,run:(tx:Tx)=>Promise<T>){return withWorkerCustomer(id,run)}
 export type Job={id:string;payload:Payload;attempts:number;maxAttempts:number;ruleId:string;ruleVersion:number;entity:string|null;recordId:string|null;dueDate:Date|null};
 export async function deliverNotifications(owner:string,run:<T>(work:(tx:Tx)=>Promise<T>)=>Promise<T>,send:typeof sendReply=sendReply,now=new Date()){
  await run(tx=>tx.$executeRawUnsafe('UPDATE "NotificationJob" SET status=\'failed\',"leaseToken"=NULL,"leaseUntil"=NULL WHERE "userId"=$1::uuid AND status=\'queued\' AND attempts>="maxAttempts" AND ("leaseUntil" IS NULL OR "leaseUntil"<$2)',owner,now));
@@ -21,7 +21,7 @@ export async function deliverNotifications(owner:string,run:<T>(work:(tx:Tx)=>Pr
  await tx.$executeRawUnsafe('UPDATE "NotificationJob" SET attempts=attempts+1,"leaseToken"=$3::uuid,"leaseUntil"=$4 WHERE id=$1::uuid AND "userId"=$2::uuid',job.id,owner,token,new Date(now.getTime()+60000));await tx.$executeRawUnsafe('INSERT INTO "NotificationDelivery"(id,"userId","jobId",channel,attempt,outcome)VALUES($1::uuid,$2::uuid,$3::uuid,\'telegram\',$4,\'pending\')',randomUUID(),owner,job.id,job.attempts+1);return {job,invalid:false as const};
  });if(!claimed)return;if(claimed.invalid)continue;
  const {job}=claimed;let code:string|null=null,delay=retryDelay(job.attempts+1);
- try{const config=getTelegramConfig();if(!config||config.ownerId!==owner)throw Error('unavailable');
+ try{const bot=commercialBot();if(!bot)throw Error('unavailable');const identity=await run(tx=>tx.$queryRawUnsafe<{userId:string;chatId:string}[]>('SELECT "telegramUserId" AS "userId","chatId" FROM "TelegramIdentity" WHERE "userId"=$1::uuid AND "botId"=$2 AND "pairedAt" IS NOT NULL',owner,bot.botId));if(!identity[0])throw Error('unavailable');const config={...bot,ownerId:owner,...identity[0]};
  const valid=await run(async tx=>{const settings=await readSettings(tx,owner);if(!settings.notificationTelegramEnabled||!await jobStillValid(tx,owner,job,settings,now))return false;const rows=await tx.$queryRawUnsafe<{id:string}[]>('SELECT t."userId" AS id FROM "TelegramIdentity" t JOIN "NotificationJob" j ON j."userId"=t."userId" WHERE j.id=$1::uuid AND j."userId"=$2::uuid AND j."leaseToken"=$3::uuid AND j.status=\'queued\' AND t."botId"=$4 AND t."telegramUserId"=$5 AND t."chatId"=$6 AND t."pairedAt" IS NOT NULL',job.id,owner,token,config.botId,config.userId,config.chatId);return rows.length>0});if(!valid)throw Error('unavailable');
  await send(config,`${job.payload.title}\n${job.payload.text}\n\nAs of ${job.payload.asOf}; source updated ${job.payload.sourceUpdatedAt}.\n${job.payload.coverage}\nNotification ${job.id}`.slice(0,3800));
  }catch(error){code='delivery_unavailable';if(error instanceof TelegramDeliveryError)delay=retryDelay(job.attempts+1,error.retryAfter)}
@@ -29,6 +29,6 @@ export async function deliverNotifications(owner:string,run:<T>(work:(tx:Tx)=>Pr
  if(code)return;
  }
 }
-export async function notificationTick(){if(process.env.PLUTO_NOTIFICATIONS_ENABLED!=='true')throw Error('Notifications are disabled. Explicitly enable the local worker first.');const owner=z.uuid().parse(process.env.PLUTO_OWNER_ID),run=<T>(work:(tx:Tx)=>Promise<T>)=>withNotificationDatabase(owner,work);
+export async function notificationTick(owner:string){if(process.env.PLUTO_NOTIFICATIONS_ENABLED!=='true')throw Error('Notifications are disabled. Explicitly enable the local worker first.');const run=<T>(work:(tx:Tx)=>Promise<T>)=>withNotificationDatabase(owner,work);
  await run(tx=>scheduleNotifications(tx,owner));await deliverNotifications(owner,run);
 }

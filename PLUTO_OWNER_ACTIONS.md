@@ -32,3 +32,7 @@ Use separate pluto_billing_runtime PostgreSQL credentials (member of pluto_billi
 ## Intelligence setup
 Optional commercial OPENAI_API_KEY, PLUTO_CHAT_MODEL and explicit rate overrides for nondefault models; BRAVE_SEARCH_API_KEY for approved research. All paid flags remain false. Approve global/customer spending caps before activation. Live usefulness, provider availability and actual costs require controlled acceptance; no paid calls were made during development.
 
+
+## Background service setup
+Provision separate pluto_worker_runtime (member pluto_worker) and pluto_erasure_runtime (member pluto_erasure) logins only in the commercial database. Configure PLUTO_WORKER_DATABASE_URL for the worker/webhook and a separate Pluto BotFather token/signing secret. Never copy the personal bot. Optional account erasure requires PLUTO_ERASURE_DATABASE_URL, PLUTO_AUTH_ERASURE_KEY and explicit PLUTO_AUTH_ERASURE_ENABLED. Enable canonical billing reconciliation only with the separate tested Stripe configuration. Worker/provider flags remain OFF until acceptance. Exhausted Auth tickets require operator follow-up.
+

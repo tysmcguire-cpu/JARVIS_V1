@@ -1,7 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
-import { db } from '@/lib/db';
+import {withWorkerCustomer} from '@/lib/worker-db';
 import { validateRecord } from '@/features/tracking/validation';
 import {quickMoneyInput,quickAccountBalance} from './quick-money-service';
 import { formatMoney,parseMoney } from '@/features/tracking/config';
@@ -12,10 +12,7 @@ import {analyze} from '@/features/assistant/analysis';
 import {querySchema} from '@/features/assistant/contract';
 import {storeReferences} from '@/features/assistant/storage';
 type Tx=Prisma.TransactionClient;
-export async function withBotDatabase<T>(config:TelegramConfig,run:(tx:Tx)=>Promise<T>):Promise<T>{return db.$transaction(async tx=>{
- await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub',${config.ownerId},true)`;
- const owner=await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "User" WHERE id=$1::uuid AND synthetic=false',config.ownerId);if(!owner.length)throw Error('Owner unavailable');return run(tx);
-},{timeout:20000});}
+export async function withBotDatabase<T>(config:TelegramConfig,run:(tx:Tx)=>Promise<T>):Promise<T>{return withWorkerCustomer(config.ownerId,run)}
 async function exactParent(tx:Tx,ownerId:string,key:'Task'|'FinancialAccount'|'Category',title:string,kind?:string){
  const result=await tx.$queryRawUnsafe<{id:string}[]>(`SELECT id FROM "${key}" WHERE "userId"=$1::uuid AND lower(title)=lower($2) ${kind?'AND kind=$3':''} LIMIT 2`,ownerId,title,...(kind?[kind]:[]));
  if(result.length!==1)throw new CommandError(`Use one exact, unique ${key==='FinancialAccount'?'account':key.toLowerCase()} title from the website${kind?' with type '+kind:''}. No record was saved.`);return result[0].id;
@@ -101,9 +98,9 @@ export async function flushReplies(config:TelegramConfig,send:(config:TelegramCo
    // A changed allowlist or owner disconnect also stops pending private replies.
    const valid=await tx.$queryRawUnsafe<{id:string}[]>('SELECT "userId" AS id FROM "TelegramIdentity" WHERE "userId"=$1::uuid AND "botId"=$2 AND "telegramUserId"=$3 AND "chatId"=$4',config.ownerId,config.botId,config.userId,config.chatId);if(!valid.length)return null;
    const rows=await tx.$queryRawUnsafe<{id:string;reply:string}[]>('SELECT id,reply FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "deliveredAt" IS NULL AND "canceledAt" IS NULL AND attempts<10 AND "nextAttemptAt"<=now() AND ("leaseUntil" IS NULL OR "leaseUntil"<now()) ORDER BY "createdAt",id LIMIT 1 FOR UPDATE SKIP LOCKED',config.ownerId,config.botId);
-   if(!rows.length)return null;await tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET attempts=attempts+1,"leaseUntil"=now()+interval \'60 seconds\' WHERE id=$1::uuid AND "userId"=$2::uuid',rows[0].id,config.ownerId);return rows[0];
+   if(!rows.length)return null;const token=randomUUID();await tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET attempts=attempts+1,"leaseUntil"=now()+interval \'60 seconds\',"leaseToken"=$3::uuid WHERE id=$1::uuid AND "userId"=$2::uuid',rows[0].id,config.ownerId,token);return {...rows[0],token};
  });if(!claimed)return;
- try{await send(config,claimed.reply);await withBotDatabase(config,tx=>tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET "deliveredAt"=now(),"leaseUntil"=NULL WHERE id=$1::uuid AND "userId"=$2::uuid',claimed.id,config.ownerId));}
- catch(error){const delay=error instanceof TelegramDeliveryError?error.retryAfter:30;await withBotDatabase(config,tx=>tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET "leaseUntil"=NULL,"nextAttemptAt"=now()+($3::int * interval \'1 second\') WHERE id=$1::uuid AND "userId"=$2::uuid',claimed.id,config.ownerId,delay));return;}
+ try{await send(config,claimed.reply);await withBotDatabase(config,tx=>tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET "deliveredAt"=now(),"leaseUntil"=NULL,"leaseToken"=NULL WHERE id=$1::uuid AND "userId"=$2::uuid AND "leaseToken"=$3::uuid',claimed.id,config.ownerId,claimed.token));}
+ catch(error){const delay=error instanceof TelegramDeliveryError?error.retryAfter:30;await withBotDatabase(config,tx=>tx.$executeRawUnsafe('UPDATE "TelegramMessage" SET "leaseUntil"=NULL,"leaseToken"=NULL,"nextAttemptAt"=now()+($3::int * interval \'1 second\') WHERE id=$1::uuid AND "userId"=$2::uuid AND "leaseToken"=$4::uuid',claimed.id,config.ownerId,delay,claimed.token));return;}
  }
 }
