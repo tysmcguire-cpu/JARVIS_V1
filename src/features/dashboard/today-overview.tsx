@@ -1,11 +1,13 @@
 'use client';
 
 import {useState, type ReactNode} from 'react';
-import {ArrowUpRight, Bell, CalendarDays, Circle, FolderKanban, ListTodo, Wallet} from 'lucide-react';
+import {ArrowUpRight, Bell, CalendarDays, Circle, ListTodo, Wallet} from 'lucide-react';
 import {NavigationLink as Link} from '@/features/shell/navigation-link';
 import {formatMoney, moneyInput} from '@/features/tracking/config';
 import {recordHref, type HubData, type HubRow} from '@/features/productivity/hub-query';
 import styles from './today-overview.module.css';
+import {WidgetCanvas} from './widget-canvas';
+import {type CanvasWidget} from '@/features/productivity/contracts';
 
 function dateLabel(date:string, today:string) {
   if(!date)return 'No date';
@@ -47,14 +49,10 @@ function Spending({hub,demo}:{hub:HubData;demo:boolean}) {
   </section>;
 }
 
-export function TodayOverview({hub,demo}:{hub?:HubData;demo:boolean}) {
+export function TodayOverview({hub,demo,configuration,pending,onSave}:{hub?:HubData;demo:boolean;configuration?:CanvasWidget[];pending:boolean;onSave:(widgets:CanvasWidget[])=>void}) {
   const path=(module:string)=>`${demo?'/demo':''}/${module}`;
-  const schedule=hub?.groups.schedule, tasks=hub?.groups.tasks, deadlines=hub?.groups.deadlines, projects=hub?.groups.projects;
-  const day=hub?new Date(hub.today+'T12:00:00Z'):undefined;
-  const date=day?.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',timeZone:'UTC'});
-  return <div className={styles.overview} data-today-overview>
-    <header className={styles.dayHeading}><div className={styles.dayTitle}><h2>Today<span aria-hidden="true">.</span></h2><time dateTime={hub?.today}>{date??'Loading your day…'}</time></div><div className={styles.dayContext}>{hub&&<span>{hub.timezone.replaceAll('_',' ')}</span>}<Link className={styles.projectLink} href={path('projects')}><FolderKanban size={15}/><strong>{projects?.total??'—'}</strong><span>Projects</span><ArrowUpRight size={13}/></Link></div></header>
-
+  const schedule=hub?.groups.schedule, tasks=hub?.groups.tasks, deadlines=hub?.groups.deadlines;
+  return <WidgetCanvas configuration={configuration} pending={pending} onSave={onSave} extra={kind=>{const group=hub?.groups[kind];return <section className={styles.panel}><PanelHeading icon={<ListTodo size={17}/>} title={kind[0].toUpperCase()+kind.slice(1)} count={group?.total} href={path(kind==='tasks'?'calendar':kind==='deadlines'?'education':kind)}/>{hub?<>{group?.rows.length?<TaskRows rows={group.rows} today={hub.today} demo={demo} deadline={kind==='deadlines'}/>:<p className={styles.empty}>Nothing to show.</p>}</>:<p className={styles.empty}>Loading…</p>}</section>}}>
     <section className={`${styles.panel} ${styles.schedule}`} data-today-panel="schedule" aria-label="Today schedule">
       <PanelHeading icon={<CalendarDays size={17}/>} title="Today’s schedule" count={schedule?.total} href={path('calendar')}/>
       {!hub?<p className={styles.empty}>Loading schedule…</p>:schedule?.rows.length?<ol className={styles.timeline}>{schedule.rows.slice(0,3).map((row,i)=><li key={row.key+row.id}>
@@ -72,5 +70,5 @@ export function TodayOverview({hub,demo}:{hub?:HubData;demo:boolean}) {
 
     <section className={`${styles.panel} ${styles.inbox}`} data-today-panel="inbox" aria-label="Notification summary"><PanelHeading icon={<Bell size={16}/>} title="Notifications" href={path('notifications')}/><div className={styles.inboxBody}><strong className={styles.inboxNumber}>{hub?.unread??'—'}<span>unread</span></strong><p>{!hub?'Loading inbox…':hub.notifications?.[0]?.title??(hub.unread?'Open inbox to review.':'No unread notifications.')}<Link href={path('notifications')}>View inbox <ArrowUpRight size={12}/></Link></p></div></section>
     {hub?<Spending hub={hub} demo={demo}/>:<section className={`${styles.panel} ${styles.spending}`}><PanelHeading icon={<Wallet size={16}/>} title="Spending" href={path('finances')}/><p className={styles.empty}>Loading spending…</p></section>}
-  </div>;
+  </WidgetCanvas>;
 }

@@ -86,3 +86,10 @@ it('returns ordered schedule times and exact zero-filled daily spending without 
  expect(usd.days).toHaveLength(7);expect(usd.days.at(-1)).toEqual({date:today,amount:(BigInt(original)+1510n).toString()});expect(eur.days.at(-1)!.amount).toBe('199');expect(usd.days.every(d=>/^\d+$/.test(d.amount))).toBe(true);
  expect(hub.groups.schedule.rows.filter(r=>r.title.startsWith('Schedule')).map(r=>r.time)).toEqual(['09:00','14:00']);
 });
+
+it('accepts previous dashboards and validates bounded custom canvas preferences',()=>{
+ expect(dashboardSchema.parse({...defaultDashboard,layout:'today'}).canvas).toBeUndefined();
+ const canvas=[{kind:'schedule',side:'left',weight:5,width:31},{kind:'priorities',side:'right',weight:5,width:31}];
+ expect(dashboardSchema.parse({...defaultDashboard,canvas}).canvas).toEqual(canvas);
+ for(const invalid of [[{...canvas[0],width:99}],[{...canvas[0],weight:0}],[...canvas,canvas[0]],['schedule','spending','notes','goals'].map(kind=>({...canvas[0],kind}))])expect(dashboardSchema.safeParse({...defaultDashboard,canvas:invalid}).success).toBe(false);
+});

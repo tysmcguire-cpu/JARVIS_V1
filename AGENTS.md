@@ -1,3 +1,5 @@
+Latest owner dashboard override (October 21, 2026): offer Default and Custom. Custom replaces both the previous Today view and old Custom builder, keeping the centered JARVIS with translucent summary widgets and no large Today heading. Widgets resize directly with pointer/keyboard handles; a corner Add widget menu, remove/move controls, and explicit Save layout persist the bounded canvas. The dashboard remains non-scrollable. This supersedes the three-layout/optional-core directions below.
+
 Latest owner override (October 20, 2026): scrolling is permitted inside modules and their dialogs when it improves access to content. The page shell and all dashboard layouts remain fixed and non-scrollable. Dashboard layouts are Default (existing orbital launcher), Today (centered JARVIS with compact module links and real summaries), and Custom (selectable/reorderable widgets with an optional central core). Defer AI assistant feature work; accounting compatibility must still exclude internal transfers from expense/income analysis. This supersedes historical no-panel-scrolling directions below.
 
 # JARVIS contributor instructions

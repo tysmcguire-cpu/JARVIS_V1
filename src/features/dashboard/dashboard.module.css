@@ -31,7 +31,7 @@
 .dashboard:not([data-layout=default]) .arrow,.dashboard:not([data-layout=default]) .selection{display:none}
 
 /* Today uses a distinct daily-planning composition around the existing core. */
-.dashboard[data-layout=today-focus] .center{width:min(29%,calc(100dvh - 285px),490px);top:53%}
+.dashboard[data-layout=today-focus] .center{width:min(29%,calc(100dvh - 285px),490px);top:50%}
 .dashboard[data-layout=today-focus] .modules{inset:auto 22px 8px;grid-template-rows:44px;gap:8px}
 .dashboard[data-layout=today-focus] .module{background:color-mix(in srgb,var(--app-tertiary) 3%,transparent);border-color:color-mix(in srgb,var(--app-tertiary) 15%,transparent);border-radius:8px;box-shadow:none;transition:background .2s,border-color .2s}
 .dashboard[data-layout=today-focus] .module::before{display:none}
