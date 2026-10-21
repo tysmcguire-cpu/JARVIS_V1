@@ -55,7 +55,7 @@ export async function scheduleNotifications(tx:Tx,owner:string,now=new Date()){
  }
  if(rule.kind==='financial'&&rule.thresholdMinor){
  const policy=policies.financial;
- const rows=await tx.$queryRawUnsafe<{spent:string;latest:Date|null}[]>(`SELECT COALESCE(sum(t.amount),0)::text AS spent,max(t."updatedAt") AS latest FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" WHERE t."userId"=$1::uuid AND c.kind='expense' AND a.currency=$2 AND t.date BETWEEN $3::date AND $4::date`,owner,rule.currency,clock.date.slice(0,7)+'-01',clock.date);
+ const rows=await tx.$queryRawUnsafe<{spent:string;latest:Date|null}[]>(`SELECT COALESCE(sum(t.amount),0)::text AS spent,max(t."updatedAt") AS latest FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" WHERE t."userId"=$1::uuid AND c.kind='expense' AND t."transferGroup" IS NULL AND a.currency=$2 AND t.date BETWEEN $3::date AND $4::date`,owner,rule.currency,clock.date.slice(0,7)+'-01',clock.date);
  const period=repetitionKey(policy,clock.date,clock.time,clock.date.slice(0,7)+'-01',policy.time);
  const legacy=policy.repeat==='once'?await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "NotificationJob" WHERE "userId"=$1::uuid AND "dedupeKey"=$2 AND status<>\'canceled\' LIMIT 1',owner,`financial:${rule.version}:${rule.currency}:${clock.date.slice(0,7)}`):[];
  if(!legacy.length&&clock.time>=policy.time&&BigInt(rows[0].spent)>=rule.thresholdMinor)queue(rule,`financial:${rule.currency}:${clock.date.slice(0,7)}:${rule.thresholdMinor}:${period}`,{title:'Recorded monthly expense threshold',text:`${formatMoney(BigInt(rows[0].spent),rule.currency)} recorded expenses this month reached your ${formatMoney(rule.thresholdMinor,rule.currency)} threshold.`,href:'/finances',asOf:now.toISOString(),sourceUpdatedAt:rows[0].latest?.toISOString()??now.toISOString(),coverage:'Recorded expenses only, by selected currency and current month. Repeats at your chosen frequency while at or above the threshold.'},now);
@@ -73,7 +73,7 @@ export async function jobStillValid(tx:Tx,owner:string,job:{ruleId:string;ruleVe
  if(rule.kind==='financial'){
  if(!rule.thresholdMinor||localClock(new Date(job.payload.asOf),settings.timezone).date.slice(0,7)!==localClock(now,settings.timezone).date.slice(0,7))return false;
  const date=localClock(now,settings.timezone).date;
- const sums=await tx.$queryRawUnsafe<{spent:string}[]>(`SELECT COALESCE(sum(t.amount),0)::text AS spent FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" WHERE t."userId"=$1::uuid AND c.kind='expense' AND a.currency=$2 AND t.date BETWEEN $3::date AND $4::date`,owner,rule.currency,date.slice(0,7)+'-01',date);
+ const sums=await tx.$queryRawUnsafe<{spent:string}[]>(`SELECT COALESCE(sum(t.amount),0)::text AS spent FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" JOIN "FinancialAccount" a ON a.id=t."accountId" AND a."userId"=t."userId" WHERE t."userId"=$1::uuid AND c.kind='expense' AND t."transferGroup" IS NULL AND a.currency=$2 AND t.date BETWEEN $3::date AND $4::date`,owner,rule.currency,date.slice(0,7)+'-01',date);
  if(BigInt(sums[0].spent)<rule.thresholdMinor)return false;
  }
  if(job.entity==='ExternalRecord'){

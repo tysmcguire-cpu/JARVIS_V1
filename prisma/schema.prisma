@@ -9,6 +9,7 @@ datasource db {
 }
 
 model User {
+  workspaceStates WorkspaceState[]
   notificationRules         NotificationRule[]
   notificationJobs          NotificationJob[]
   notificationDeliveries    NotificationDelivery[]
@@ -53,6 +54,17 @@ model User {
   trackingHabit             Habit[]
   trackingHabitEntry        HabitEntry[]
   trackingNote              Note[]
+}
+
+model WorkspaceState {
+ id String @id @db.Uuid
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ key String @db.VarChar(160)
+ value Json
+ version Int @default(1)
+ updatedAt DateTime @default(now()) @db.Timestamptz(6)
+ @@unique([userId,key])
 }
 
 model AiConversation {
@@ -221,6 +233,7 @@ model Category {
 }
 
 model Transaction {
+  transferGroup String? @db.Uuid
   csvBatchId       String?          @db.Uuid
   csvBatch         CsvImportBatch?  @relation(fields: [csvBatchId, userId], references: [id, userId], onDelete: NoAction, onUpdate: NoAction)
   id               String           @id @default(uuid()) @db.Uuid
@@ -400,6 +413,7 @@ model StudySession {
 }
 
 model Event {
+  seriesId String? @db.Uuid
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -630,7 +644,7 @@ model Note {
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @db.Timestamptz(6)
   title     String   @db.VarChar(200)
-  content   String   @db.VarChar(8000)
+  content   String   @db.VarChar(32000)
   tag       String   @db.VarChar(200)
 
   @@unique([id, userId])

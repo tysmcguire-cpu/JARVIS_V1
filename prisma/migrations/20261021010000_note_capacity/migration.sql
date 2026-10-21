@@ -1,0 +1,1 @@
+ALTER TABLE "Note" ALTER COLUMN content TYPE varchar(32000);

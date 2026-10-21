@@ -22,9 +22,11 @@ export async function saveTracking(key:string,input:unknown,id?:string,updatedAt
 }
 export async function deleteTracking(key:string,id:string,updatedAt:string) {
   await requireOwner();
-  try { if(key==='BudgetCategory')await removeBudget(id,updatedAt);else await removeRecord(key,id,updatedAt);revalidatePath('/'+entityFor(key).module);return {ok:true,message:'Record deleted.'}; }
+  try { const removed=key==='BudgetCategory'?(await removeBudget(id,updatedAt),undefined):await removeRecord(key,id,updatedAt);revalidatePath('/'+entityFor(key).module);return {ok:true,message:'Record deleted.',undoId:removed?.undoId}; }
   catch { return {ok:false,message:'Could not delete. Reload the record and remove dependent records first.'}; }
 }
 export async function searchLinkedChoices(key:string,field:string,search:string) {
  await requireOwner(); const {readLinkedChoices}=await import('./repository');return readLinkedChoices(key,field,search);
 }
+
+export async function undoDeletedTransaction(id:string){await requireOwner();try{const {undoTransactionDeletion}=await import('./transaction-undo');await undoTransactionDeletion(id);revalidatePath('/finances');return {ok:true,message:'Transaction restored.'}}catch{return {ok:false,message:'Could not undo. It may have expired, already been used, or its account/category was removed.'}}}

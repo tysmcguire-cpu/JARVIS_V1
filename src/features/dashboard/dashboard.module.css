@@ -19,3 +19,13 @@
 @keyframes outer-wave-morph{0%,100%{d:var(--wave-a)}33.333%{d:var(--wave-b)}66.667%{d:var(--wave-c)}}
 @keyframes outer-wave-pulse{0%,100%{transform:scale(.985);opacity:.28}50%{transform:scale(1.025);opacity:.66}}
 @media(prefers-reduced-motion:reduce){.outerWave,.outerWave path{animation:none!important}}
+
+.dashboard[data-layout=today] .center{width:min(29%,calc(100dvh - 270px),440px)}
+.dashboard[data-layout=custom-flat] .center{display:none}
+.dashboard:not([data-layout=default]) .connections{display:none}
+.dashboard:not([data-layout=default]) .modules{inset:auto 16px 8px;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));grid-template-rows:42px;gap:6px}
+.dashboard:not([data-layout=default]) .module{grid-column:auto!important;grid-row:1!important;justify-content:center;padding:5px;gap:3px;flex-direction:column;border-radius:7px;transform:none}
+.dashboard:not([data-layout=default]) .icon{width:auto;height:auto;border:0;background:none}
+.dashboard:not([data-layout=default]) .icon svg{width:17px;height:17px}
+.dashboard:not([data-layout=default]) .module strong{font-size:10px}
+.dashboard:not([data-layout=default]) .arrow,.dashboard:not([data-layout=default]) .selection{display:none}

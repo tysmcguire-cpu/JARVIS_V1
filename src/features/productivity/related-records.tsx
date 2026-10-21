@@ -1,0 +1,15 @@
+'use client';
+import {useEffect,useRef,useState,useTransition} from 'react';
+import {readPersonalState,savePersonalState} from './state-actions';
+import {linksSchema} from './contracts';
+import {searchEverything} from './hub-actions';
+import {recordHref,type HubRow} from './hub-query';
+import {entities,type RecordRow} from '@/features/tracking/config';
+import {NavigationLink as Link} from '@/features/shell/navigation-link';
+import styles from './command.module.css';
+type Linked={key:string;id:string;title:string};
+export function RelatedRecords({entityKey,row,demo,close}:{entityKey:string;row:RecordRow;demo:boolean;close:()=>void}){
+ const dialog=useRef<HTMLDialogElement>(null),[links,setLinks]=useState<Linked[]>([]),[version,setVersion]=useState(0),[search,setSearch]=useState(''),[results,setResults]=useState<HubRow[]>([]),[pending,start]=useTransition(),[ready,setReady]=useState(false),[message,setMessage]=useState('');const key='links:'+entityKey+':'+row.id;
+ useEffect(()=>{dialog.current?.showModal();let active=true;start(async()=>{try{const saved=demo?{value:[],version:0}:await readPersonalState(key);if(active){setLinks(linksSchema.parse(saved.value??[]));setVersion(saved.version);setReady(true)}}catch{if(active)setMessage('Could not load links. Reopen to retry.')}});return()=>{active=false}},[key,demo]);
+ return <dialog className={styles.dialog} ref={dialog} onCancel={close} aria-labelledby="related-title"><header><h2 id="related-title">Related to {row.title}</h2><button onClick={close}>Close</button></header><ul>{links.map((link,i)=>{const targetModule=entities.find(e=>e.key===link.key)?.module;return <li key={link.key+link.id}>{targetModule?<Link href={recordHref({...link,module:targetModule},demo)}>{link.title}</Link>:<span>{link.title}</span>}<button disabled={pending} onClick={()=>setLinks(links.filter((_,n)=>n!==i))}>Remove link</button></li>})}</ul><form onSubmit={e=>{e.preventDefault();start(async()=>{try{if(demo){setMessage('Link search is available in your signed-in workspace.');return}setResults(await searchEverything(search))}catch{setMessage('Could not search. Try again.')}})}}><input aria-label="Find related record" maxLength={100} required value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find task, course, note, project…"/><button disabled={pending}>Find</button></form><ul className={styles.results}>{results.filter(r=>!(r.key===entityKey&&r.id===row.id)).map(result=><li key={result.key+result.id}><button disabled={links.length>=12||links.some(l=>l.key===result.key&&l.id===result.id)} onClick={()=>setLinks([...links,{key:result.key,id:result.id,title:result.title}])}>Link {result.title} · {result.key}</button></li>)}</ul><p role="status">{message}</p><button disabled={!ready||pending||demo} onClick={()=>start(async()=>{try{const saved=await savePersonalState(key,links,version);setVersion(saved.version);setMessage('Links saved.')}catch{setMessage('Links changed or a record was removed. Reload before saving.')}})}>Save links</button><p>Links are saved on this record. Removing a link does not delete either record.</p></dialog>;
+}

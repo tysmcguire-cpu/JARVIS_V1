@@ -1,3 +1,5 @@
+Latest owner override (October 20, 2026): scrolling is permitted inside modules and their dialogs when it improves access to content. The page shell and all dashboard layouts remain fixed and non-scrollable. Dashboard layouts are Default (existing orbital launcher), Today (centered JARVIS with compact module links and real summaries), and Custom (selectable/reorderable widgets with an optional central core). Defer AI assistant feature work; accounting compatibility must still exclude internal transfers from expense/income analysis. This supersedes historical no-panel-scrolling directions below.
+
 # JARVIS contributor instructions
 
 Read JARVIS_SPEC.md in full before development; it is the primary requirements source. Read IMPLEMENTATION_PLAN.md for phase scope, architecture decisions and verified status. Do not proceed to Phase 2 until Foundation's live Supabase configuration and acceptance checks are verified. Preserve the complete specification.

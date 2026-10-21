@@ -11,3 +11,9 @@ Before a future approved deployment: run frozen dependency install, generate Pri
 Use separate development and production Supabase projects. Configure Auth site URL and allowed redirects for the actual domain, disable signup and anonymous auth, configure SMTP/recovery/rate limits and establish backup/restore procedures. Pool database connections appropriate to the hosting plan. Secrets are configured by the user, never invented. Deployment, domain purchases and paid plans require explicit approval.
 
 Phase 6 implementation and local security/recovery checks passed. Hosted acceptance still requires owner configuration, recovery rehearsal, domain/budget approval and production isolation checks. Run notification and Telegram polling workers on a separately approved always-on Node host; request-scoped Vercel execution is not a durable worker. Keep exactly one poller per bot. Define owner-approved backup/retention operations; no scheduler or paid host was created. See OWNER_SETUP.md and RECOVERY.md. A passing local build is not a claim of deployment or live integration success.
+
+## Productivity storage update
+
+Before deploying this revision, apply 20261021000000_productivity with the administrative migration connection and regenerate Prisma. This additive migration creates WorkspaceState, grants its CRUD only to the existing jarvis_app role, and adds ledger transfer and event-series metadata/integrity checks. It was applied and runtime-verified on the existing configured project. New installations still need their normal runtime-role provisioning. Run pnpm exec tsx scripts/verify-productivity.ts for synthetic rollback verification. Existing hosted:start and hosting plan remain sufficient. DAILY_WORKFLOWS.md documents the new controls.
+
+The follow-up 20261021010000_note_capacity migration widens Note.content to varchar(32000), matching validation, editor and recovery limits. Existing notes are preserved.

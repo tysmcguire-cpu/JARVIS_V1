@@ -1,0 +1,23 @@
+:root{--app-surface:#1b2938}
+.appearance-root[data-background=white]{--app-surface:#fff}
+.appearance-root[data-background=black]{--app-surface:#050505}
+/* Owner permits scrolling inside modules; the shell and dashboard stay fixed. */
+.app-shell:not(.dashboard-shell) .module-body{overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.tracking-workspace .tracking-content{overflow:auto;min-height:0;overscroll-behavior:contain}
+.tracking-workspace :is(.tracking-table-wrap,.finance-log,.module-cards,.module-pipeline,.module-activity,.note-index){overflow:auto;overscroll-behavior:contain}
+.tracking-workspace .module-record-card{min-height:190px}
+.tracking-workspace .module-cards{grid-auto-rows:minmax(190px,auto)}
+.tracking-workspace .tracking-dialog{max-height:85dvh;overflow:auto}
+.tracking-workspace .module-note-library{min-height:330px}
+.tracking-workspace .inline-note-reader{min-height:330px}
+.tracking-workspace .note-viewport{overflow:auto;overscroll-behavior:contain;min-height:100px}
+.tracking-workspace .note-document{position:static;transform:none!important;will-change:auto}
+.tracking-workspace .note-document .tiptap{font-size:15px;line-height:1.6;padding:6px}
+.tracking-workspace .note-document .tiptap :is(p,li){font-size:15px;line-height:1.6}
+.note-recovery{display:flex;gap:6px;flex-wrap:wrap}.note-recovery button,.note-recovery select{font-size:12px;padding:4px 7px}.note-recovery>span{font-size:12px;width:100%}
+.course-focus,.scenario-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;padding:6px 0}.course-focus select{max-width:300px}.course-focus>span{font-size:12px}.saved-calculator{height:100%;display:flex;flex-direction:column;min-height:380px}.saved-calculator .grade-calculator{flex:1;min-height:330px}
+.tracking-workspace .calendar-day-items{max-height:45dvh;overflow:auto}
+
+.calendar-agenda{padding:12px;overflow:auto;list-style:none}.calendar-agenda li{display:flex;flex-wrap:wrap;gap:12px;padding:12px;border-bottom:1px solid var(--app-tertiary)}.calendar-agenda time{font-variant-numeric:tabular-nums}.calendar-agenda a{color:var(--app-primary)}.event-repeat{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}.event-repeat small{width:100%;font-size:12px}.event-repeat input{max-width:90px}.finance-operations{padding-bottom:6px}.finance-tools .tracking-fields{max-height:50dvh;overflow:auto}.calendar-day-items a{color:var(--app-primary)}
+
+.tracking-workspace .module-cards{grid-template-rows:none;grid-auto-rows:minmax(220px,auto);align-content:start}.tracking-workspace .module-record-card{min-height:220px}.tracking-workspace .module-record-card footer{flex-shrink:0}.tracking-workspace .module-record-card .tracking-row-actions{display:flex;flex-wrap:wrap;white-space:normal;gap:7px}.tracking-workspace .pipeline-lane{overflow:auto;overscroll-behavior:contain}
