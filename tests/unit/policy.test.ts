@@ -11,10 +11,10 @@ describe("single-owner boundary", () => {
     expect(isOwner("invalid", "invalid")).toBe(false);
   });
   it("fails closed for production demo access even with the flag enabled", () => {
-    expect(demoEnabled({ NODE_ENV: "production", JARVIS_DEMO_MODE: "true" })).toBe(false);
-    expect(demoEnabled({ NODE_ENV: "development", JARVIS_DEMO_MODE: "true" })).toBe(true);
+    expect(demoEnabled({ NODE_ENV: "production", PLUTO_DEMO_MODE: "true" })).toBe(false);
+    expect(demoEnabled({ NODE_ENV: "development", PLUTO_DEMO_MODE: "true" })).toBe(true);
     expect(demoEnabled({ NODE_ENV: "development" })).toBe(false);
-    expect(demoEnabled({ NODE_ENV: "development", JARVIS_DEMO_MODE: "false" })).toBe(false);
+    expect(demoEnabled({ NODE_ENV: "development", PLUTO_DEMO_MODE: "false" })).toBe(false);
   });
 });
 describe("module routing", () => {

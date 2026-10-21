@@ -8,7 +8,7 @@ import {resolveCategory} from '@/features/tracking/categories';
 export async function quickMoneyInput(tx:Prisma.TransactionClient,owner:string,text:string){
  const parsed=quickMoney(text);
  const [settings]=await tx.$queryRawUnsafe<{currency:string;date:string}[]>('SELECT currency,to_char(now() AT TIME ZONE timezone,\'YYYY-MM-DD\') AS date FROM "UserSettings" WHERE "userId"=$1::uuid',owner);
- if(!settings||!currencies.includes(settings.currency))throw new CommandError('Set your currency in JARVIS Settings first.');
+ if(!settings||!currencies.includes(settings.currency))throw new CommandError('Set your currency in PLUTO Settings first.');
  const accounts=await tx.$queryRawUnsafe<{id:string;title:string;currency:string}[]>(`SELECT id,title,currency FROM "FinancialAccount" WHERE "userId"=$1::uuid ${parsed.account?'AND lower(title)=lower($2)':''} ORDER BY id LIMIT 2`,owner,...(parsed.account?[parsed.account]:[]));
  if(accounts.length>1)throw new CommandError('Which account? Send the entry with its exact name, for example: -20 food | Checking. Nothing was saved.');
  let account=accounts[0];if(!account){if(parsed.account)throw new CommandError('Account not found. Use an exact account name from Finances. Nothing was saved.');account={id:randomUUID(),title:'Personal',currency:settings.currency};await tx.$executeRawUnsafe('INSERT INTO "FinancialAccount"(id,"userId",title,currency,"openingBalance","updatedAt")VALUES($1::uuid,$2::uuid,$3,$4,0,date_trunc(\'milliseconds\',clock_timestamp()))',account.id,owner,account.title,account.currency)}

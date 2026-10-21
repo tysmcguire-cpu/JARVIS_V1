@@ -1,6 +1,6 @@
 import 'server-only';
 import {z} from 'zod';
-import {withOwnerDatabase} from '@/lib/owner-db';
+import {withCustomerDatabase} from '@/lib/customer-db';
 import {moneyInput,parseMoney} from '@/features/tracking/config';
 import {preferencesSchema,type Preferences} from './schedule';
 import {scheduleNotifications,type Payload} from './engine';
@@ -13,13 +13,13 @@ function preferencesFrom(settings:Settings&{updatedAt:string|Date},rules:StoredR
 }
 function revision(kind:Kind,p:Preferences,rules:RuleSettings){return JSON.stringify([p.timezone,p.notificationTelegramEnabled,rules[kind],kind==='weekly'?[p.weeklyReviewEnabled,p.weeklyReviewTime]:kind==='morning'?[p.morningBriefingEnabled,p.morningBriefingTime]:kind==='deadline'?[p.deadlineReminders,p.leadDays,p.deadlineTime]:kind==='financial'?[p.financialAlerts,p.threshold,p.currency]:[]])}
 const pageSchema=z.number().int().min(1).max(10000);
-export async function notificationState(pageInput:unknown=1){const page=pageSchema.parse(pageInput);return withOwnerDatabase(async(tx,owner)=>{
+export async function notificationState(pageInput:unknown=1){const page=pageSchema.parse(pageInput);return withCustomerDatabase(async(tx,owner)=>{
  const [result]=await tx.$queryRawUnsafe<{settings:(Settings&{updatedAt:string})|null;rules:StoredRule[];jobs:{id:string;payload:Payload;status:string;attempts:number;readAt:string|null;createdAt:string}[]}[]>(`SELECT (SELECT to_jsonb(s) FROM "UserSettings" s WHERE "userId"=$1::uuid) AS settings,(SELECT COALESCE(jsonb_agg(to_jsonb(r)||jsonb_build_object('thresholdMinor',r."thresholdMinor"::text)),'[]'::jsonb) FROM "NotificationRule" r WHERE "userId"=$1::uuid) AS rules,(SELECT COALESCE(jsonb_agg(to_jsonb(j) ORDER BY "createdAt" DESC,id),'[]'::jsonb) FROM(SELECT id,payload,status,attempts,"readAt","createdAt" FROM "NotificationJob" WHERE "userId"=$1::uuid ORDER BY "createdAt" DESC,id LIMIT 5 OFFSET $2::int) j) AS jobs`,owner,(page-1)*4);
  const {settings,rules,jobs}=result;if(!settings)throw Error('Owner settings unavailable');
  const prefs=preferencesFrom(settings,rules);
- return {preferences:prefs,jobs:jobs.slice(0,4).map(j=>({...j,readAt:j.readAt?new Date(j.readAt).toISOString():null,createdAt:new Date(j.createdAt).toISOString()})),more:jobs.length>4,page,workerConfigured:process.env.JARVIS_NOTIFICATIONS_ENABLED==='true'};
+ return {preferences:prefs,jobs:jobs.slice(0,4).map(j=>({...j,readAt:j.readAt?new Date(j.readAt).toISOString():null,createdAt:new Date(j.createdAt).toISOString()})),more:jobs.length>4,page,workerConfigured:process.env.PLUTO_NOTIFICATIONS_ENABLED==='true'};
  })}
-export async function saveNotificationPreferences(input:unknown){const prefs=preferencesSchema.parse(input);return withOwnerDatabase(async(tx,owner)=>{
+export async function saveNotificationPreferences(input:unknown){const prefs=preferencesSchema.parse(input);return withCustomerDatabase(async(tx,owner)=>{
  await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',owner+':notifications');
  const previous=await tx.$queryRawUnsafe<{settings:Settings&{updatedAt:string};rules:StoredRule[]}[]>(`SELECT (SELECT to_jsonb(s) FROM "UserSettings" s WHERE "userId"=$1::uuid) AS settings,(SELECT COALESCE(jsonb_agg(to_jsonb(r)||jsonb_build_object('thresholdMinor',r."thresholdMinor"::text)),'[]'::jsonb) FROM "NotificationRule" r WHERE "userId"=$1::uuid) AS rules`,owner);
  if(!previous[0]?.settings)throw Error('Owner settings unavailable');
@@ -36,8 +36,8 @@ export async function saveNotificationPreferences(input:unknown){const prefs=pre
  }
  await tx.auditLog.create({data:{userId:owner,action:'notification.preferences',outcome:'success'}});
  });}
-export async function refreshNotifications(){return withOwnerDatabase((tx,owner)=>scheduleNotifications(tx,owner))}
-export async function updateNotification(idInput:unknown,operation:unknown){const id=z.uuid().parse(idInput),action=z.enum(['read','retry','cancel']).parse(operation);return withOwnerDatabase(async(tx,owner)=>{
+export async function refreshNotifications(){return withCustomerDatabase((tx,owner)=>scheduleNotifications(tx,owner))}
+export async function updateNotification(idInput:unknown,operation:unknown){const id=z.uuid().parse(idInput),action=z.enum(['read','retry','cancel']).parse(operation);return withCustomerDatabase(async(tx,owner)=>{
  let changed=0;
  if(action==='read')changed=await tx.$executeRawUnsafe('UPDATE "NotificationJob" SET "readAt"=now() WHERE id=$1::uuid AND "userId"=$2::uuid',id,owner);
  if(action==='cancel')changed=await tx.$executeRawUnsafe('UPDATE "NotificationJob" SET status=\'canceled\',"leaseToken"=NULL,"leaseUntil"=NULL WHERE id=$1::uuid AND "userId"=$2::uuid AND status IN(\'queued\',\'failed\')',id,owner);

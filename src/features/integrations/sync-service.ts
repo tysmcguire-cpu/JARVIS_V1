@@ -1,19 +1,19 @@
 import 'server-only';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
-import type {withOwnerDatabase} from '@/lib/owner-db';
+import type {withCustomerDatabase} from '@/lib/customer-db';
 import {providers,synchronize,type Credentials,type ProviderId} from './contract';
 import {encryptToken,decryptToken} from './encryption';
 import {createReadOnlyConnector,type AuthorizedGrant} from './http-providers';
-type OwnerDatabase=typeof withOwnerDatabase;
-export async function synchronizeWithDatabase(id:string,withOwnerDatabase:OwnerDatabase){
+type OwnerDatabase=typeof withCustomerDatabase;
+export async function synchronizeWithDatabase(id:string,withCustomerDatabase:OwnerDatabase){
  z.uuid().parse(id);const lease=randomUUID();
- const state=await withOwnerDatabase(async(tx,ownerId)=>{
+ const state=await withCustomerDatabase(async(tx,ownerId)=>{
  const rows=await tx.$queryRawUnsafe<{provider:ProviderId;selection:{resources:string[];canvasOrigin?:string;canvasTransport?:'feed';syncIntervalMinutes?:number};tokenCiphertext:string|null;cursor:string|null;available:boolean;retry:boolean;consentedAt:Date|null}[]>('SELECT provider,selection,"tokenCiphertext",cursor,"consentedAt",("leaseUntil" IS NULL OR "leaseUntil"<now()) AS available,("retryAt" IS NULL OR "retryAt"<=now()) AS retry FROM "ApiConnection" WHERE id=$1::uuid AND "userId"=$2::uuid AND mode=\'live\' FOR UPDATE',id,ownerId);
  const row=rows[0];if(!row?.tokenCiphertext||!row.consentedAt||!providers.some(p=>p.id===row.provider))throw Error('Authorize this connection first.');if(!row.available)throw Error('Synchronization is already running.');if(!row.retry)throw Error('Provider retry delay is still active.');
  await tx.$executeRawUnsafe('UPDATE "ApiConnection" SET status=\'syncing\',"leaseToken"=$3::uuid,"leaseUntil"=now()+interval \'120 seconds\',"updatedAt"=now() WHERE id=$1::uuid AND "userId"=$2::uuid',id,ownerId,lease);return {...row,ownerId};
  });
- const leased=<T>(run:(tx:Parameters<Parameters<typeof withOwnerDatabase>[0]>[0],ownerId:string)=>Promise<T>)=>withOwnerDatabase(async(tx,ownerId)=>{
+ const leased=<T>(run:(tx:Parameters<Parameters<typeof withCustomerDatabase>[0]>[0],ownerId:string)=>Promise<T>)=>withCustomerDatabase(async(tx,ownerId)=>{
  if(ownerId!==state.ownerId)throw Error('Owner session changed.');const valid=await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "ApiConnection" WHERE id=$1::uuid AND "userId"=$2::uuid AND "leaseToken"=$3::uuid AND "tokenCiphertext" IS NOT NULL FOR UPDATE',id,ownerId,lease);if(!valid.length)throw Error('Connection changed or disconnected.');await tx.$executeRawUnsafe('UPDATE "ApiConnection" SET "leaseUntil"=now()+interval \'120 seconds\' WHERE id=$1::uuid AND "userId"=$2::uuid',id,ownerId);return run(tx,ownerId);
  });
  let count=0;const seenIds=new Set<string>();
@@ -31,7 +31,7 @@ export async function synchronizeWithDatabase(id:string,withOwnerDatabase:OwnerD
  }catch{
  // A provider error normally reports/releases its lease through the engine. If setup failed
  // before that, release only our own lease and retain a redacted status for an explicit retry.
- try{await withOwnerDatabase(async(tx,ownerId)=>{await tx.$executeRawUnsafe('UPDATE "ApiConnection" SET status=\'error\',"leaseToken"=NULL,"leaseUntil"=NULL,"retryAt"=now()+interval \'30 seconds\',"updatedAt"=now() WHERE id=$1::uuid AND "userId"=$2::uuid AND "leaseToken"=$3::uuid',id,ownerId,lease);});}catch{/* An expired lease permits recovery after database availability returns. */}
+ try{await withCustomerDatabase(async(tx,ownerId)=>{await tx.$executeRawUnsafe('UPDATE "ApiConnection" SET status=\'error\',"leaseToken"=NULL,"leaseUntil"=NULL,"retryAt"=now()+interval \'30 seconds\',"updatedAt"=now() WHERE id=$1::uuid AND "userId"=$2::uuid AND "leaseToken"=$3::uuid',id,ownerId,lease);});}catch{/* An expired lease permits recovery after database availability returns. */}
  return {ok:false,count};
  }
 }

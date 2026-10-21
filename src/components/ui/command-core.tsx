@@ -34,7 +34,7 @@ export function CommandCore({ compact = false }: { compact?: boolean }) {
       <g className="core-orbit-points"><circle cx="200" cy="49" r="3" /><circle cx="351" cy="200" r="3" /><circle cx="200" cy="351" r="3" /><circle cx="49" cy="200" r="3" /></g>
       <ellipse cx="200" cy="200" rx="192" ry="67" transform="rotate(-26 200 200)" className="core-orbit-faint" />
     </svg>
-    <div className="core-wordmark"><span className="core-overline">PERSONAL OPERATING SYSTEM</span><strong>JARVIS</strong><span className="core-underline">PRIVATE BY DESIGN</span></div>
+    <div className="core-wordmark"><span className="core-overline">PERSONAL OPERATING SYSTEM</span><strong>PLUTO</strong><span className="core-underline">PRIVATE BY DESIGN</span></div>
     <div className="core-coordinate coordinate-top">INTERFACE / 01</div><div className="core-coordinate coordinate-bottom">FOUNDATION</div>
   </div>;
 }

@@ -12,7 +12,7 @@ import { entities,trackingModules } from '@/features/tracking/config';
 export const dynamic = "force-dynamic";
 export default async function DemoPage({ params,searchParams }: { params: Promise<{ module?: string[] }>;searchParams:Promise<Record<string,string|undefined>> }) {
   if (!demoEnabled(process.env)) notFound();
-  let palette;try{const saved=paletteSchema.safeParse(JSON.parse((await cookies()).get('jarvis-demo-palette')?.value??'null'));if(saved.success)palette=saved.data}catch{}
+  let palette;try{const saved=paletteSchema.safeParse(JSON.parse((await cookies()).get('pluto-demo-palette')?.value??'null'));if(saved.success)palette=saved.data}catch{}
   const query=await searchParams;
   const segments = (await params).module ?? [];
   if (segments.length > 1) notFound();

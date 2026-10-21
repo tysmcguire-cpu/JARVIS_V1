@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   // Next dev otherwise logs action arguments, including private form contents.
   logging: { serverFunctions: false, browserToTerminal: false },
-  distDir: process.env.JARVIS_TEST_OUTPUT === "true" ? ".next-tests" : ".next",
+  distDir: process.env.PLUTO_TEST_OUTPUT === "true" ? ".next-tests" : ".next",
   poweredByHeader: false,
   async headers() {
     return [{ source: "/:path*", headers: [

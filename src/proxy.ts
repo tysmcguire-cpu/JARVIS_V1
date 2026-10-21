@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getAuthConfig } from "@/lib/env";
-import { demoEnabled, isOwner } from "@/features/auth/policy";
+import { demoEnabled } from "@/features/auth/policy";
 import { findModule } from "@/features/shell/navigation";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -16,7 +16,7 @@ export async function proxy(request: NextRequest) {
   // This single endpoint authenticates Telegram independently using its secret and owner allowlist.
   if (pathname === "/api/telegram/webhook") return NextResponse.next();
   const config = getAuthConfig();
-  const privateRoute = pathname !== "/login";
+  const privateRoute = !["/login","/register","/forgot-password","/reset-password","/auth/callback","/privacy","/terms"].includes(pathname);
   if (!config) {
     const response = privateRoute ? NextResponse.redirect(new URL("/login?status=configuration", request.url)) : NextResponse.next();
     response.headers.set("Cache-Control", "private, no-store");
@@ -34,9 +34,9 @@ export async function proxy(request: NextRequest) {
     }
   });
   // Signature/expiry-verified preflight; every private page and data operation still
-  // uses fresh getUser verification in requireOwner (including revoked sessions).
+  // uses fresh getUser verification in requireCustomer (including revoked sessions).
   const { data, error } = await client.auth.getClaims();
-  if (privateRoute && (error || !isOwner(data?.claims.sub, config.JARVIS_OWNER_ID))) {
+  if (privateRoute && (error || !data?.claims.sub)) {
     const denied = NextResponse.redirect(new URL("/login?status=unauthorized", request.url));
     response.cookies.getAll().forEach(cookie => denied.cookies.set(cookie));
     denied.headers.set("Cache-Control", "private, no-store");

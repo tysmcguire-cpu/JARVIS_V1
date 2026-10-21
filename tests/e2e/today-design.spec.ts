@@ -24,7 +24,7 @@ test('Today respects background and palette choices with readable text',async({p
  test.setTimeout(90000);
  await page.setViewportSize({width:1024,height:600});
  for(const background of ['current','black','white'])for(const tertiaryColor of ['#000000','#ffffff','#87a8bc']){
-  await page.context().addCookies([{name:'jarvis-demo-palette',value:JSON.stringify({...defaultPalette,background,primaryColor:'#37a66e',secondaryColor:'#bd73a7',tertiaryColor}),url:'http://127.0.0.1:3100'}]);await page.goto('/demo');await chooseDashboard(page,'custom');
+  await page.context().addCookies([{name:'pluto-demo-palette',value:JSON.stringify({...defaultPalette,background,primaryColor:'#37a66e',secondaryColor:'#bd73a7',tertiaryColor}),url:'http://127.0.0.1:3100'}]);await page.goto('/demo');await chooseDashboard(page,'custom');
   const contrast=await page.locator('[data-today-panel="spending"]').evaluate(panel=>{
    const canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;const ctx=canvas.getContext('2d')!;const rgb=(color:string)=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=color;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].slice(0,3)};
    const lum=(values:number[])=>values.map(v=>{const n=v/255;return n<=.04045?n/12.92:((n+.055)/1.055)**2.4}).reduce((n,v,i)=>n+v*[.2126,.7152,.0722][i],0);

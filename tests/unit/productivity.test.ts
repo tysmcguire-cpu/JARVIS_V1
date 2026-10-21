@@ -9,7 +9,7 @@ import {eventSeriesDates,eventConflicts} from '@/features/tracking/event-series'
 let database:PGlite;const owner=randomUUID(),other=randomUUID();let actor=owner;
 vi.mock('next/cache',()=>({revalidatePath:vi.fn()}));
 vi.mock('server-only',()=>({}));
-vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:async(work:(tx:unknown,id:string)=>Promise<unknown>)=>database.transaction(async tx=>{
+vi.mock('@/lib/customer-db',()=>({withCustomerDatabase:async(work:(tx:unknown,id:string)=>Promise<unknown>)=>database.transaction(async tx=>{
  await tx.exec(`SET LOCAL ROLE runtime;SET LOCAL request.jwt.claim.sub='${actor}'`);
  return work({$queryRawUnsafe:async(sql:string,...args:unknown[])=>(await tx.query(sql,args)).rows,$executeRawUnsafe:async(sql:string,...args:unknown[])=>(await tx.query(sql,args)).affectedRows,auditLog:{create:({data}:{data:{userId:string;action:string;outcome:string}})=>tx.query('INSERT INTO "AuditLog"(id,"userId",action,outcome) VALUES($1,$2,$3,$4)',[randomUUID(),data.userId,data.action,data.outcome])}},actor);
 })}));
@@ -18,7 +18,7 @@ import {readPersonalState,savePersonalState} from '@/features/productivity/state
 import {writeRecord,readWorkspace,writeInlineNote,removeRecord} from '@/features/tracking/repository';
 import {financeAccounts,transferMoney,reconcileAccount,recordRecurringPayment} from '@/features/tracking/finance-operations';
 import {searchEverything,readHub,quickCapture} from '@/features/productivity/hub-actions';
-beforeAll(async()=>{database=new PGlite();await database.exec(`CREATE SCHEMA auth;CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE jarvis_app;CREATE ROLE runtime INHERIT;GRANT jarvis_app TO runtime;GRANT USAGE ON SCHEMA public,auth TO runtime;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
+beforeAll(async()=>{database=new PGlite();await database.exec(`CREATE SCHEMA auth;CREATE ROLE anon;CREATE ROLE authenticated;CREATE ROLE pluto_app;CREATE ROLE runtime INHERIT;GRANT pluto_app TO runtime;GRANT USAGE ON SCHEMA public,auth TO runtime;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
  for(const name of readdirSync('prisma/migrations').filter(n=>/^\d/.test(n)).sort())await database.exec(readFileSync('prisma/migrations/'+name+'/migration.sql','utf8'));
  await database.exec(`INSERT INTO "User"(id,"updatedAt") VALUES('${owner}',now());INSERT INTO "UserSettings"("userId","updatedAt") VALUES('${owner}',now());GRANT SELECT,INSERT,UPDATE,DELETE ON ${entities.map(e=>'"'+e.key+'"').join(',')},"WorkspaceState","ApiConnection","ExternalRecord","NotificationJob" TO runtime;GRANT SELECT ON "UserSettings" TO runtime;GRANT INSERT ON "AuditLog" TO runtime;CREATE POLICY fixture_settings ON "UserSettings" FOR SELECT TO runtime USING((SELECT auth.uid())="userId");`);
 },30000);

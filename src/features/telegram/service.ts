@@ -31,13 +31,13 @@ type Outcome={reply:string;entity?:string;recordId?:string;recordVersion?:Date};
 async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):Promise<Outcome>{
  const command=parseCommand(text),{name,parts,args}=command;const owner=config.ownerId;
  const identity=await tx.$queryRawUnsafe<{pairedAt:Date|null;pairingHash:string|null;pairingExpiresAt:Date|null}[]>('SELECT "pairedAt","pairingHash","pairingExpiresAt" FROM "TelegramIdentity" WHERE "userId"=$1::uuid AND "botId"=$2 AND "telegramUserId"=$3 AND "chatId"=$4',owner,config.botId,config.userId,config.chatId);
- if(!identity.length)return {reply:'Open JARVIS Settings and create a pairing code before using this bot.'};
+ if(!identity.length)return {reply:'Open PLUTO Settings and create a pairing code before using this bot.'};
  if(name==='start'){
    const paired=await tx.$executeRawUnsafe('UPDATE "TelegramIdentity" SET "pairedAt"=now(),"pairingHash"=NULL,"pairingExpiresAt"=NULL,"updatedAt"=now() WHERE "userId"=$1::uuid AND "botId"=$2 AND "telegramUserId"=$3 AND "chatId"=$4 AND "pairingHash"=$5 AND "pairingExpiresAt">now()',owner,config.botId,config.userId,config.chatId,hashCode(args));
-   if(paired){await audit(tx,owner,'pair');return {reply:'JARVIS paired to your approved private chat. Use /help for commands. Telegram bot chats are not end-to-end encrypted.'}}
-   return {reply:identity[0].pairedAt?'Already paired. Use /help.':'Pairing code invalid or expired. Generate a new code in JARVIS Settings.'};
+   if(paired){await audit(tx,owner,'pair');return {reply:'PLUTO paired to your approved private chat. Use /help for commands. Telegram bot chats are not end-to-end encrypted.'}}
+   return {reply:identity[0].pairedAt?'Already paired. Use /help.':'Pairing code invalid or expired. Generate a new code in PLUTO Settings.'};
  }
- if(!identity[0].pairedAt)return {reply:'Pair first: generate a code in JARVIS Settings, then send /start CODE here.'};
+ if(!identity[0].pairedAt)return {reply:'Pair first: generate a code in PLUTO Settings, then send /start CODE here.'};
  if(name==='help')return {reply:helpText};
  if(name==='money'){
  const entry=await quickMoneyInput(tx,owner,args),outcome=await insert(tx,owner,'Transaction',entry.input),balance=await quickAccountBalance(tx,owner,entry.account.id);
@@ -48,11 +48,11 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  requireParts(parts,3,4);let query;try{query=querySchema.parse({domain:parts[0],start:parts[1],end:parts[2],search:parts[3]??'',view:'summary',recommendations:false})}catch{throw new CommandError('Use /ask domain | YYYY-MM-DD | YYYY-MM-DD | optional title search. Domains: finances, education, calendar, career, projects, goals, notes, sources, weekly. Maximum 366 days.');}
  const answer=await analyze(tx,owner,query);const id=randomUUID();await tx.$executeRawUnsafe('INSERT INTO "AiConversation"(id,"userId",question,query,answer,status)VALUES($1::uuid,$2::uuid,$3,$4::jsonb,$5::jsonb,\'complete\')',id,owner,('/ask '+args).slice(0,1000),JSON.stringify(query),JSON.stringify(answer));
  await storeReferences(tx,owner,id,answer.sources);
- return {reply:answer.claims.slice(0,2).map(c=>{const s=answer.sources.find(s=>s.id===c.sourceIds[0])!;return `${c.kind.toUpperCase()}: ${c.text}\nSource: ${s.label}; updated ${s.updatedAt}; retrieved ${s.fetchedAt}`}).join('\n\n')+`\n\nLocal analysis of stored records; missing/unsynced data unknown. ${answer.claims.length} result(s). Open JARVIS Assistant history for all sources and coverage. No OpenAI call made.`};
+ return {reply:answer.claims.slice(0,2).map(c=>{const s=answer.sources.find(s=>s.id===c.sourceIds[0])!;return `${c.kind.toUpperCase()}: ${c.text}\nSource: ${s.label}; updated ${s.updatedAt}; retrieved ${s.fetchedAt}`}).join('\n\n')+`\n\nLocal analysis of stored records; missing/unsynced data unknown. ${answer.claims.length} result(s). Open PLUTO Assistant history for all sources and coverage. No OpenAI call made.`};
  }
  if(name==='status'){
    const pending=await tx.$queryRawUnsafe<{count:bigint}[]>('SELECT count(*) FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "deliveredAt" IS NULL AND "canceledAt" IS NULL',owner,config.botId);
-   return {reply:`Owner paired. Database available. ${pending[0].count} pending replies. Manual commands and local /ask analysis enabled. Notification schedules and delivery status are in JARVIS Notifications.`};
+   return {reply:`Owner paired. Database available. ${pending[0].count} pending replies. Manual commands and local /ask analysis enabled. Notification schedules and delivery status are in PLUTO Notifications.`};
  }
  if(name==='undo'){
    const previous=await tx.$queryRawUnsafe<{id:string;entity:string;recordId:string;recordVersion:Date}[]>('SELECT id,entity,"recordId","recordVersion" FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "updateId"<$3 AND entity IS NOT NULL AND undone=false AND "createdAt">now()-interval \'24 hours\' ORDER BY "updateId" DESC,id DESC LIMIT 1 FOR UPDATE',owner,config.botId,BigInt(updateId));
@@ -64,7 +64,7 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  if(['tasks','notes','projects'].includes(name)){
    const table={tasks:'Task',notes:'Note',projects:'Project'}[name as 'tasks'|'notes'|'projects'];
    const rows=await tx.$queryRawUnsafe<{title:string;detail:string}[]>(`SELECT title,${table==='Note'?'left(content,250)':'status'} AS detail FROM "${table}" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY "updatedAt" DESC,id LIMIT 5`,owner,`%${args.slice(0,100).replace(/[\\%_]/g,'\\$&')}%`);
-   return {reply:rows.length?rows.map(r=>r.title+' — '+r.detail).join('\n')+'\nLatest five matching records. Open JARVIS for the complete list.':'No matching records.'};
+   return {reply:rows.length?rows.map(r=>r.title+' — '+r.detail).join('\n')+'\nLatest five matching records. Open PLUTO for the complete list.':'No matching records.'};
  }
  if(name==='balance'){
    const balances=await tx.$queryRawUnsafe<{currency:string;balance:bigint}[]>(`SELECT a.currency,sum(a."openingBalance"+COALESCE(t.net,0))::bigint AS balance FROM "FinancialAccount" a LEFT JOIN (SELECT t."accountId",t."userId",sum(CASE WHEN c.kind='income' THEN t.amount ELSE -t.amount END) AS net FROM "Transaction" t JOIN "Category" c ON c.id=t."categoryId" AND c."userId"=t."userId" WHERE t."userId"=$1::uuid GROUP BY t."accountId",t."userId") t ON t."accountId"=a.id AND t."userId"=a."userId" WHERE a."userId"=$1::uuid GROUP BY a.currency ORDER BY a.currency`,owner);
@@ -89,7 +89,7 @@ export async function processUpdate(input:unknown,config:TelegramConfig){
    // Savepoints preserve a usable transaction when undo is blocked by a dependent record.
    await tx.$executeRawUnsafe('SAVEPOINT telegram_command');let result:Outcome;
    try{result=await execute(tx,config,update.message.text,update.update_id);}
-   catch(error){if(error instanceof CommandError){await tx.$executeRawUnsafe('ROLLBACK TO SAVEPOINT telegram_command');result={reply:error.message};}else if(typeof error==='object'&&error!==null&&(('code' in error&&error.code==='23503')||('meta' in error&&typeof error.meta==='object'&&error.meta!==null&&'code' in error.meta&&error.meta.code==='23503'))){await tx.$executeRawUnsafe('ROLLBACK TO SAVEPOINT telegram_command');result={reply:'A linked record prevents this operation. Remove its dependents in JARVIS first. Nothing was changed.'};}else throw error;}
+   catch(error){if(error instanceof CommandError){await tx.$executeRawUnsafe('ROLLBACK TO SAVEPOINT telegram_command');result={reply:error.message};}else if(typeof error==='object'&&error!==null&&(('code' in error&&error.code==='23503')||('meta' in error&&typeof error.meta==='object'&&error.meta!==null&&'code' in error.meta&&error.meta.code==='23503'))){await tx.$executeRawUnsafe('ROLLBACK TO SAVEPOINT telegram_command');result={reply:'A linked record prevents this operation. Remove its dependents in PLUTO first. Nothing was changed.'};}else throw error;}
    await tx.$executeRawUnsafe('RELEASE SAVEPOINT telegram_command');
    await tx.$executeRawUnsafe('INSERT INTO "TelegramMessage"(id,"userId","botId","updateId",command,reply,entity,"recordId","recordVersion")VALUES($1::uuid,$2::uuid,$3,$4,$5,$6,$7,$8::uuid,$9)',randomUUID(),config.ownerId,config.botId,BigInt(update.update_id),parseCommand(update.message.text).name,result.reply.slice(0,4096),result.entity??null,result.recordId??null,result.recordVersion??null);
    return {accepted:true,duplicate:false};

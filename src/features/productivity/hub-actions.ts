@@ -1,13 +1,13 @@
 'use server';
-import {withOwnerDatabase} from '@/lib/owner-db';
+import {withCustomerDatabase} from '@/lib/customer-db';
 import {catalogSql} from './catalog-query';
 import type {HubData,HubRow} from './hub-query';
 import {z} from 'zod';
 import {writeRecord} from '@/features/tracking/repository';
 export async function searchEverything(input:string){const search=z.string().trim().min(1).max(100).parse(input);
- return withOwnerDatabase((tx,owner)=>tx.$queryRawUnsafe<HubRow[]>(`SELECT key,module,id,title,date,status,updated FROM (${catalogSql(undefined,true)}) catalog WHERE searchable ILIKE $2 ORDER BY updated DESC,key,id LIMIT 40`,owner,'%'+search.replace(/[\\%_]/g,'\\$&')+'%'));
+ return withCustomerDatabase((tx,owner)=>tx.$queryRawUnsafe<HubRow[]>(`SELECT key,module,id,title,date,status,updated FROM (${catalogSql(undefined,true)}) catalog WHERE searchable ILIKE $2 ORDER BY updated DESC,key,id LIMIT 40`,owner,'%'+search.replace(/[\\%_]/g,'\\$&')+'%'));
 }
-export async function readHub():Promise<HubData>{return withOwnerDatabase(async(tx,owner)=>{
+export async function readHub():Promise<HubData>{return withCustomerDatabase(async(tx,owner)=>{
  const [{timezone,today,currency}]=await tx.$queryRawUnsafe<{timezone:string;today:string;currency:string}[]>('SELECT timezone,currency,(CURRENT_TIMESTAMP AT TIME ZONE timezone)::date::text AS today FROM "UserSettings" WHERE "userId"=$1::uuid',owner);
  const conditions:Record<string,string>={deadlines:`key IN ('Assignment','Exam','Milestone','FollowUp') AND status NOT IN ('done','submitted') AND NULLIF(date,'')::date<=$2::date+7`,tasks:`key='Task' AND status<>'done'`,schedule:`key='Event' AND NULLIF(date,'')::date<=$2::date AND COALESCE(NULLIF("endDate",'')::date,NULLIF(date,'')::date)>=$2::date`,projects:`key='Project' AND status<>'done'`,goals:`key='Goal' AND status<>'done'`,notes:`key='Note'`};
  const parts=Object.entries(conditions).flatMap(([key,where])=>[`'${key}'`,`(SELECT jsonb_build_object('total',count(*),'rows',COALESCE((SELECT jsonb_agg(to_jsonb(r)) FROM(SELECT * FROM catalog WHERE ${where} ORDER BY NULLIF(date,'') NULLS LAST,NULLIF(time,'') NULLS LAST,updated DESC,id LIMIT 6)r),'[]'::jsonb)) FROM catalog WHERE ${where})`]);

@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import {requestPasswordReset} from '@/features/auth/actions';
+export default async function Forgot({searchParams}:{searchParams:Promise<{status?:string}>}){const status=(await searchParams).status;return <main className="login-screen"><section className="login-card"><h1>Reset your password</h1><form action={requestPasswordReset} className="login-form"><label>Email<input type="email" name="email" autoComplete="email" maxLength={254} required/></label><button>Send reset link</button></form>{status&&<p role="status">If the account is eligible, a reset email will arrive shortly.</p>}<Link href="/login">Back to sign in</Link></section></main>}

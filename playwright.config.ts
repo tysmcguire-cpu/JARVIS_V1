@@ -8,5 +8,5 @@ export default defineConfig({
     { name: "monitor", use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } } }
   ],
   webServer: { command: "pnpm dev --hostname 127.0.0.1 --port 3100", url: "http://127.0.0.1:3100/login", reuseExistingServer: false, timeout: 120000,
-    env: { JARVIS_TEST_OUTPUT: "true", JARVIS_DEMO_MODE: "true", NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "", JARVIS_OWNER_ID: "" } }
+    env: { PLUTO_TEST_OUTPUT: "true", PLUTO_DEMO_MODE: "true", NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "", PLUTO_OWNER_ID: "" } }
 });

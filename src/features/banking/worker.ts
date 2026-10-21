@@ -4,7 +4,7 @@ import {db} from '@/lib/db';
 import {bankAvailability} from './config';
 import {syncBank,type BankRun} from './service';
 export async function bankTick(){
- if(!bankAvailability().ready)return 0;const owner=z.uuid().parse(process.env.JARVIS_OWNER_ID);
+ if(!bankAvailability().ready)return 0;const owner=z.uuid().parse(process.env.PLUTO_OWNER_ID);
  const run:BankRun=async work=>db.$transaction(async tx=>{await tx.$queryRaw`SELECT set_config('request.jwt.claim.sub',${owner},true)`;const valid=await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "User" WHERE id=$1::uuid AND synthetic=false',owner);if(!valid.length)throw Error('Owner unavailable.');return work(tx,owner)},{timeout:15000});
  return refreshDueBank(run);
 }

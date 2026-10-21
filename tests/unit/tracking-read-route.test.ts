@@ -1,6 +1,6 @@
 import {it,expect,vi,beforeEach} from 'vitest';
 const mocks=vi.hoisted(()=>({owner:vi.fn(),read:vi.fn()}));
-vi.mock('server-only',()=>({}));vi.mock('@/features/auth/server',()=>({withOwnerRequest:async(work:()=>Promise<unknown>)=>{await mocks.owner();return work()}}));vi.mock('@/features/tracking/repository',()=>({readWorkspace:mocks.read}));
+vi.mock('server-only',()=>({}));vi.mock('@/features/auth/server',()=>({withCustomerRequest:async(work:()=>Promise<unknown>)=>{await mocks.owner();return work()}}));vi.mock('@/features/tracking/repository',()=>({readWorkspace:mocks.read}));
 import {POST} from '@/app/api/tracking/read/route';
 const request=(body='{"key":"Note","query":{}}',origin='http://localhost:3000')=>new Request('http://localhost:3000/api/tracking/read',{method:'POST',headers:{origin},body});
 beforeEach(()=>{vi.unstubAllEnvs();vi.resetAllMocks();mocks.owner.mockResolvedValue({id:'owner'});mocks.read.mockResolvedValue({rows:[]})});

@@ -1,11 +1,11 @@
 import 'server-only';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
-import type {withOwnerDatabase} from '@/lib/owner-db';
+import type {withCustomerDatabase} from '@/lib/customer-db';
 import {encryptToken,decryptToken} from '@/features/integrations/encryption';
 import {bankConfig} from './config';
 import {bankRequest,BankError,normalizeAccount,normalizeTransaction,type BankRecord} from './api';
-export type BankRun=typeof withOwnerDatabase;
+export type BankRun=typeof withCustomerDatabase;
 type Selection={automaticSync?:boolean;environment?:string;connected?:boolean;itemsCreated?:number;syncMinutes?:number;historyDays?:number;historyStatus?:string;completedSession?:string;errorCode?:string};
 type Secret={environment:string;accessToken?:string;verified?:boolean;linkToken?:string;linkExpiry?:number;sessionId?:string;updating?:boolean};
 type Row={id:string;tokenCiphertext:string|null;selection:Selection;cursor:string|null;available:boolean;retry:boolean;status:string};
@@ -39,7 +39,7 @@ export async function startBankLink(run:BankRun,input:unknown){
  try{
   const secret=lease.secret();requireEnvironment(secret);if(secret.linkToken&&secret.sessionId&&(secret.linkExpiry??0)>Date.now())return await lease.persist(secret,lease.state.selection,lease.state.status).then(()=>({token:secret.linkToken!,sessionId:secret.sessionId!,updating:!!secret.updating}));
   const updating=!!secret.accessToken;if(!updating&&(lease.state.selection.itemsCreated??0)>=10)throw new BankError('TRIAL_ITEM_LIMIT');
-  const response=await bankRequest('/link/token/create',{client_name:'JARVIS',language:'en',country_codes:['US'],user:{client_user_id:lease.state.owner},redirect_uri:config.redirectUri,...(updating?{access_token:secret.accessToken}:{products:['transactions'],transactions:{days_requested:choice.historyDays},account_filters:{depository:{account_subtypes:['checking','savings']},credit:{account_subtypes:['credit card']}}})});
+  const response=await bankRequest('/link/token/create',{client_name:'PLUTO',language:'en',country_codes:['US'],user:{client_user_id:lease.state.owner},redirect_uri:config.redirectUri,...(updating?{access_token:secret.accessToken}:{products:['transactions'],transactions:{days_requested:choice.historyDays},account_filters:{depository:{account_subtypes:['checking','savings']},credit:{account_subtypes:['credit card']}}})});
   const token=z.string().min(1).max(1000).parse(response.link_token),expiry=Date.parse(z.iso.datetime().parse(response.expiration));if(expiry<=Date.now())throw new BankError('LINK_EXPIRED');const sessionId=randomUUID();
   await lease.persist({...secret,linkToken:token,linkExpiry:expiry,sessionId,updating},{...lease.state.selection,environment:config.env,connected:!!secret.verified&&!!secret.accessToken,historyDays:updating?lease.state.selection.historyDays:choice.historyDays,syncMinutes:choice.syncMinutes,errorCode:undefined},'authorized');return {token,sessionId,updating};
  }catch(error){await lease.fail(error);throw error}

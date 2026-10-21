@@ -1,7 +1,7 @@
 import 'server-only';
 import {randomUUID} from 'node:crypto';
 import type {Prisma} from '@prisma/client';
-import {withOwnerDatabase} from '@/lib/owner-db';
+import {withCustomerDatabase} from '@/lib/customer-db';
 import {z} from 'zod';
 export async function keepDeletedTransactions(tx:Prisma.TransactionClient,owner:string,ids:string[]){
  const rows=await tx.$queryRawUnsafe<{id:string;title:string;accountId:string;categoryId:string;amount:string;date:string;transferGroup:string|null}[]>('SELECT id,title,"accountId","categoryId",amount::text,date::text,"transferGroup" FROM "Transaction" WHERE "userId"=$1::uuid AND id=ANY($2::uuid[]) ORDER BY id',owner,ids);
@@ -9,7 +9,7 @@ export async function keepDeletedTransactions(tx:Prisma.TransactionClient,owner:
  await tx.$executeRawUnsafe('DELETE FROM "WorkspaceState" WHERE "userId"=$1::uuid AND key LIKE \'deleted-transaction:%\' AND "updatedAt"<now()-interval \'1 day\'',owner);
  await tx.$executeRawUnsafe('INSERT INTO "WorkspaceState" (id,"userId",key,value,version,"updatedAt") VALUES($1::uuid,$2::uuid,$3,$4::jsonb,1,now())',randomUUID(),owner,'deleted-transaction:'+undoId,JSON.stringify(rows));return undoId;
 }
-export async function undoTransactionDeletion(input:string){const id=z.uuid().parse(input);return withOwnerDatabase(async(tx,owner)=>{
+export async function undoTransactionDeletion(input:string){const id=z.uuid().parse(input);return withCustomerDatabase(async(tx,owner)=>{
  const [saved]=await tx.$queryRawUnsafe<{value:unknown}[]>('SELECT value FROM "WorkspaceState" WHERE "userId"=$1::uuid AND key=$2 AND "updatedAt">now()-interval \'10 minutes\' FOR UPDATE',owner,'deleted-transaction:'+id);if(!saved)throw Error('Undo expired or was already used.');
  const rows=z.array(z.object({id:z.uuid(),title:z.string().min(1).max(200),accountId:z.uuid(),categoryId:z.uuid(),amount:z.string().regex(/^\d+$/),date:z.iso.date(),transferGroup:z.uuid().nullable()})).min(1).max(2).parse(saved.value);
  // Deterministic account locks include both sides of a transfer.

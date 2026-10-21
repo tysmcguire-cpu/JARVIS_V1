@@ -1,0 +1,9 @@
+# Pluto database and isolation
+
+Never use personal database credentials. Create a separate commercial Supabase project, obtain its project reference, and review every migration before execution. Historical migrations are immutable; 20261022000000_pluto_foundation is additive and aborts if User contains any records. This intentionally prevents commercial conversion of an existing personal database. No commercial migration has been applied remotely.
+
+The migration creates NOLOGIN pluto_app and grants runtime access under existing FORCE RLS ownership policies. Commercial identity/settings insertion policies allow only auth.uid(); status changes and administrative privileges are not granted. Browser anon/authenticated table access remains revoked. A separate restricted LOGIN role pluto_runtime must be provisioned as a member of pluto_app (not table owner, superuser or BYPASSRLS); use its pooler login for DATABASE_URL. Keep DIRECT_URL only in approved migration tooling. Never run a browser request with the admin URL.
+
+PLUTO_SUPABASE_PROJECT_REF must match both Auth URL and database host/pooler username. Runtime URLs must use TLS and the pluto_runtime login; administrative URLs are accepted only by guarded migration tooling. The db:migrate wrapper additionally requires PLUTO_ALLOW_MIGRATIONS=approved. Old single-owner setup/restore/provision commands are deliberately retired and fail without connecting.
+
+The installation metadata table is reserved for separately approved infrastructure provisioning. Further commercial schema changes and lifecycle procedures are tracked in PLUTO_ROADMAP.md. Local migration tests emulate Supabase prerequisites in PGlite and verify two real PostgreSQL roles/identities, ownership FKs and cross-tenant rejection. They do not replace live Supabase acceptance.

@@ -1,3 +1,4 @@
+import {product} from '@/features/commercial/product';
 import type { Metadata } from "next";
 import "./globals.css";
 import "./command-theme.css";
@@ -18,7 +19,7 @@ import "./module-polish.css";
 import "./module-rail.css";
 import "./grade-calculator.css";
 import "./module-scrolling.css";
-export const metadata: Metadata = { title: "JARVIS · Personal Operating System", description: "Your private personal command center.", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: product.name+" · Personal Operating System", description: "Your private personal command center.", robots: { index: false, follow: false } };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className="dark"><body>{children}<div className="desktop-size-notice"><span>JARVIS / DESKTOP WORKSPACE</span><h1>A little more room.</h1><p>Open JARVIS in a desktop window at least 1024 pixels wide and 600 pixels tall.</p><p>The interface is designed to fit on one screen.</p></div></body></html>;
+  return <html lang="en" className="dark"><body>{children}</body></html>;
 }

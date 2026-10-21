@@ -7,7 +7,7 @@ import {randomUUID} from 'node:crypto';
 export async function enrollMfa(){
  const owner=await requireIdentity(),client=await createAuthClient();
  if(owner.factors?.some(f=>f.status==='verified')){const claims=await client.auth.getClaims();if(claims.error||claims.data?.claims.aal!=='aal2'||claims.data.claims.sub!==owner.id)throw Error('Verify your existing authenticator first.');}
- const {data,error}=await client.auth.mfa.enroll({factorType:'totp',friendlyName:'JARVIS owner '+randomUUID().slice(0,8)});if(error||!data)throw Error('Authenticator setup unavailable. Check your Supabase MFA configuration.');
+ const {data,error}=await client.auth.mfa.enroll({factorType:'totp',friendlyName:'PLUTO owner '+randomUUID().slice(0,8)});if(error||!data)throw Error('Authenticator setup unavailable. Check your Supabase MFA configuration.');
  return {factorId:data.id,secret:data.totp.secret};
 }
 export async function verifyMfa(factorInput:unknown,codeInput:unknown){

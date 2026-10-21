@@ -1,11 +1,11 @@
 import { timingSafeEqual, createHash } from 'node:crypto';
 import { z } from 'zod';
 const id=z.string().regex(/^[1-9]\d{0,15}$/).refine(v=>Number.isSafeInteger(Number(v)));
-const schema=z.object({TELEGRAM_ENABLED:z.literal('true'),TELEGRAM_BOT_TOKEN:z.string().regex(/^\d{5,20}:[A-Za-z0-9_-]{30,}$/),TELEGRAM_OWNER_USER_ID:id,TELEGRAM_OWNER_CHAT_ID:id,JARVIS_OWNER_ID:z.uuid()});
+const schema=z.object({TELEGRAM_ENABLED:z.literal('true'),TELEGRAM_BOT_TOKEN:z.string().regex(/^\d{5,20}:[A-Za-z0-9_-]{30,}$/),TELEGRAM_OWNER_USER_ID:id,TELEGRAM_OWNER_CHAT_ID:id,PLUTO_OWNER_ID:z.uuid()});
 export type TelegramConfig={token:string;botId:string;ownerId:string;userId:string;chatId:string};
 export function getTelegramConfig(env:Record<string,string|undefined>=process.env):TelegramConfig|null {
  const result=schema.safeParse(env);if(!result.success)return null;const e=result.data;
- return {token:e.TELEGRAM_BOT_TOKEN,botId:e.TELEGRAM_BOT_TOKEN.split(':')[0],ownerId:e.JARVIS_OWNER_ID,userId:e.TELEGRAM_OWNER_USER_ID,chatId:e.TELEGRAM_OWNER_CHAT_ID};
+ return {token:e.TELEGRAM_BOT_TOKEN,botId:e.TELEGRAM_BOT_TOKEN.split(':')[0],ownerId:e.PLUTO_OWNER_ID,userId:e.TELEGRAM_OWNER_USER_ID,chatId:e.TELEGRAM_OWNER_CHAT_ID};
 }
 export function hashCode(value:string){return createHash('sha256').update(value).digest('hex')}
 export function validWebhookSecret(actual:string|null,expected:string|undefined){if(!expected||!/^[A-Za-z0-9_-]{32,256}$/.test(expected)||!actual||actual.length>256)return false;const a=Buffer.from(hashCode(actual),'hex'),b=Buffer.from(hashCode(expected),'hex');return timingSafeEqual(a,b)}

@@ -1,7 +1,7 @@
 import 'server-only';
 import {createHash,randomUUID} from 'node:crypto';
 import {z} from 'zod';
-import {withOwnerDatabase} from '@/lib/owner-db';
+import {withCustomerDatabase} from '@/lib/customer-db';
 import {formatMoney} from '@/features/tracking/config';
 import {normalizeCsv,mappingSchema,type CsvRow} from './csv';
 const hash=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -10,13 +10,13 @@ export type ImportPreview={id:string;filename:string;currency:string;accountTitl
 const requestSchema=z.object({text:z.string().max(262144),filename:z.string().max(500),accountId:uuid,expenseCategoryId:z.union([uuid,z.literal('')]),incomeCategoryId:z.union([uuid,z.literal('')]),mapping:mappingSchema}).strict();
 export type ImportRequest=z.infer<typeof requestSchema>;
 export async function csvChoices(search=''){
- z.string().max(100).parse(search);return withOwnerDatabase(async(tx,ownerId)=>{
+ z.string().max(100).parse(search);return withCustomerDatabase(async(tx,ownerId)=>{
  const pattern=`%${search.replace(/[\\%_]/g,'\\$&')}%`;const accounts=await tx.$queryRawUnsafe<{id:string;title:string;currency:string}[]>('SELECT id,title,currency FROM "FinancialAccount" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY title,id LIMIT 100',ownerId,pattern);const categories=await tx.$queryRawUnsafe<{id:string;title:string;kind:string}[]>('SELECT id,title,kind FROM "Category" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY title,id LIMIT 100',ownerId,pattern);return {accounts,categories};
  });
 }
 export async function previewImport(input:unknown):Promise<ImportPreview>{
  const request=requestSchema.parse(input);
- return withOwnerDatabase(async(tx,ownerId)=>{
+ return withCustomerDatabase(async(tx,ownerId)=>{
  await tx.$executeRawUnsafe('DELETE FROM "CsvImportBatch" WHERE "userId"=$1::uuid AND "importedAt" IS NULL AND "expiresAt"<now()',ownerId);
  const accounts=await tx.$queryRawUnsafe<{currency:string;title:string}[]>('SELECT title,currency FROM "FinancialAccount" WHERE id=$1::uuid AND "userId"=$2::uuid FOR SHARE',request.accountId,ownerId);if(!accounts[0])throw Error('Select an existing owner account first.');const currency=accounts[0].currency;
  const rows=normalizeCsv(request.text,request.mapping,currency);const categories=await tx.$queryRawUnsafe<{id:string;kind:string}[]>('SELECT id,kind FROM "Category" WHERE "userId"=$1::uuid AND (id=$2::uuid OR id=$3::uuid)',ownerId,request.expenseCategoryId||null,request.incomeCategoryId||null);
@@ -37,7 +37,7 @@ export async function previewImport(input:unknown):Promise<ImportPreview>{
 }
 export async function confirmImport(batchId:string,acknowledgeDuplicates:boolean){
  uuid.parse(batchId);z.boolean().parse(acknowledgeDuplicates);
- return withOwnerDatabase(async(tx,ownerId)=>{
+ return withCustomerDatabase(async(tx,ownerId)=>{
  await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text',ownerId+':csv');
  const batches=await tx.$queryRawUnsafe<{accountId:string;currency:string;plan:CsvRow[];importedAt:Date|null;importedCount:number;skippedCount:number;valid:boolean}[]>('SELECT "accountId",currency,plan,"importedAt","importedCount","skippedCount","expiresAt">now() AS valid FROM "CsvImportBatch" WHERE id=$1::uuid AND "userId"=$2::uuid FOR UPDATE',batchId,ownerId);const batch=batches[0];if(!batch)throw Error('Import preview is unavailable.');if(batch.importedAt)return {inserted:batch.importedCount,skipped:batch.skippedCount,repeated:true};if(!batch.valid)throw Error('Import preview expired. Upload and review the file again.');
  const account=await tx.$queryRawUnsafe<{currency:string}[]>('SELECT currency FROM "FinancialAccount" WHERE id=$1::uuid AND "userId"=$2::uuid FOR UPDATE',batch.accountId,ownerId);if(account[0]?.currency!==batch.currency)throw Error('Account currency changed. Create a new preview.');

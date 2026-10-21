@@ -5,39 +5,39 @@ vi.mock("server-only", () => ({}));
 vi.mock("next/navigation", () => ({ redirect: (url: string) => { throw new Error(`redirect:${url}`); } }));
 vi.mock("@/lib/env", () => ({ getAuthConfig: () => mocks.configured ? {} : null }));
 vi.mock("@/lib/supabase/server", () => ({ createAuthClient: async () => ({ auth: mocks }) }));
-import { requireOwner,withOwnerRequest } from "../../src/features/auth/server";
+import { requireCustomer,withCustomerRequest } from "../../src/features/auth/server";
 import { signIn, signOut } from "../../src/features/auth/actions";
 
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.configured = true;
-  vi.stubEnv('JARVIS_REQUIRE_MFA','false');
-  vi.stubEnv("JARVIS_OWNER_ID", ownerId);
+  vi.stubEnv('PLUTO_REQUIRE_MFA','false');
+  vi.stubEnv("PLUTO_OWNER_ID", ownerId);
   mocks.signOut.mockResolvedValue({ error: null });
 });
 afterEach(() => vi.unstubAllEnvs());
 describe("server owner boundary", () => {
-  it('requires AAL2 for verified factors and for mandatory enrollment, failing closed on claim errors',async()=>{mocks.getUser.mockResolvedValue({data:{user:{id:ownerId,factors:[{id:'factor',status:'verified'}]}},error:null});mocks.getClaims.mockResolvedValue({data:{claims:{sub:ownerId,aal:'aal1'}},error:null});await expect(requireOwner()).rejects.toThrow('redirect:/mfa');mocks.getClaims.mockResolvedValue({data:{claims:{sub:ownerId,aal:'aal2'}},error:null});expect((await requireOwner()).id).toBe(ownerId);mocks.getClaims.mockResolvedValue({data:null,error:{code:'invalid'}});await expect(requireOwner()).rejects.toThrow('redirect:/mfa');mocks.getUser.mockResolvedValue({data:{user:{id:ownerId}},error:null});vi.stubEnv('JARVIS_REQUIRE_MFA','true');await expect(requireOwner()).rejects.toThrow('redirect:/mfa');});
+  it('requires AAL2 for verified factors and for mandatory enrollment, failing closed on claim errors',async()=>{mocks.getUser.mockResolvedValue({data:{user:{id:ownerId,email_confirmed_at:"2026-01-01T00:00:00Z",factors:[{id:'factor',status:'verified'}]}},error:null});mocks.getClaims.mockResolvedValue({data:{claims:{sub:ownerId,aal:'aal1'}},error:null});await expect(requireCustomer()).rejects.toThrow('redirect:/mfa');mocks.getClaims.mockResolvedValue({data:{claims:{sub:ownerId,aal:'aal2'}},error:null});expect((await requireCustomer()).id).toBe(ownerId);mocks.getClaims.mockResolvedValue({data:null,error:{code:'invalid'}});await expect(requireCustomer()).rejects.toThrow('redirect:/mfa');mocks.getUser.mockResolvedValue({data:{user:{id:ownerId,email_confirmed_at:"2026-01-01T00:00:00Z"}},error:null});vi.stubEnv('PLUTO_REQUIRE_MFA','true');await expect(requireCustomer()).rejects.toThrow('redirect:/mfa');});
   it('shares verification only inside an explicitly verified request and rechecks the next request',async()=>{
-    mocks.getUser.mockResolvedValue({data:{user:{id:ownerId}},error:null});await withOwnerRequest(async()=>{expect((await requireOwner()).id).toBe(ownerId);expect((await requireOwner()).id).toBe(ownerId)});expect(mocks.getUser).toHaveBeenCalledTimes(1);mocks.getUser.mockResolvedValue({data:{user:null},error:{code:'revoked'}});await expect(withOwnerRequest(async()=>requireOwner())).rejects.toThrow('unauthorized');expect(mocks.getUser).toHaveBeenCalledTimes(2);
+    mocks.getUser.mockResolvedValue({data:{user:{id:ownerId,email_confirmed_at:"2026-01-01T00:00:00Z"}},error:null});await withCustomerRequest(async()=>{expect((await requireCustomer()).id).toBe(ownerId);expect((await requireCustomer()).id).toBe(ownerId)});expect(mocks.getUser).toHaveBeenCalledTimes(1);mocks.getUser.mockResolvedValue({data:{user:null},error:{code:'revoked'}});await expect(withCustomerRequest(async()=>requireCustomer())).rejects.toThrow('unauthorized');expect(mocks.getUser).toHaveBeenCalledTimes(2);
   });
   it("does not call Supabase without complete configuration", async () => {
     mocks.configured = false;
-    await expect(requireOwner()).rejects.toThrow("redirect:/login?status=configuration");
+    await expect(requireCustomer()).rejects.toThrow("redirect:/login?status=configuration");
     expect(mocks.getUser).not.toHaveBeenCalled();
   });
   it("accepts an owner returned by the verified Supabase getUser call", async () => {
-    mocks.getUser.mockResolvedValue({ data: { user: { id: ownerId } }, error: null });
-    expect((await requireOwner()).id).toBe(ownerId);
+    mocks.getUser.mockResolvedValue({ data: { user: { id: ownerId,email_confirmed_at:"2026-01-01T00:00:00Z" } }, error: null });
+    expect((await requireCustomer()).id).toBe(ownerId);
   });
   it.each([
     { data: { user: null }, error: null },
     { data: { user: { id: "b2c92111-c2a3-4ab2-91dc-3d1abc84cc33" } }, error: null },
-    { data: { user: { id: ownerId } }, error: { code: "session_not_found" } },
+    { data: { user: { id: ownerId,email_confirmed_at:"2026-01-01T00:00:00Z" } }, error: { code: "session_not_found" } },
     { data: { user: null }, error: { code: "bad_jwt" } }
-  ])("rejects absent, second-user, revoked and invalid sessions", async result => {
+  ])("rejects absent, unverified, revoked and invalid sessions", async result => {
     mocks.getUser.mockResolvedValue(result);
-    await expect(requireOwner()).rejects.toThrow("redirect:/login?status=unauthorized");
+    await expect(requireCustomer()).rejects.toThrow("redirect:/login?status=unauthorized");
   });
 });
 describe("password actions", () => {
@@ -56,7 +56,7 @@ describe("password actions", () => {
     await expect(signIn(form())).rejects.toThrow("redirect:/login?status=invalid");
   });
   it("redirects the approved owner to the dashboard", async () => {
-    mocks.signInWithPassword.mockResolvedValue({ data: { user: { id: ownerId } }, error: null });
+    mocks.signInWithPassword.mockResolvedValue({ data: { user: { id: ownerId,email_confirmed_at:"2026-01-01T00:00:00Z" } }, error: null });
     await expect(signIn(form())).rejects.toThrow("redirect:/");
     expect(mocks.signOut).not.toHaveBeenCalled();
   });
@@ -65,3 +65,5 @@ describe("password actions", () => {
     await expect(signOut()).rejects.toThrow("Sign out failed");
   });
 });
+
+it('accepts a second independent verified customer',async()=>{mocks.getUser.mockResolvedValue({data:{user:{id:'b2c92111-c2a3-4ab2-91dc-3d1abc84cc33',email_confirmed_at:'2026-01-01T00:00:00Z'}},error:null});expect((await requireCustomer()).id).toBe('b2c92111-c2a3-4ab2-91dc-3d1abc84cc33')});

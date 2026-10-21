@@ -4,12 +4,12 @@ loadEnvironment();
 
 async function main() {
   const {canvasFeedTick} = await import('../src/features/integrations/canvas-feed-worker');
-  const feeds = !!process.env.JARVIS_OWNER_ID;
+  const feeds = !!process.env.PLUTO_OWNER_ID;
   const {notificationTick} = await import('../src/features/notifications/worker');
   const {getTelegramConfig} = await import('../src/features/telegram/config');
   const {flushReplies} = await import('../src/features/telegram/service');
   const {db} = await import('../src/lib/db');
-  const notifications = process.env.JARVIS_NOTIFICATIONS_ENABLED === 'true';
+  const notifications = process.env.PLUTO_NOTIFICATIONS_ENABLED === 'true';
   const telegram = getTelegramConfig();
   const replies = !!telegram && !!process.env.TELEGRAM_WEBHOOK_SECRET;
   if (!notifications && !replies && !feeds) throw Error('No background task enabled');

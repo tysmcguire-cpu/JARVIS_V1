@@ -29,6 +29,6 @@ export async function deliverNotifications(owner:string,run:<T>(work:(tx:Tx)=>Pr
  if(code)return;
  }
 }
-export async function notificationTick(){if(process.env.JARVIS_NOTIFICATIONS_ENABLED!=='true')throw Error('Notifications are disabled. Explicitly enable the local worker first.');const owner=z.uuid().parse(process.env.JARVIS_OWNER_ID),run=<T>(work:(tx:Tx)=>Promise<T>)=>withNotificationDatabase(owner,work);
+export async function notificationTick(){if(process.env.PLUTO_NOTIFICATIONS_ENABLED!=='true')throw Error('Notifications are disabled. Explicitly enable the local worker first.');const owner=z.uuid().parse(process.env.PLUTO_OWNER_ID),run=<T>(work:(tx:Tx)=>Promise<T>)=>withNotificationDatabase(owner,work);
  await run(tx=>scheduleNotifications(tx,owner));await deliverNotifications(owner,run);
 }

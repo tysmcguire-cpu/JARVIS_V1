@@ -1,0 +1,5 @@
+import Link from 'next/link';
+import {register} from '@/features/auth/actions';
+import {features} from '@/features/commercial/flags';
+export const dynamic='force-dynamic';
+export default async function Register({searchParams}:{searchParams:Promise<{status?:string}>}){const status=(await searchParams).status;return <main className="login-screen"><section className="login-card"><h1>Create your Pluto account</h1>{features.registration()?<form action={register} className="login-form"><label>Email<input name="email" type="email" autoComplete="email" required maxLength={254}/></label><label>Password (at least 12 characters)<input name="password" type="password" autoComplete="new-password" required minLength={12} maxLength={128}/></label><p>Creating an account requires acceptance of the reviewed Terms and Privacy Policy before public launch.</p><button type="submit">Register</button></form>:<p>Registration is closed during development.</p>}{status&&<p role="status">Registration is unavailable. Check your details or try again later.</p>}<Link href="/login">Sign in</Link></section></main>}

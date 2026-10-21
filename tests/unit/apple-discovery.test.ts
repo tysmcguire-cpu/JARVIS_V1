@@ -1,7 +1,7 @@
 import {beforeEach,it,expect,vi} from 'vitest';
 const mocks=vi.hoisted(()=>({database:vi.fn(),discover:vi.fn(),query:vi.fn(),audit:vi.fn()}));
 vi.mock('server-only',()=>({}));
-vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:mocks.database}));
+vi.mock('@/lib/customer-db',()=>({withCustomerDatabase:mocks.database}));
 vi.mock('@/features/integrations/apple-calendar',async()=>({...await vi.importActual<typeof import('@/features/integrations/apple-calendar')>('@/features/integrations/apple-calendar'),discoverAppleCalendars:mocks.discover}));
 import {discoverOwnerAppleCalendars} from '@/features/integrations/apple-discovery';
 const input={approved:true,username:'synthetic@example.invalid',password:'synthetic-app-password'};

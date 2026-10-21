@@ -23,8 +23,9 @@ model User {
   telegramIdentity          TelegramIdentity?
   telegramMessages          TelegramMessage[]
   id                        String                 @id @db.Uuid
-  singleton                 Boolean                @unique @default(true)
-  displayName               String                 @default("Owner") @db.VarChar(100)
+  status String @default("active") @db.VarChar(20)
+  onboardingCompletedAt DateTime? @db.Timestamptz(6)
+  displayName               String                 @default("Customer") @db.VarChar(100)
   synthetic                 Boolean                @default(false)
   createdAt                 DateTime               @default(now()) @db.Timestamptz(6)
   updatedAt                 DateTime               @updatedAt @db.Timestamptz(6)

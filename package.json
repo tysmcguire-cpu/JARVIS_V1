@@ -1,5 +1,5 @@
 {
-  "name": "jarvis",
+  "name": "pluto",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,7 @@
     "test:production": "playwright test --config playwright.production.config.ts",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
-    "db:migrate": "prisma migrate deploy",
+    "db:migrate": "tsx scripts/pluto-migrate.ts",
     "db:provision": "tsx scripts/provision-owner.ts",
     "db:verify": "tsx scripts/verify-database.ts",
     "db:seed": "tsx prisma/seed.ts",

@@ -6,7 +6,7 @@ import { entities } from '@/features/tracking/config';
 let database:PGlite;let reads=0;
 const owner='a2c92111-c2a3-4ab2-91dc-3d1abc84cc33';
 vi.mock('server-only',()=>({}));
-vi.mock('@/lib/owner-db',()=>({withOwnerDatabase:async(callback:(tx:unknown,id:string)=>Promise<unknown>)=>database.transaction(async transaction=>{
+vi.mock('@/lib/customer-db',()=>({withCustomerDatabase:async(callback:(tx:unknown,id:string)=>Promise<unknown>)=>database.transaction(async transaction=>{
  await transaction.exec(`SET LOCAL ROLE runtime;SET LOCAL request.jwt.claim.sub='${owner}'`);
  const adapter={
  $queryRawUnsafe:async(sql:string,...args:unknown[])=>{reads++;return (await transaction.query(sql,args)).rows},

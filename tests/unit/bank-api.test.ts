@@ -2,7 +2,7 @@ import {it,expect,vi,afterEach} from 'vitest';
 vi.mock('server-only',()=>({}));
 import {bankConfig,bankAvailability} from '@/features/banking/config';
 import {bankRequest,exactBankMoney,normalizeTransaction,normalizeAccount} from '@/features/banking/api';
-const setup=()=>{for(const [key,value] of Object.entries({PLAID_ENABLED:'true',PLAID_ENV:'sandbox',PLAID_CLIENT_ID:'synthetic-client',PLAID_SECRET:'synthetic-secret',PLAID_REDIRECT_URI:'http://localhost:3000/bank-link',JARVIS_CONNECTOR_ENCRYPTION_KEY:'a'.repeat(64)}))vi.stubEnv(key,value)};
+const setup=()=>{for(const [key,value] of Object.entries({PLAID_ENABLED:'true',PLAID_ENV:'sandbox',PLAID_CLIENT_ID:'synthetic-client',PLAID_SECRET:'synthetic-secret',PLAID_REDIRECT_URI:'http://localhost:3000/bank-link',PLUTO_CONNECTOR_ENCRYPTION_KEY:'a'.repeat(64)}))vi.stubEnv(key,value)};
 afterEach(()=>vi.unstubAllEnvs());
 it('defaults disabled, gates production on owner-confirmed Trial and validates redirect destinations',()=>{
  vi.stubEnv('PLAID_ENABLED','false');expect(bankAvailability().ready).toBe(false);setup();expect(bankConfig().base).toBe('https://sandbox.plaid.com');vi.stubEnv('PLAID_ENV','production');expect(()=>bankConfig()).toThrow('Trial');vi.stubEnv('PLAID_TRIAL_CONFIRMED','true');expect(()=>bankConfig()).toThrow('redirect');vi.stubEnv('PLAID_REDIRECT_URI','https://synthetic.onrender.com/bank-link');expect(bankConfig().base).toBe('https://production.plaid.com');for(const uri of ['https://user:password@example.invalid/bank-link','https://example.invalid/bank-link?x=1','https://example.invalid/other']){vi.stubEnv('PLAID_REDIRECT_URI',uri);expect(()=>bankConfig()).toThrow()}

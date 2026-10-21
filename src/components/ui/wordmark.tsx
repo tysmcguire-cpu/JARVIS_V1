@@ -1,5 +1,4 @@
 import type {Palette} from '@/features/settings/appearance';
+import {product} from '@/features/commercial/product';
 import styles from './wordmark.module.css';
-export function Wordmark({variant,preview=false}:{variant:Palette['wordmarkStyle'];preview?:boolean}){
- return <strong className={styles.wordmark} data-wordmark-style={variant} style={preview?{fontSize:24,...(variant==='dotted'?{width:200}: {})}:undefined}>{variant==='dotted'?<><span className="sr-only">JARVIS</span><svg viewBox="0 0 264 32" fill="none" aria-hidden="true"><g stroke="currentColor" strokeWidth="2.6" strokeLinecap="square" strokeLinejoin="round"><path d="M4 17V22Q4 26 8 26H28Q32 26 32 22V6"/><path d="M50 26L69 6H80V26M58 18H80"/><path d="M99 26V6H124Q130 6 130 12V14Q130 19 124 19H99M120 19L132 26"/><path d="M151 6V26H160L183 6"/><path d="M202 6V26"/><path d="M259 6H231Q226 6 226 11V12Q226 16 231 16H253Q259 16 259 21V22Q259 26 253 26H226"/></g><g fill="currentColor">{[41,89,141,192,215].map(x=><rect key={x} x={x} y="23" width="3" height="3"/>)}</g></svg></>:'JARVIS'}</strong>;
-}
+export function Wordmark({variant,preview=false}:{variant:Palette['wordmarkStyle'];preview?:boolean}){return <strong className={styles.wordmark} data-wordmark-style={variant} style={preview?{fontSize:24}:undefined}>{variant==='dotted'?product.wordmark.split('').join('.'):product.wordmark}</strong>}

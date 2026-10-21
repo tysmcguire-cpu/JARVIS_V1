@@ -4,7 +4,7 @@ import {keepDeletedTransactions} from './transaction-undo';
 import {eventSeriesDates} from './event-series';
 import {z} from 'zod';
 import { randomUUID } from 'node:crypto';
-import { withOwnerDatabase } from '@/lib/owner-db';
+import { withCustomerDatabase } from '@/lib/customer-db';
 import { entities, entityFor, formatMoney, type WorkspaceData } from './config';
 import { recordId, validateRecord } from './validation';
 import {workspaceQuery} from './read-query';
@@ -13,7 +13,7 @@ const quoted = (name: string) => `"${name}"`; // Names come exclusively from the
 type ReadResult=Omit<WorkspaceData,"summary"|"chart"> & {facts:ModuleFacts;statuses:{label:string;value:number}[];balances?:{currency:string;balance:string}[];spending?:{label:string;value:string}[];timezone?:string;grade?:{earned:string;possible:string};budgetSpending?:{title:string;currency:string;spent:string}[]};
 export async function readWorkspace(key:string,input:unknown):Promise<WorkspaceData>{
  const {sql,params}=workspaceQuery(key,input);
- return withOwnerDatabase(async(tx,owner)=>{
+ return withCustomerDatabase(async(tx,owner)=>{
   params[0]=owner;const [{data}]=await tx.$queryRawUnsafe<{data:ReadResult}[]>(sql,...params);
   const summary:WorkspaceData["summary"]=moduleSummary(key,data.total,data.facts);let chart:WorkspaceData["chart"]=data.statuses;
 
@@ -29,7 +29,7 @@ export async function writeRecord(key: string, input: unknown, id?: string, expe
   const entity=entityFor(key); const values=validateRecord(key,input); if(id)recordId.parse(id);
   const extra=input as Record<string,string>;const series=key==='Event'&&!id?eventSeriesDates(String(values.startDate),String(values.endDate),extra.repeat??'none',Number(extra.repeatCount??1)):[];
   const seriesId=series.length>1?z.uuid().parse(extra.seriesId):null;
-  return withOwnerDatabase(async(tx,ownerId)=>{
+  return withCustomerDatabase(async(tx,ownerId)=>{
     if(seriesId){const existing=await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "Event" WHERE "userId"=$1::uuid AND "seriesId"=$2::uuid LIMIT 1',ownerId,seriesId);if(existing.length)return;}
     if(key==='Transaction'&&id){const [current]=await tx.$queryRawUnsafe<{transferGroup:string|null}[]>('SELECT "transferGroup" FROM "Transaction" WHERE id=$1::uuid AND "userId"=$2::uuid',id,ownerId);if(current?.transferGroup)throw Error('Delete both transfer entries and create a replacement to correct a transfer.');}
     if(key==='Category'){
@@ -73,7 +73,7 @@ export async function writeRecord(key: string, input: unknown, id?: string, expe
 }
 export async function removeRecord(key:string,id:string,updatedAt:string) {
   entityFor(key);recordId.parse(id);
-  return withOwnerDatabase(async(tx,ownerId)=>{
+  return withCustomerDatabase(async(tx,ownerId)=>{
     let undoId:string|undefined;
     if(key==='Transaction'){
      const [current]=await tx.$queryRawUnsafe<{transferGroup:string|null}[]>('SELECT "transferGroup" FROM "Transaction" WHERE id=$1::uuid AND "userId"=$2::uuid AND "updatedAt"=$3::timestamptz FOR UPDATE',id,ownerId,updatedAt);
@@ -89,7 +89,7 @@ export async function removeRecord(key:string,id:string,updatedAt:string) {
 export function moduleForEntity(key:string) {return entities.find(e=>e.key===key)?.module;}
 export async function writeInlineNote(input:unknown,id:string,version:string){
  const values=validateRecord('Note',input);recordId.parse(id);
- return withOwnerDatabase(async(tx,owner)=>{
+ return withCustomerDatabase(async(tx,owner)=>{
   const [previous]=await tx.$queryRawUnsafe<import('./config').RecordRow[]>('SELECT id,title,tag,content,"updatedAt"::text AS "baseVersion" FROM "Note" WHERE id=$1::uuid AND "userId"=$2::uuid AND "updatedAt"=$3::timestamptz FOR UPDATE',id,owner,version);
  if(!previous)throw Error('This note changed or is unavailable. Copy your changes, then reload.');
  await tx.$executeRawUnsafe(`INSERT INTO "WorkspaceState" (id,"userId",key,value,version,"updatedAt") VALUES ($1::uuid,$2::uuid,$3,$4::jsonb,1,now()) ON CONFLICT ("userId",key) DO UPDATE SET value=(SELECT jsonb_agg(item) FROM (SELECT item FROM jsonb_array_elements(EXCLUDED.value||"WorkspaceState".value) WITH ORDINALITY AS v(item,n) ORDER BY n LIMIT 10) latest),version="WorkspaceState".version+1,"updatedAt"=now()`,randomUUID(),owner,'note-history:'+id,JSON.stringify([{title:previous.title,tag:previous.tag,content:previous.content,baseVersion:previous.baseVersion,savedAt:new Date().toISOString()}]));
@@ -100,5 +100,5 @@ export async function writeInlineNote(input:unknown,id:string,version:string){
 }
 export async function readLinkedChoices(key:string,fieldName:string,search:string) {
  const entity=entityFor(key);const field=entity.fields.find(f=>f.name===fieldName&&f.target);if(!field||search.length>100)throw Error('Invalid linked-record search.');
- return withOwnerDatabase((tx,ownerId)=>tx.$queryRawUnsafe<{id:string;title:string;kind?:string}[]>(`SELECT id,title${field.target==='Category'?",kind":""} FROM "${field.target}" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY title,id LIMIT 50`,ownerId,`%${search.replace(/[\\%_]/g,'\\$&')}%`));
+ return withCustomerDatabase((tx,ownerId)=>tx.$queryRawUnsafe<{id:string;title:string;kind?:string}[]>(`SELECT id,title${field.target==='Category'?",kind":""} FROM "${field.target}" WHERE "userId"=$1::uuid AND title ILIKE $2 ORDER BY title,id LIMIT 50`,ownerId,`%${search.replace(/[\\%_]/g,'\\$&')}%`));
 }

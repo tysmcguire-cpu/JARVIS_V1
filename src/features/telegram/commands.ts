@@ -1,4 +1,4 @@
-export const helpText=`JARVIS commands:
+export const helpText=`PLUTO commands:
 +400 — add income
 -20 food — add an expense
 -20 food lunch — category + description
