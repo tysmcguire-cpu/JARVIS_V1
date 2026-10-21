@@ -1,0 +1,76 @@
+CREATE ROLE pluto_admin NOLOGIN NOSUPERUSER NOBYPASSRLS;
+CREATE ROLE pluto_admin_api NOLOGIN NOSUPERUSER NOBYPASSRLS;
+GRANT USAGE ON SCHEMA public TO pluto_admin,pluto_admin_api;
+CREATE TABLE "AdminMembership"("authId" uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,role text NOT NULL CHECK(role='owner_admin'),active boolean NOT NULL DEFAULT true,"createdAt" timestamptz NOT NULL DEFAULT now());
+CREATE TABLE "AdminApiKey"(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),"adminId" uuid NOT NULL REFERENCES "AdminMembership"("authId") ON DELETE CASCADE,hash varchar(64) NOT NULL UNIQUE,scope text NOT NULL DEFAULT 'metrics:read' CHECK(scope='metrics:read'),"expiresAt" timestamptz NOT NULL,"revokedAt" timestamptz,minute timestamptz,requests int NOT NULL DEFAULT 0,"createdAt" timestamptz NOT NULL DEFAULT now());
+CREATE TABLE "AdminAccess"(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),"adminId" uuid,"keyId" uuid,channel text NOT NULL,outcome text NOT NULL,"createdAt" timestamptz NOT NULL DEFAULT now());
+CREATE TABLE "OperatingCost"(id boolean PRIMARY KEY DEFAULT true CHECK(id),"hostingMicros" bigint,"databaseMicros" bigint,"monitoringMicros" bigint,"otherMicros" bigint,"updatedAt" timestamptz NOT NULL DEFAULT now(),CHECK("hostingMicros">=0 AND "databaseMicros">=0 AND "monitoringMicros">=0 AND "otherMicros">=0));
+INSERT INTO "OperatingCost"(id)VALUES(true);
+CREATE TABLE "ProductCustomer"(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),"userId" uuid UNIQUE REFERENCES "User"(id) ON DELETE SET NULL,"registeredAt" timestamptz NOT NULL,"activatedAt" timestamptz,"firstPaidAt" timestamptz,"firstTestPaidAt" timestamptz,"deletedAt" timestamptz);
+CREATE TABLE "ProductActivity"("userId" uuid NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,day date NOT NULL,feature varchar(30) NOT NULL,count int NOT NULL DEFAULT 1 CHECK(count BETWEEN 1 AND 10000),PRIMARY KEY("userId",day,feature));
+CREATE INDEX product_activity_day ON "ProductActivity"(day,"userId");
+CREATE INDEX product_customer_registration ON "ProductCustomer"("registeredAt");
+CREATE INDEX usage_created ON "UsageReservation"("createdAt");
+DO $$ DECLARE tab text;BEGIN FOREACH tab IN ARRAY ARRAY['AdminMembership','AdminApiKey','AdminAccess','OperatingCost','ProductCustomer','ProductActivity'] LOOP EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',tab);EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY',tab);EXECUTE format('REVOKE ALL ON public.%I FROM PUBLIC,anon,authenticated,pluto_app,pluto_worker,pluto_billing,pluto_admin,pluto_admin_api',tab);END LOOP;END $$;
+CREATE FUNCTION public.pluto_product_customer() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$ BEGIN
+ IF TG_TABLE_NAME='User' THEN
+  INSERT INTO public."ProductCustomer"("userId","registeredAt","activatedAt","deletedAt")VALUES(NEW.id,NEW."createdAt",NEW."onboardingCompletedAt",CASE WHEN NEW.status='deleted' THEN now() END) ON CONFLICT("userId")DO UPDATE SET "activatedAt"=EXCLUDED."activatedAt","deletedAt"=COALESCE(public."ProductCustomer"."deletedAt",EXCLUDED."deletedAt");
+  IF NEW.status='deleted' THEN DELETE FROM public."ProductActivity" WHERE "userId"=NEW.id;END IF;
+ ELSE
+  IF NEW.status='active' THEN UPDATE public."ProductCustomer" SET "firstPaidAt"=CASE WHEN NEW.livemode THEN COALESCE("firstPaidAt",now()) ELSE "firstPaidAt" END,"firstTestPaidAt"=CASE WHEN NOT NEW.livemode THEN COALESCE("firstTestPaidAt",now()) ELSE "firstTestPaidAt" END WHERE "userId"=NEW."userId";END IF;
+ END IF;RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.pluto_product_customer() FROM PUBLIC;
+CREATE TRIGGER pluto_product_customer AFTER INSERT OR UPDATE ON "User" FOR EACH ROW EXECUTE FUNCTION public.pluto_product_customer();
+CREATE TRIGGER pluto_product_subscription AFTER INSERT OR UPDATE ON "Subscription" FOR EACH ROW EXECUTE FUNCTION public.pluto_product_customer();
+INSERT INTO "ProductCustomer"("userId","registeredAt","activatedAt")SELECT id,"createdAt","onboardingCompletedAt" FROM "User";
+CREATE FUNCTION public.pluto_record_activity(label text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$ DECLARE actor uuid:=auth.uid();BEGIN
+ IF label NOT IN('dashboard','finances','education','calendar','career','projects','goals','notes','assistant','notifications','settings','chat','report_open','telegram_pair','integration_connect','voice') THEN RAISE EXCEPTION 'Unknown feature';END IF;
+ PERFORM 1 FROM public."User" WHERE id=actor AND status='active' FOR SHARE;IF NOT FOUND THEN RAISE EXCEPTION 'Customer unavailable';END IF;
+ INSERT INTO public."ProductActivity"("userId",day,feature)VALUES(actor,(now() AT TIME ZONE 'UTC')::date,label) ON CONFLICT("userId",day,feature)DO UPDATE SET count=LEAST(public."ProductActivity".count+1,10000);
+END $$;
+REVOKE ALL ON FUNCTION public.pluto_record_activity(text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.pluto_record_activity(text) TO pluto_app;
+GRANT SELECT ON "ProductActivity" TO pluto_app;
+CREATE POLICY product_activity_self ON "ProductActivity" FOR SELECT TO pluto_app USING("userId"=(SELECT auth.uid()) AND EXISTS(SELECT 1 FROM "User" WHERE id=auth.uid() AND status='active'));
+CREATE FUNCTION public.pluto_admin_separate() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$ BEGIN IF EXISTS(SELECT 1 FROM public."AdminMembership" WHERE "authId"=NEW.id) THEN RAISE EXCEPTION 'Administrator identities cannot be customer workspaces';END IF;RETURN NEW;END $$;
+REVOKE ALL ON FUNCTION public.pluto_admin_separate() FROM PUBLIC;
+CREATE TRIGGER pluto_admin_separate BEFORE INSERT ON "User" FOR EACH ROW EXECUTE FUNCTION public.pluto_admin_separate();
+CREATE FUNCTION public.pluto_admin_member() RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog,public AS $$ SELECT EXISTS(SELECT 1 FROM public."AdminMembership" WHERE "authId"=auth.uid() AND active AND role='owner_admin' AND NOT EXISTS(SELECT 1 FROM public."User" WHERE id=auth.uid())) $$;
+REVOKE ALL ON FUNCTION public.pluto_admin_member() FROM PUBLIC,anon,authenticated,pluto_app;
+GRANT EXECUTE ON FUNCTION public.pluto_admin_member() TO pluto_admin;
+CREATE FUNCTION public.pluto_metrics_data(first_day date,last_day date,live boolean) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
+DECLARE result jsonb;BEGIN
+ IF first_day IS NULL OR last_day IS NULL OR last_day<first_day OR last_day-first_day>89 OR first_day<current_date-730 OR last_day>current_date THEN RAISE EXCEPTION 'Choose up to 90 completed/current days within two years';END IF;
+ WITH paid AS(SELECT * FROM public."Subscription" WHERE status='active' AND "periodEnd">now() AND "syncedAt">now()-interval '24 hours' AND livemode=live),cohort AS(SELECT * FROM public."ProductCustomer"),span AS(SELECT * FROM public."UsageReservation" WHERE "createdAt">=first_day AND "createdAt"<last_day+1),cash AS(SELECT * FROM public."BillingLedger" WHERE "occurredAt">=first_day AND "occurredAt"<last_day+1 AND livemode=live AND currency='USD')
+ SELECT jsonb_build_object('asOf',now(),'from',first_day,'to',last_day,'billingMode',CASE WHEN live THEN 'live' ELSE 'test' END,
+ 'customers',jsonb_build_object('registered',(SELECT count(*) FROM cohort),'new',(SELECT count(*) FROM cohort WHERE "registeredAt">=first_day AND "registeredAt"<last_day+1),'activated',(SELECT count(*) FROM cohort WHERE "activatedAt" IS NOT NULL),'converted',(SELECT count(*) FROM cohort WHERE CASE WHEN live THEN "firstPaidAt" ELSE "firstTestPaidAt" END IS NOT NULL),'paying',(SELECT count(*) FROM paid),'free',(SELECT count(*) FROM public."User" u WHERE u.status='active' AND NOT EXISTS(SELECT 1 FROM paid p WHERE p."userId"=u.id)),'trial',(SELECT count(*) FROM public."Subscription" WHERE status='trialing' AND livemode=live),'dau',(SELECT count(DISTINCT "userId") FROM public."ProductActivity" WHERE day=last_day),'wau',(SELECT count(DISTINCT "userId") FROM public."ProductActivity" WHERE day BETWEEN last_day-6 AND last_day),'mau',(SELECT count(DISTINCT "userId") FROM public."ProductActivity" WHERE day BETWEEN last_day-29 AND last_day),'pendingCancellations',(SELECT count(*) FROM paid WHERE "cancelAtPeriodEnd"),'churnEvents',(SELECT count(*) FROM public."RevenueMovement" WHERE kind='churn' AND "occurredAt">=first_day AND "occurredAt"<last_day+1 AND livemode=live)),
+ 'financial',jsonb_build_object('mrrMicros',(SELECT COALESCE(sum("monthlyAmountMicros"),0)::text FROM paid),'arrMicros',(SELECT (COALESCE(sum("monthlyAmountMicros"),0)*12)::text FROM paid),'cashCollectedMinor',(SELECT COALESCE(sum(amount),0)::text FROM cash WHERE kind='cash_collected'),'refundMinor',(SELECT COALESCE(sum(amount),0)::text FROM cash WHERE kind='refund'),'paymentFailures',(SELECT count(*) FROM cash WHERE kind='payment_failed'),'estimatedUsageMicros',(SELECT COALESCE(sum(COALESCE("costActualMicros","costReservedMicros")),0)::text FROM span),'costConfiguration',(SELECT jsonb_build_object('hostingMicros',c."hostingMicros"::text,'databaseMicros',c."databaseMicros"::text,'monitoringMicros',c."monitoringMicros"::text,'otherMicros',c."otherMicros"::text,'updatedAt',c."updatedAt") FROM public."OperatingCost" c WHERE id=true),'staleSubscriptions',(SELECT count(*) FROM public."Subscription" WHERE "syncedAt"<now()-interval '24 hours' AND livemode=live)),
+ 'usage',jsonb_build_object('requests',(SELECT count(*) FROM span),'failed',(SELECT count(*) FROM span WHERE state='failed'),'inputTokens',(SELECT COALESCE(sum("inputTokens"),0)::text FROM span),'outputTokens',(SELECT COALESCE(sum("outputTokens"),0)::text FROM span),'voiceSeconds',(SELECT COALESCE(sum(COALESCE("voiceActualSeconds","voiceReservedSeconds")),0)::text FROM span),'researchCalls',(SELECT COALESCE(sum(COALESCE("researchActualCalls","researchReservedCalls")),0)::text FROM span)),
+ 'byKind',(SELECT COALESCE(jsonb_agg(x),'[]') FROM(SELECT kind,count(*) AS requests,COALESCE(sum(COALESCE("costActualMicros","costReservedMicros")),0)::text AS "costMicros" FROM span GROUP BY kind ORDER BY kind)x),
+ 'byModel',(SELECT COALESCE(jsonb_agg(x),'[]') FROM(SELECT COALESCE(model,'uncertain') AS model,count(*) AS requests,COALESCE(sum(COALESCE("costActualMicros","costReservedMicros")),0)::text AS "costMicros" FROM span GROUP BY model ORDER BY model)x),
+ 'byTier',(SELECT COALESCE(jsonb_agg(x),'[]') FROM(SELECT plan,count(*) AS requests,count(DISTINCT "userId") AS customers,COALESCE(sum(COALESCE("costActualMicros","costReservedMicros")),0)::text AS "costMicros" FROM span GROUP BY plan ORDER BY plan)x),
+ 'revenueByTier',(SELECT COALESCE(jsonb_agg(x),'[]') FROM(SELECT plan,count(*) AS subscribers,sum("monthlyAmountMicros")::text AS "mrrMicros" FROM paid GROUP BY plan ORDER BY plan)x),
+ 'movements',(SELECT COALESCE(jsonb_agg(x),'[]') FROM(SELECT kind,count(*) AS count,sum("deltaMicros")::text AS "deltaMicros" FROM public."RevenueMovement" WHERE "occurredAt">=first_day AND "occurredAt"<last_day+1 AND livemode=live GROUP BY kind)x),
+ 'engagement',(SELECT COALESCE(jsonb_agg(x),'[]') FROM(SELECT feature,count(DISTINCT "userId") AS customers,sum(count)::text AS events FROM public."ProductActivity" WHERE day BETWEEN first_day AND last_day GROUP BY feature ORDER BY feature)x),
+ 'cohorts',(SELECT COALESCE(jsonb_agg(x),'[]') FROM(SELECT date_trunc('month',c."registeredAt")::date AS month,count(*) AS registered,count(*) FILTER(WHERE EXISTS(SELECT 1 FROM public."ProductActivity" a WHERE a."userId"=c."userId" AND a.day BETWEEN last_day-29 AND last_day)) AS "activeLast30Days" FROM cohort c GROUP BY 1 ORDER BY 1 DESC LIMIT 24)x),
+ 'daily',(SELECT jsonb_agg(x ORDER BY day) FROM(SELECT day::date AS day,(SELECT count(*) FROM cohort WHERE "registeredAt">=day AND "registeredAt"<day+interval '1 day') AS registrations,(SELECT count(DISTINCT "userId") FROM public."ProductActivity" WHERE day=days.day::date) AS active,(SELECT COALESCE(sum(COALESCE("costActualMicros","costReservedMicros")),0)::text FROM span WHERE "createdAt">=day AND "createdAt"<day+interval '1 day') AS "usageMicros" FROM generate_series(first_day::timestamp,last_day::timestamp,interval '1 day')days(day))x),
+ 'operations',jsonb_build_object('workersFailing',(SELECT count(*) FROM public."WorkerLease" WHERE attempts>0),'workersStale',(SELECT count(*) FROM public."WorkerLease" WHERE "nextAt"<now()-interval '10 minutes' AND ("leaseUntil" IS NULL OR "leaseUntil"<now())),'notificationsFailed',(SELECT count(*) FROM public."NotificationJob" WHERE status='failed'),'reportsCompleted',(SELECT count(*) FROM public."WeeklyReport" WHERE status='completed' AND "completedAt">=first_day AND "completedAt"<last_day+1),'reportsFailed',(SELECT count(*) FROM public."WeeklyReport" WHERE status='failed'),'erasureExhausted',(SELECT count(*) FROM public."CustomerErasure" WHERE attempts>=5),'pairedCustomers',(SELECT count(*) FROM public."TelegramIdentity" WHERE "pairedAt" IS NOT NULL),'connectedCustomers',(SELECT count(DISTINCT "userId") FROM public."ApiConnection" WHERE mode='live' AND status<>'disconnected' AND "tokenCiphertext" IS NOT NULL))) INTO result;
+ RETURN result;
+END $$;
+REVOKE ALL ON FUNCTION public.pluto_metrics_data(date,date,boolean) FROM PUBLIC,anon,authenticated,pluto_app,pluto_worker,pluto_admin,pluto_admin_api;
+CREATE FUNCTION public.pluto_admin_metrics(first_day date,last_day date,live boolean) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$ BEGIN
+ IF NOT public.pluto_admin_member() OR current_setting('pluto.admin.aal',true) IS DISTINCT FROM 'aal2' THEN RAISE EXCEPTION 'Administrator MFA required';END IF;
+ INSERT INTO public."AdminAccess"("adminId",channel,outcome)VALUES(auth.uid(),'dashboard','success');RETURN public.pluto_metrics_data(first_day,last_day,live);
+END $$;
+CREATE FUNCTION public.pluto_admin_api_metrics(secret_hash text,first_day date,last_day date,live boolean) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
+DECLARE k public."AdminApiKey";BEGIN
+ SELECT a.* INTO k FROM public."AdminApiKey" a JOIN public."AdminMembership" m ON m."authId"=a."adminId" WHERE a.hash=secret_hash AND a.scope='metrics:read' AND a."revokedAt" IS NULL AND a."expiresAt">now() AND m.active AND NOT EXISTS(SELECT 1 FROM public."User" WHERE id=m."authId") FOR UPDATE OF a;
+ IF NOT FOUND THEN RETURN jsonb_build_object('error','unauthorized');END IF;
+ IF k.minute=date_trunc('minute',now()) AND k.requests>=30 THEN RETURN jsonb_build_object('error','rate_limited');END IF;
+ UPDATE public."AdminApiKey" SET minute=date_trunc('minute',now()),requests=CASE WHEN minute=date_trunc('minute',now()) THEN requests+1 ELSE 1 END WHERE id=k.id;
+ INSERT INTO public."AdminAccess"("adminId","keyId",channel,outcome)VALUES(k."adminId",k.id,'api','success');RETURN public.pluto_metrics_data(first_day,last_day,live);
+END $$;
+REVOKE ALL ON FUNCTION public.pluto_admin_metrics(date,date,boolean),public.pluto_admin_api_metrics(text,date,date,boolean) FROM PUBLIC,anon,authenticated,pluto_app,pluto_worker;
+GRANT EXECUTE ON FUNCTION public.pluto_admin_metrics(date,date,boolean) TO pluto_admin;
+GRANT EXECUTE ON FUNCTION public.pluto_admin_api_metrics(text,date,date,boolean) TO pluto_admin_api;

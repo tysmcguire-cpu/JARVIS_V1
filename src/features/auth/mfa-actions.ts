@@ -10,8 +10,8 @@ export async function enrollMfa(){
  const {data,error}=await client.auth.mfa.enroll({factorType:'totp',friendlyName:'PLUTO owner '+randomUUID().slice(0,8)});if(error||!data)throw Error('Authenticator setup unavailable. Check your Supabase MFA configuration.');
  return {factorId:data.id,secret:data.totp.secret};
 }
-export async function verifyMfa(factorInput:unknown,codeInput:unknown){
+export async function verifyMfa(factorInput:unknown,codeInput:unknown,next:unknown='workspace'){
  const owner=await requireIdentity(),factor=z.uuid().parse(factorInput),code=z.string().regex(/^\d{6}$/).parse(codeInput),client=await createAuthClient();
  if(!owner.factors?.some(f=>f.id===factor))throw Error('Authenticator unavailable. Reload the verification page.');
- const {error}=await client.auth.mfa.challengeAndVerify({factorId:factor,code});if(error)throw Error('Code not accepted. Try a current authenticator code.');redirect('/');
+ const {error}=await client.auth.mfa.challengeAndVerify({factorId:factor,code});if(error)throw Error('Code not accepted. Try a current authenticator code.');redirect(next==='admin'?'/admin':'/');
 }

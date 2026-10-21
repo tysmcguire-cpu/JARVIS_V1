@@ -1,6 +1,7 @@
 "use client";
 import {CommandMenu} from '@/features/productivity/command-menu';
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import {recordActivity} from '@/features/admin/activity';
 import {NavigationLink as Link} from "@/features/shell/navigation-link";
 import { ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, ChevronLeft, Command, FolderKanban, LayoutDashboard, Menu, NotebookPen, Settings, Sparkles, Target, Wallet, X } from "lucide-react";
 import { navigation, type ModuleSlug } from "./navigation";
@@ -8,6 +9,7 @@ import { signOut } from "@/features/auth/actions";
 import { InterfaceClock } from "./interface-clock";
 const icons = { dashboard: LayoutDashboard, finances: Wallet, education: BookOpen, calendar: CalendarDays, career: BriefcaseBusiness, projects: FolderKanban, goals: Target, notes: NotebookPen, assistant: Sparkles, notifications: Bell, settings: Settings };
 export function Shell({ children, active, demo }: { children: React.ReactNode; active: ModuleSlug; demo: boolean }) {
+  useEffect(()=>{if(!demo)void recordActivity(active).catch(()=>{})},[active,demo]);
   const [collapsed, setCollapsed] = useState(active!=="dashboard");
   const [peek,setPeek]=useState(false);
   const [mobile, setMobile] = useState(false);

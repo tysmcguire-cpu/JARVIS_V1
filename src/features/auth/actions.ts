@@ -12,8 +12,8 @@ export async function signIn(form:FormData){
  const input=credentials.safeParse({email:form.get('email'),password:form.get('password')});if(!input.success)redirect('/login?status=invalid');
  const client=await createAuthClient(),{data,error}=await client.auth.signInWithPassword(input.data);
  if(error||!verifiedCustomer(data.user)){await client.auth.signOut();redirect('/login?status=invalid')}
- if(process.env.PLUTO_REQUIRE_MFA==='true'||data.user?.factors?.some(f=>f.status==='verified'))redirect('/mfa');
- redirect('/');
+ if(process.env.PLUTO_REQUIRE_MFA==='true'||data.user?.factors?.some(f=>f.status==='verified'))redirect(form.get('next')==='admin'?'/mfa?next=admin':'/mfa');
+ redirect(form.get('next')==='admin'?'/admin':'/');
 }
 export async function register(form:FormData){
  if(!features.registration()||!getAuthConfig())redirect('/register?status=disabled');

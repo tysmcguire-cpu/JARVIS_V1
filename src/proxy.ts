@@ -14,7 +14,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
   // This single endpoint authenticates Telegram independently using its secret and owner allowlist.
-  if (["/api/telegram/webhook","/api/stripe/webhook"].includes(pathname)) return NextResponse.next();
+  if (["/api/telegram/webhook","/api/stripe/webhook","/api/admin/metrics"].includes(pathname)) return NextResponse.next();
   const config = getAuthConfig();
   const privateRoute = !["/login","/register","/forgot-password","/reset-password","/auth/callback","/privacy","/terms"].includes(pathname);
   if (!config) {

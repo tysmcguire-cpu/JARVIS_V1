@@ -25,3 +25,7 @@ All 270 unit/database tests passed (49 files). Four desktop browser scenarios pa
 ## Phase 5 local acceptance
 All 277 unit/database tests passed (50 files) before the reply-fencing refinement. The 18 affected Telegram/worker tests passed again after fencing. Seven new cases cover hashed/expired/single-use pairing, cross-customer chat takeover denial, isolated ledgers, replay, daily limits, connector limits, dispatcher fencing, local-period paid report scheduling and restricted Auth erasure. TypeScript and ESLint passed. Prisma validation/generation passed. No actual Telegram, Auth deletion, provider sync, Stripe reconciliation or hosted scheduler call was made.
 
+
+## Phase 6 local acceptance
+All 285 unit/database tests passed (53 files). New checks cover aggregate calculations, private-table denial for admin/API roles, noncustomer role assignment, current MFA/subject/factor checks, disabled membership, anonymous registration totals after deletion, bounded date windows, revoked/expired credentials and 30/minute durable API limits. Prisma validation/generation, TypeScript, ESLint and production build passed. A first combined run inherited synthetic migration URLs without their project pin and failed closed; rerunning tests/build in the unconfigured isolated environment passed. No live administrator provisioning, API credential issuance or personal-JARVIS integration was executed.
+

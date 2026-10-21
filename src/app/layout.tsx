@@ -2,6 +2,7 @@ import {product} from '@/features/commercial/product';
 import type { Metadata } from "next";
 import "./globals.css";
 import "./intelligence.css";
+import "./admin.css";
 import "./command-theme.css";
 import "./orbital-dashboard.css";
 import "./desktop-workspace.css";

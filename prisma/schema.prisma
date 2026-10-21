@@ -9,6 +9,8 @@ datasource db {
 }
 
 model User {
+ productCustomer ProductCustomer?
+ productActivity ProductActivity[]
  telegramPairing TelegramPairing?
  workerLease WorkerLease?
  aiPreferences AiPreferences?
@@ -1007,4 +1009,59 @@ model WorkerLease {
  lastSuccessAt DateTime? @db.Timestamptz(6)
  lastFailureAt DateTime? @db.Timestamptz(6)
  user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+}
+model AdminMembership {
+ authId String @id @db.Uuid
+ role String
+ active Boolean @default(true)
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ keys AdminApiKey[]
+}
+model AdminApiKey {
+ id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+ adminId String @db.Uuid
+ admin AdminMembership @relation(fields:[adminId],references:[authId],onDelete:Cascade)
+ hash String @unique @db.VarChar(64)
+ scope String @default("metrics:read")
+ expiresAt DateTime @db.Timestamptz(6)
+ revokedAt DateTime? @db.Timestamptz(6)
+ minute DateTime? @db.Timestamptz(6)
+ requests Int @default(0)
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+}
+model AdminAccess {
+ id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+ adminId String? @db.Uuid
+ keyId String? @db.Uuid
+ channel String
+ outcome String
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+}
+model OperatingCost {
+ id Boolean @id @default(true)
+ hostingMicros BigInt?
+ databaseMicros BigInt?
+ monitoringMicros BigInt?
+ otherMicros BigInt?
+ updatedAt DateTime @default(now()) @db.Timestamptz(6)
+}
+model ProductCustomer {
+ id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+ userId String? @unique @db.Uuid
+ user User? @relation(fields:[userId],references:[id],onDelete:SetNull)
+ registeredAt DateTime @db.Timestamptz(6)
+ activatedAt DateTime? @db.Timestamptz(6)
+ firstPaidAt DateTime? @db.Timestamptz(6)
+ firstTestPaidAt DateTime? @db.Timestamptz(6)
+ deletedAt DateTime? @db.Timestamptz(6)
+ @@index([registeredAt],map:"product_customer_registration")
+}
+model ProductActivity {
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ day DateTime @db.Date
+ feature String @db.VarChar(30)
+ count Int @default(1)
+ @@id([userId,day,feature])
+ @@index([day,userId],map:"product_activity_day")
 }

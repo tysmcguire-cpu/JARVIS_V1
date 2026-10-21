@@ -28,7 +28,7 @@ it('restricts Auth erasure to self-requested tombstones and narrowly privileged 
  await expect(scoped('pluto_worker',undefined,tx=>tx.$queryRawUnsafe('SELECT * FROM public.pluto_claim_erasure()'))).rejects.toThrow('permission denied');
  await expect(scoped('pluto_erasure',undefined,tx=>tx.$queryRawUnsafe('SELECT * FROM "Note"'))).rejects.toThrow('permission denied');
  vi.stubEnv('PLUTO_AUTH_ERASURE_ENABLED','true');vi.stubEnv('PLUTO_AUTH_ERASURE_KEY','synthetic-erasure-key');vi.stubEnv('PLUTO_SUPABASE_PROJECT_REF','syntheticproject0000');
- const fetcher=vi.fn(async()=>new Response('{}',{status:200}));
+ const fetcher=vi.fn<typeof fetch>(async()=>new Response('{}',{status:200}));
  const run=<T>(work:(tx:Prisma.TransactionClient)=>Promise<T>)=>scoped('pluto_erasure',undefined,work);
  expect(await eraseAuthAccounts(fetcher,run)).toBe(1);expect(fetcher).toHaveBeenCalledOnce();expect(String(fetcher.mock.calls[0][0])).toContain('/auth/v1/admin/users/'+bob);
  expect((await database.query('SELECT id FROM "User" WHERE id=$1',[bob])).rows).toHaveLength(0);expect((await database.query('SELECT id FROM "User" WHERE id=$1',[alice])).rows).toHaveLength(1);expect(await eraseAuthAccounts(fetcher,run)).toBe(0);
