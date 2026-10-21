@@ -5,6 +5,7 @@ import {getAuthConfig} from '@/lib/env';
 import {createAuthClient} from '@/lib/supabase/server';
 import {verifiedCustomer} from './policy';
 import {features} from '@/features/commercial/flags';
+import {registrationEmailAllowed} from '@/features/commercial/rollout';
 import {requireCustomer} from './server';
 const credentials=z.object({email:z.email().max(254),password:z.string().min(1).max(128)});
 export async function signIn(form:FormData){
@@ -18,6 +19,7 @@ export async function signIn(form:FormData){
 export async function register(form:FormData){
  if(!features.registration()||!getAuthConfig())redirect('/register?status=disabled');
  const input=credentials.extend({password:z.string().min(12).max(128)}).safeParse({email:form.get('email'),password:form.get('password')});if(!input.success)redirect('/register?status=invalid');
+ if(!registrationEmailAllowed(input.data.email))redirect('/register?status=unavailable');
  const site=new URL(process.env.PLUTO_SITE_URL??'');if(site.protocol!=='https:'&&process.env.NODE_ENV==='production')throw Error('Secure site URL required');
  const {error}=await (await createAuthClient()).auth.signUp({...input.data,options:{emailRedirectTo:new URL('/auth/callback',site).toString()}});
  if(error)redirect('/register?status=unavailable');redirect('/login?status=verify-email');

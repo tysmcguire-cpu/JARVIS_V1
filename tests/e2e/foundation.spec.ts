@@ -60,7 +60,7 @@ test("orbital controls support keyboard selection, motion preferences and naviga
   await expect(page.getByRole("button", { name: "+ Add projects", exact: true })).toBeVisible();
 });
 
-test("flowing core animates and the workspace enforces the desktop canvas", async ({ page }) => {
+test("flowing core animates and the workspace remains bounded on tablet", async ({ page }) => {
   await page.goto("/demo");
   const canvas = page.locator(".flowing-core canvas");
   await expect(canvas).toHaveAttribute("data-motion", "flowing");
@@ -73,6 +73,6 @@ test("flowing core animates and the workspace enforces the desktop canvas", asyn
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(600);
   }
   await page.setViewportSize({ width: 800, height: 600 });
-  await expect(page.getByRole("heading", { name: "A little more room." })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Workspace modules" })).not.toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByRole("navigation", { name: "Workspace modules" })).toBeVisible();
 });

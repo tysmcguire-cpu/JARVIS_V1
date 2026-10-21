@@ -6,6 +6,7 @@ import {withBillingDatabase} from './database';
 import {stripeClient,billingSite} from './stripe';
 import {planForPrice,priceFor} from './prices';
 type Tx=Prisma.TransactionClient;
+async function recordRefunds(tx:Tx,userId:string,charge:Stripe.Charge,stripe:Stripe){const refunds=await stripe.refunds.list({charge:charge.id,limit:100});if(refunds.has_more)throw Error('Refund history requires bounded reconciliation.');for(const refund of refunds.data){const source=typeof refund.charge==='string'?refund.charge:refund.charge?.id;if(source!==charge.id||refund.currency!==charge.currency)throw Error('Refund identity mismatch');await tx.$executeRawUnsafe('INSERT INTO "BillingLedger"("objectId",kind,"userId",amount,currency,"occurredAt",livemode)VALUES($1,\'refund\',$2::uuid,$3,$4,$5,$6)ON CONFLICT("objectId",kind)DO UPDATE SET amount=EXCLUDED.amount,"occurredAt"=EXCLUDED."occurredAt"',refund.id,userId,refund.status==='succeeded'?-BigInt(refund.amount):0n,refund.currency.toUpperCase(),new Date(refund.created*1000),charge.livemode)}await tx.$executeRawUnsafe('UPDATE "BillingLedger" SET amount=0 WHERE "objectId"=$1 AND kind=\'refund\'',charge.id)}
 export function subscriptionSnapshot(subscription:Stripe.Subscription){
  if(subscription.items.data.length!==1)throw Error('Unexpected subscription item count.');
  const item=subscription.items.data[0],price=item.price,selection=planForPrice(price.id);
@@ -26,8 +27,10 @@ async function synchronizeLocked(tx:Tx,customerId:string,eventId:string,stripe:S
  await tx.$executeRawUnsafe('UPDATE "CheckoutIntent" SET "expiresAt"=now() WHERE "userId"=$1::uuid',customer.userId);return true;
 }
 export async function applyStripeEvent(event:Stripe.Event,stripe:Stripe=stripeClient()){
- const object=event.data.object as {id?:string;customer?:string|{id:string}},customerId=typeof object.customer==='string'?object.customer:object.customer?.id;
+ const object=event.data.object as {id?:string;customer?:string|{id:string};charge?:string|{id:string}};
  return withBillingDatabase(async tx=>{
+  let customerId=typeof object.customer==='string'?object.customer:object.customer?.id,refundCharge:Stripe.Charge|undefined;
+  if(event.type.startsWith('refund.')&&object.charge){if((await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "BillingEvent" WHERE id=$1',event.id)).length)return {duplicate:true};refundCharge=await stripe.charges.retrieve(typeof object.charge==='string'?object.charge:object.charge.id);customerId=typeof refundCharge.customer==='string'?refundCharge.customer:refundCharge.customer?.id;}
   // Signature verification is mandatory at the route before this internal function.
   await tx.$queryRawUnsafe('SELECT pg_advisory_xact_lock(hashtext($1))::text','stripe:'+(customerId??event.id));
   if((await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "BillingEvent" WHERE id=$1',event.id)).length)return {duplicate:true};
@@ -36,7 +39,7 @@ export async function applyStripeEvent(event:Stripe.Event,stripe:Stripe=stripeCl
   await synchronizeLocked(tx,customerId,event.id,stripe,new Date());
   const [customer]=await tx.$queryRawUnsafe<{userId:string}[]>('SELECT "userId" FROM "BillingCustomer" WHERE "stripeCustomerId"=$1',customerId);if(!customer)return {duplicate:false};
   if(['invoice.paid','invoice.payment_failed'].includes(event.type)&&object.id){const invoice=await stripe.invoices.retrieve(object.id);if((typeof invoice.customer==='string'?invoice.customer:invoice.customer?.id)!==customerId)throw Error('Invoice identity mismatch');await tx.$executeRawUnsafe('INSERT INTO "BillingLedger"("objectId",kind,"userId",amount,currency,"occurredAt",livemode)VALUES($1,$2,$3::uuid,$4,$5,$6,$7) ON CONFLICT("objectId",kind) DO UPDATE SET amount=EXCLUDED.amount',invoice.id,event.type==='invoice.paid'?'cash_collected':'payment_failed',customer.userId,BigInt(event.type==='invoice.paid'?invoice.amount_paid:invoice.amount_due),invoice.currency.toUpperCase(),new Date(event.created*1000),event.livemode)}
-  if(event.type==='charge.refunded'&&object.id){const charge=await stripe.charges.retrieve(object.id);if((typeof charge.customer==='string'?charge.customer:charge.customer?.id)!==customerId)throw Error('Refund identity mismatch');await tx.$executeRawUnsafe('INSERT INTO "BillingLedger"("objectId",kind,"userId",amount,currency,"occurredAt",livemode)VALUES($1,\'refund\',$2::uuid,$3,$4,$5,$6) ON CONFLICT("objectId",kind) DO UPDATE SET amount=EXCLUDED.amount',charge.id,customer.userId,-BigInt(charge.amount_refunded),charge.currency.toUpperCase(),new Date(event.created*1000),event.livemode)}
+  if((event.type==='charge.refunded'&&object.id)||refundCharge){const charge=refundCharge??await stripe.charges.retrieve(object.id!);if((typeof charge.customer==='string'?charge.customer:charge.customer?.id)!==customerId)throw Error('Refund identity mismatch');await recordRefunds(tx,customer.userId,charge,stripe)}
   return {duplicate:false};
  });
 }

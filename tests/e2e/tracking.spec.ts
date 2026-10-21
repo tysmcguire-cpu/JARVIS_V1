@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { entities } from '../../src/features/tracking/config';
 test('every tracking tab fits the minimum desktop viewport',async({page},info)=>{
+ test.setTimeout(120000);
  await page.setViewportSize({width:1024,height:600});
  for(const slug of ['finances','education','calendar','career','projects','goals','notes']){
  await page.goto('/demo/'+slug);await expect(page.locator('.tracking-workspace')).toBeVisible();

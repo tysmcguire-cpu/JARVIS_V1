@@ -9,3 +9,6 @@ Historical per-record userId columns, composite owner FKs, exact finance math an
 
 ## Deliberately staged
 Billing/usage, conversational intelligence, tenant-aware bot/worker dispatch, aggregate administration, responsive layouts and commercial account deletion are subsequent roadmap phases. Paid flags and public registration default OFF. Existing provider code is not evidence of a commercial feature acceptance. No personal records or credentials are copied.
+
+## Release and operating boundaries
+Public startup and live checkout require explicit branding/legal/security/recovery/expense attestations. Closed-beta signup is server-allowlisted (maximum 100 emails); all signup/paid gates remain OFF by default. Separate installation identity, bounded Prisma pools, fixed maintenance and storage/request budgets add operational containment. See PLUTO_DEPLOYMENT.md and PLUTO_COST_MODEL.md. Local implementation does not imply remote provisioning or launch acceptance.

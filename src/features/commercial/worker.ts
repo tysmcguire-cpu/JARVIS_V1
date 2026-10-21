@@ -24,7 +24,7 @@ async function reportsForCustomer(id:string){
 }
 export async function commercialWorkerTick(){
  if(process.env.PLUTO_WORKERS_ENABLED!=='true')throw Error('Commercial workers are disabled.');
- await eraseAuthAccounts();await reconcileBillingTick();
+ await withWorkerDatabase(tx=>tx.$queryRawUnsafe('SELECT public.pluto_maintenance()'));for(const task of [eraseAuthAccounts,reconcileBillingTick]){try{await task()}catch{console.error('Commercial background service unavailable. Check operator logs and configuration; private details suppressed.')}}
  const claimed=await withWorkerDatabase(tx=>tx.$queryRawUnsafe<{userId:string;token:string}[]>('SELECT * FROM public.pluto_claim_workers(2)'));
  for(const job of claimed){let ok=true;try{if(features.integrations())await canvasFeedTick(job.userId);if(process.env.PLUTO_NOTIFICATIONS_ENABLED==='true')await notificationTick(job.userId);if(features.weeklyReports())await reportsForCustomer(job.userId);const bot=await pairedBot(job.userId);if(bot)await flushReplies(bot);await withWorkerCustomer(job.userId,(tx,id)=>tx.$executeRawUnsafe('UPDATE "ChatTurn" SET status=\'failed\',"updatedAt"=now() WHERE "userId"=$1::uuid AND status=\'generating\' AND "createdAt"<now()-interval \'5 minutes\'',id))}catch{ok=false}
   await withWorkerDatabase(tx=>tx.$queryRawUnsafe('SELECT public.pluto_finish_worker($1::uuid,$2::uuid,$3)',job.userId,job.token,ok));

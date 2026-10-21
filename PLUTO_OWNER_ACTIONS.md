@@ -1,46 +1,28 @@
-# Pluto — owner setup and approval checklist
+# Pluto — what you need to provide
 
-Status: commercial development only. Not ready for public launch. Do not change your personal JARVIS database, deployment or Telegram bot. Do not paste secrets into chat. This checklist will be updated as implementation and tests establish exact requirements.
+The commercial build is isolated on feature/pluto-saas-v1. Personal JARVIS remains unchanged. Local checks do not establish public launch readiness. No commercial deployment, real migration, purchase or charged provider request has been made. Enter secrets only in the separate project/host environment, never chat or Git.
 
-## Required before live closed beta
-- Create a SEPARATE Supabase project for Pluto. Supply its project URL/reference and publishable key through the commercial environment; keep migration/admin and restricted runtime DB credentials separate. Free project is acceptable for development if available. No personal records should be imported.
-- Configure Supabase verified-email signup, email delivery, callback/reset URL allowlists and rate limits for the commercial site. SMTP/email provider approval or payment may be needed at meaningful volume; test actual receipt and recovery.
-- Create a Stripe account in TEST mode and separate test API key, webhook signing secret, Plus/Pro monthly and annual prices. Annual price/discount requires your decision; monthly working prices are $9.99/$19.99. Live activation requires account verification and separate approval; no real charges during development.
-- Create a NEW Telegram bot through BotFather. Set token/webhook secret only in Pluto environment. Do not replace your personal bot token or webhook.
-- Generate separate connector encryption and administrative API secrets locally; arrange secure backup/key custody. Never reuse personal secrets.
-- Choose an explicit administrator Auth UUID after creating its account. Enroll MFA before assigning the admin role using the protected provisioning procedure. Customers never gain admin from email or signup order.
+## Start here: closed beta
+1. Approve a separate Supabase project and separate Render service. Never reuse the personal database/service. Budget roughly $7/month for a limited beta with available Supabase Free; a production starting budget is $32/month ($7 host +$25 Supabase Pro), before optional email/domain and usage costs. See PLUTO_COST_MODEL.md for assumptions.
+2. Provide the commercial project reference, Auth URL/publishable key and independently generated restricted database logins through the commercial environment. Follow PLUTO_DEPLOYMENT.md; migration/admin credentials stay local and are removed after approved setup. No database password needs to be sent in chat.
+3. Configure verified-email Auth, custom SMTP, sender identity and exact site/callback/reset URLs. Test email receipt and password recovery. Supply the approved HTTPS site URL and beta email allowlist, maximum 100 people. Signup stays OFF until this is tested.
+4. Choose a separate administrator account, verify its email and enroll MFA. Explicitly provision its Auth UUID using the documented guarded command. An admin cannot also be a customer profile. Optional aggregate API keys expire after 30 days; personal JARVIS integration is documented but personal code has not been changed.
 
-## Optional / deferred activation
-- AI API billing is separate from ChatGPT Plus. Approve a measured per-user/global budget before activation; put a commercial provider key/model in the environment. Mocked tests need no paid credentials.
-- Voice and advanced research remain OFF pending cost approval and provider setup. No real-time paid service will be activated silently.
-- Connectors need independent commercial OAuth/provider approvals. Users must be able to use tracking without them.
+## Optional capabilities: enable separately
+5. Stripe TEST account/key/webhook secret and Plus/Pro prices. Monthly defaults are $9.99/$19.99; decide annual totals before configuring annual prices. Test checkout, Portal, failed invoices, refunds, replay and cancellation before live approval. Business verification/tax settings remain yours to complete.
+6. A NEW Telegram bot token and webhook secret. Keep your personal bot untouched. Test pairing and commands using two beta customers before enabling background processing.
+7. Separate OpenAI API billing/key if AI is wanted. ChatGPT Plus does not include API spending. Approve a maximum monthly global budget and provider-side cap first. Research additionally needs a Brave API key. Tracking works without these services.
+8. Decide whether to enable push-to-talk voice after measuring quality/cost. It is OFF and needs explicit cost approval plus paid entitlement, sharing consent and microphone testing. No paid realtime voice is enabled.
+9. Optional commercial Google/Apple calendar, Canvas and GitHub configuration/approvals. Access remains read-only. Gmail/Drive and automatic bank sync are not offered. Generate connector encryption keys privately and back them up securely.
+10. Approve Auth erasure worker configuration and recovery/key custody. Test deletion, export and exhausted-job follow-up before customer use.
 
-## Required before public paid launch
-- Approve Pluto working name after professional trademark clearance; it is not legally cleared.
-- Review draft privacy/terms, retention, refunds/cancellation, business/contact details, selling jurisdiction/taxes and security disclosures with qualified professionals.
-- Approve a separate commercial deployment and domain/hosted URL. No changes to personal Render. Hosting purchase and public deployment require your approval.
-- Execute real multi-account Supabase, email/recovery, Stripe test checkout/portal/webhook/reconciliation, bot and hosted job acceptance. Local mocks do not establish these.
-- Arrange an independent security review, particularly tenant isolation, admin access, financial records and paid usage limits.
-- Verify backup restore and rollback against the separate project, then approve closed beta/paid activation stages explicitly.
+## Before selling publicly
+11. Obtain trademark clearance for the provisional Pluto name and qualified review of draft terms/privacy, business contact details, jurisdiction, taxes, refunds/cancellation and retention. Draft pages are not final legal documents.
+12. Arrange independent security review. One unresolved development-only braces advisory has no published patched release; production audit is clean, but this remains a review item. Local tests do not replace an independent audit.
+13. Execute real two-customer/admin hosted acceptance, Stripe test acceptance, email/recovery, bot, microphone and provider shutdown checks. Load-test the actual host with approved synthetic traffic; no 10,000-user capacity claim has been established.
+14. Drill backup restore into a disposable separate project; record recovery time/data loss and approved RTO/RPO. The local embedded restore test is not a hosted disaster-recovery drill.
+15. Approve expenses, commercial deployment and staged activation. Public startup requires explicit branding/legal/security/recovery/expense attestations; live billing needs additional approval. Keep all approval fields false until the corresponding work is actually completed.
 
-## Decisions awaiting you (development continues with safe defaults)
-Annual discount; business jurisdiction/currency/tax settings; final brand/domain; retention windows; maximum monthly AI spend; invitation-only beta cohort; whether customers may enable Telegram on Free. Safe defaults: USD, Free/Plus/Pro only, no trials, Ultimate inactive, no external actions, all paid providers/public registration/checkout disabled.
+Decisions still needed: annual pricing, legal/business jurisdiction and taxes, final name/domain, email sender, monthly AI budget, beta participants, retention approval, voice activation and recovery objectives. No purchases or public activation will happen automatically.
 
-## Billing implementation specifics
-Use separate pluto_billing_runtime PostgreSQL credentials (member of pluto_billing only), in PLUTO_BILLING_DATABASE_URL. Configure Stripe TEST API/signing keys, monthly price IDs and Portal products/proration/cancellation. Annual billing additionally needs approved total cents in PLUTO_STRIPE_PLUS_ANNUAL_MINOR / PLUTO_STRIPE_PRO_ANNUAL_MINOR plus annual price IDs. Public checkout is OFF. Before AI activation, approve and configure BudgetPolicy's global USD microdollar cap; its initial value is zero and disabled. No real Stripe API call, paid provider request or commercial migration has been executed.
-
-## Intelligence setup
-Optional commercial OPENAI_API_KEY, PLUTO_CHAT_MODEL and explicit rate overrides for nondefault models; BRAVE_SEARCH_API_KEY for approved research. All paid flags remain false. Approve global/customer spending caps before activation. Live usefulness, provider availability and actual costs require controlled acceptance; no paid calls were made during development.
-
-
-## Background service setup
-Provision separate pluto_worker_runtime (member pluto_worker) and pluto_erasure_runtime (member pluto_erasure) logins only in the commercial database. Configure PLUTO_WORKER_DATABASE_URL for the worker/webhook and a separate Pluto BotFather token/signing secret. Never copy the personal bot. Optional account erasure requires PLUTO_ERASURE_DATABASE_URL, PLUTO_AUTH_ERASURE_KEY and explicit PLUTO_AUTH_ERASURE_ENABLED. Enable canonical billing reconciliation only with the separate tested Stripe configuration. Worker/provider flags remain OFF until acceptance. Exhausted Auth tickets require operator follow-up.
-
-
-## Administrator setup
-Use a separate commercial Auth identity, verify email and enroll MFA, then explicitly provision its UUID with the protected scripts/pluto-admin.ts command. Configure separate admin dashboard/API runtime logins, never a customer or billing login. Optional metrics API credentials are issued to a private file outside Git, expire after 30 days and can be revoked. PLUTO_ADMIN.md documents the future personal-JARVIS connection; personal code is unchanged. Operating-cost estimates begin NULL and require your real monthly inputs.
-
-
-## Voice and customer experience acceptance
-Choose whether to approve push-to-talk transcription costs after a measured beta test. PLUTO_VOICE_COST_APPROVED, voice/chat flags, active plan, sharing consent, provider keys and spending budgets all gate activation. No realtime service is enabled. Test real microphones, stop controls and local speech availability on chosen devices before allowing customers to use voice. Validate real email verification, onboarding, profile/module preferences and account recovery in the separate project.
-
+If a GitHub token previously pasted into chat is still active, revoke it in GitHub and replace it locally. Do not reuse it for commercial services.

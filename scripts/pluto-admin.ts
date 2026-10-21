@@ -1,3 +1,4 @@
+import {assertCommercialDatabase} from '../src/features/commercial/isolation';
 import {PrismaClient} from '@prisma/client';
 import {randomBytes,createHash} from 'node:crypto';
 import {writeFile} from 'node:fs/promises';
@@ -5,6 +6,7 @@ import {resolve,relative,isAbsolute} from 'node:path';
 import {z} from 'zod';
 import {loadEnvironment} from './load-environment';
 loadEnvironment();
+if(process.env.DIRECT_URL)assertCommercialDatabase(process.env.DIRECT_URL,process.env.PLUTO_SUPABASE_PROJECT_REF,true);
 async function main(){
  if(process.env.PLUTO_ALLOW_ADMIN_PROVISIONING!=='approved'||!process.env.DIRECT_URL)throw Error('Explicit commercial administrator provisioning approval is required.');
  const id=z.uuid().parse(process.env.PLUTO_ADMIN_AUTH_ID),mode=process.argv[2];if(!['grant','revoke','issue-key','revoke-key'].includes(mode))throw Error('Choose grant, revoke, issue-key or revoke-key.');const db=new PrismaClient({datasourceUrl:process.env.DIRECT_URL});

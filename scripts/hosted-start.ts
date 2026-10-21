@@ -2,8 +2,10 @@ import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {loadEnvironment} from './load-environment';
 import {supervise} from './supervise';
+import {assertPublicRelease} from '../src/features/commercial/rollout';
 
 loadEnvironment();
+assertPublicRelease();
 const require = createRequire(import.meta.url);
 const children = [spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'start', '--hostname', '0.0.0.0'], {stdio:'inherit'})];
 const background = process.env.PLUTO_WORKERS_ENABLED === 'true';

@@ -9,6 +9,8 @@ datasource db {
 }
 
 model User {
+ customerStorage CustomerStorage?
+ requestWindow CustomerRequestWindow?
  voiceSessions VoiceSession[]
  voiceTurns VoiceTurn[]
  productCustomer ProductCustomer?
@@ -817,6 +819,10 @@ model CustomerErasure {
 }
 
 model PlanCatalog {
+ recordLimit Int @default(5000)
+ storageBytes BigInt @default(10485760)
+ operationsMinute Int @default(120)
+ operationsDay Int @default(5000)
   integrationMax Int @default(1)
   telegramDaily Int @default(20)
  id String @id @db.VarChar(20)
@@ -1095,4 +1101,27 @@ model VoiceTurn {
  createdAt DateTime @default(now()) @db.Timestamptz(6)
  @@unique([userId,requestId])
  @@index([userId,sessionId,createdAt],map:"voice_customer_turn")
+}
+model CustomerStorage {
+ userId String @id @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ records BigInt @default(0)
+ bytes BigInt @default(0)
+}
+model StoragePolicy {
+ id Boolean @id @default(true)
+ maxBytes BigInt @default(134217728)
+ usedBytes BigInt @default(0)
+}
+model CustomerRequestWindow {
+ userId String @id @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ minute DateTime @db.Timestamptz(6)
+ day DateTime @db.Date
+ minuteCount Int
+ dayCount Int
+}
+model MaintenanceState {
+ id Boolean @id @default(true)
+ nextAt DateTime @default(now()) @db.Timestamptz(6)
 }

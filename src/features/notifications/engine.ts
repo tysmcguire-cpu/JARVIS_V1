@@ -8,7 +8,7 @@ import {storedRuleSettings,repetitionKey} from './rules';
 export type Tx=Pick<Prisma.TransactionClient,'$queryRawUnsafe'|'$executeRawUnsafe'>;
 type Rule={id:string;kind:Kind;version:number;config?:unknown;thresholdMinor:bigint|null;currency:string;leadDays:number;time:string;lastScannedAt:Date|null;createdAt:Date};
 export type Payload={title:string;text:string;href:string;asOf:string;sourceUpdatedAt:string;coverage:string};
-export async function readSettings(tx:Tx,owner:string){const rows=await tx.$queryRawUnsafe<(Settings&{updatedAt:Date})[]>('SELECT * FROM "UserSettings" WHERE "userId"=$1::uuid',owner);if(!rows[0])throw Error('Owner settings unavailable');return rows[0];}
+export async function readSettings(tx:Tx,owner:string){const rows=await tx.$queryRawUnsafe<(Settings&{updatedAt:Date})[]>('SELECT * FROM "UserSettings" WHERE "userId"=$1::uuid',owner);if(!rows[0])throw Error('Account settings unavailable');return rows[0];}
 const sourceKey=(entity:string,id:string,updatedAt:Date)=>`${entity}:${id}:${updatedAt.toISOString()}`;
 async function notifiedSources(tx:Tx,owner:string,rows:{entity:string;id:string;updatedAt:Date}[]){
  if(!rows.length)return new Set<string>();

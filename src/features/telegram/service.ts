@@ -49,7 +49,7 @@ async function execute(tx:Tx,config:TelegramConfig,text:string,updateId:number):
  }
  if(name==='status'){
    const pending=await tx.$queryRawUnsafe<{count:bigint}[]>('SELECT count(*) FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "deliveredAt" IS NULL AND "canceledAt" IS NULL',owner,config.botId);
-   return {reply:`Owner paired. Database available. ${pending[0].count} pending replies. Manual commands and local /ask analysis enabled. Notification schedules and delivery status are in PLUTO Notifications.`};
+   return {reply:`Account paired. Database available. ${pending[0].count} pending replies. Manual commands and local /ask analysis enabled. Notification schedules and delivery status are in PLUTO Notifications.`};
  }
  if(name==='undo'){
    const previous=await tx.$queryRawUnsafe<{id:string;entity:string;recordId:string;recordVersion:Date}[]>('SELECT id,entity,"recordId","recordVersion" FROM "TelegramMessage" WHERE "userId"=$1::uuid AND "botId"=$2 AND "updateId"<$3 AND entity IS NOT NULL AND undone=false AND "createdAt">now()-interval \'24 hours\' ORDER BY "updateId" DESC,id DESC LIMIT 1 FOR UPDATE',owner,config.botId,BigInt(updateId));

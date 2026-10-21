@@ -14,7 +14,7 @@ export async function synchronizeWithDatabase(id:string,withCustomerDatabase:Own
  await tx.$executeRawUnsafe('UPDATE "ApiConnection" SET status=\'syncing\',"leaseToken"=$3::uuid,"leaseUntil"=now()+interval \'120 seconds\',"updatedAt"=now() WHERE id=$1::uuid AND "userId"=$2::uuid',id,ownerId,lease);return {...row,ownerId};
  });
  const leased=<T>(run:(tx:Parameters<Parameters<typeof withCustomerDatabase>[0]>[0],ownerId:string)=>Promise<T>)=>withCustomerDatabase(async(tx,ownerId)=>{
- if(ownerId!==state.ownerId)throw Error('Owner session changed.');const valid=await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "ApiConnection" WHERE id=$1::uuid AND "userId"=$2::uuid AND "leaseToken"=$3::uuid AND "tokenCiphertext" IS NOT NULL FOR UPDATE',id,ownerId,lease);if(!valid.length)throw Error('Connection changed or disconnected.');await tx.$executeRawUnsafe('UPDATE "ApiConnection" SET "leaseUntil"=now()+interval \'120 seconds\' WHERE id=$1::uuid AND "userId"=$2::uuid',id,ownerId);return run(tx,ownerId);
+ if(ownerId!==state.ownerId)throw Error('Account session changed.');const valid=await tx.$queryRawUnsafe<{id:string}[]>('SELECT id FROM "ApiConnection" WHERE id=$1::uuid AND "userId"=$2::uuid AND "leaseToken"=$3::uuid AND "tokenCiphertext" IS NOT NULL FOR UPDATE',id,ownerId,lease);if(!valid.length)throw Error('Connection changed or disconnected.');await tx.$executeRawUnsafe('UPDATE "ApiConnection" SET "leaseUntil"=now()+interval \'120 seconds\' WHERE id=$1::uuid AND "userId"=$2::uuid',id,ownerId);return run(tx,ownerId);
  });
  let count=0;const seenIds=new Set<string>();
  try{
