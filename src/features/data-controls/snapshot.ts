@@ -10,6 +10,10 @@ export const snapshotSchema=z.object({format:z.literal('pluto-data-v1'),ownerId:
 export type Snapshot=z.infer<typeof snapshotSchema>;
 type Tx=Pick<Prisma.TransactionClient,'$queryRawUnsafe'|'$executeRawUnsafe'>;
 export async function exportSnapshot(tx:Tx,owner:string){
+ // Bound each table before constructing a single JSON aggregate. Counting row
+ // JSON overestimates the final size because credential fields are removed.
+ let size=0;
+ for(const table of snapshotTables){const [bound]=await tx.$queryRawUnsafe<{count:string;bytes:string}[]>(`SELECT count(*)::text AS count,COALESCE(sum(octet_length(to_jsonb(t)::text)),0)::text AS bytes FROM(SELECT * FROM "${table}" WHERE ${table==='User'?'id':'"userId"'}=$1::uuid LIMIT 5001)t`,owner);if(Number(bound.count)>5000)throw Error('Export exceeds 5,000 records per table.');size+=Number(bound.bytes);if(size>maxSnapshotBytes-65536)throw Error('Export exceeds 16 MiB. Use an approved native database backup.');}
  const pairs:string[]=[];
  for(const table of snapshotTables){const removals=excluded[table]??[],money=entities.find(e=>e.key===table)?.fields.filter(f=>f.type==='money').map(f=>f.name)??(table==='NotificationRule'?['thresholdMinor']:table==='TelegramMessage'?['updateId']:[]);
  const value=`to_jsonb(t)${removals.length?' - ARRAY['+removals.map(s=>"'"+s+"'").join(',')+']::text[]':''}${money.length?' || jsonb_build_object('+money.flatMap(f=>["'"+f+"'",'t."'+f+'"::text']).join(',')+')':''}`;

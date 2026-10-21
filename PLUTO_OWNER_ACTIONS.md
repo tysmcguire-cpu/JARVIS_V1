@@ -28,3 +28,7 @@ Annual discount; business jurisdiction/currency/tax settings; final brand/domain
 
 ## Billing implementation specifics
 Use separate pluto_billing_runtime PostgreSQL credentials (member of pluto_billing only), in PLUTO_BILLING_DATABASE_URL. Configure Stripe TEST API/signing keys, monthly price IDs and Portal products/proration/cancellation. Annual billing additionally needs approved total cents in PLUTO_STRIPE_PLUS_ANNUAL_MINOR / PLUTO_STRIPE_PRO_ANNUAL_MINOR plus annual price IDs. Public checkout is OFF. Before AI activation, approve and configure BudgetPolicy's global USD microdollar cap; its initial value is zero and disabled. No real Stripe API call, paid provider request or commercial migration has been executed.
+
+## Intelligence setup
+Optional commercial OPENAI_API_KEY, PLUTO_CHAT_MODEL and explicit rate overrides for nondefault models; BRAVE_SEARCH_API_KEY for approved research. All paid flags remain false. Approve global/customer spending caps before activation. Live usefulness, provider availability and actual costs require controlled acceptance; no paid calls were made during development.
+

@@ -9,6 +9,11 @@ datasource db {
 }
 
 model User {
+ aiPreferences AiPreferences?
+ chatThreads ChatThread[]
+ chatTurns ChatTurn[]
+ weeklyReports WeeklyReport[]
+ researchResults ResearchResult[]
  billingCustomer BillingCustomer?
  subscription Subscription?
  checkoutIntent CheckoutIntent?
@@ -911,4 +916,70 @@ model UsageReservation {
  @@unique([userId,requestKey])
  @@index([userId,periodStart],map:"usage_customer_period")
  @@index([periodStart],map:"usage_global_period")
+}
+
+model AiPreferences {
+ userId String @id @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ sharingEnabled Boolean @default(false)
+ allowedDomains String[] @default([])
+ weeklyEnabled Boolean @default(false)
+ reportDay Int @default(0)
+ reportTime String @default("18:00") @db.VarChar(5)
+ telegramReports Boolean @default(false)
+ version Int @default(1)
+ updatedAt DateTime @default(now()) @db.Timestamptz(6)
+}
+model ChatThread {
+ id String @id @db.Uuid
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ title String @db.VarChar(100)
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ updatedAt DateTime @default(now()) @db.Timestamptz(6)
+ turns ChatTurn[]
+ @@unique([id,userId])
+}
+model ChatTurn {
+ id String @id @db.Uuid
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ threadId String @db.Uuid
+ thread ChatThread @relation(fields:[threadId,userId],references:[id,userId],onDelete:Cascade)
+ requestId String @db.Uuid
+ question String @db.VarChar(1000)
+ domains String[]
+ answer Json?
+ status String @db.VarChar(20)
+ usageId String? @db.Uuid
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ completedAt DateTime? @db.Timestamptz(6)
+ @@unique([userId,requestId])
+ @@index([userId,threadId,createdAt],map:"chat_customer_thread")
+}
+model WeeklyReport {
+ id String @id @db.Uuid
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ periodStart DateTime @db.Date
+ periodEnd DateTime @db.Date
+ status String @default("queued") @db.VarChar(20)
+ content Json?
+ leaseToken String? @db.Uuid
+ leaseUntil DateTime? @db.Timestamptz(6)
+ attempts Int @default(0)
+ nextAttemptAt DateTime @default(now()) @db.Timestamptz(6)
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
+ completedAt DateTime? @db.Timestamptz(6)
+ openedAt DateTime? @db.Timestamptz(6)
+ notifiedAt DateTime? @db.Timestamptz(6)
+ @@unique([userId,periodStart])
+}
+model ResearchResult {
+ id String @id @db.Uuid
+ userId String @db.Uuid
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ query String @db.VarChar(300)
+ result Json
+ createdAt DateTime @default(now()) @db.Timestamptz(6)
 }

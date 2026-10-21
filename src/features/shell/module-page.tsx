@@ -1,11 +1,11 @@
 import { SettingsPanels } from "@/features/telegram/settings-panels";
-import {AssistantPanel} from '@/features/assistant/panel';
+import {IntelligencePanel} from '@/features/intelligence/panel';
 import {NotificationPanel} from '@/features/notifications/panel';
 import type { UserSettings } from "@prisma/client";
 import { findModule, type ModuleSlug } from "./navigation";
 const phases: Partial<Record<ModuleSlug, string>> = { assistant: "Phase 5", notifications: "Phase 6", settings: "Phase 1" };
 export function ModulePage({ slug, demo, settings }: { slug: ModuleSlug; demo: boolean; settings?: UserSettings | null }) {
-  if(slug==='assistant')return <AssistantPanel demo={demo}/>;
+  if(slug==='assistant')return <IntelligencePanel demo={demo}/>;
   if(slug==='notifications')return <NotificationPanel demo={demo}/>;
   const moduleInfo = findModule(slug)!;
   const demoPreferences = [["Timezone", "America/Chicago"], ["Weekly review", "Enabled · Sunday 18:00"], ["Deadline reminders", "Enabled"], ["Financial alerts", "Enabled"], ["Morning briefing", "Disabled · inactive time 08:00"], ["Unsolicited AI recommendations", "Disabled"]];

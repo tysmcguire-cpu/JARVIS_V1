@@ -1,0 +1,18 @@
+BEGIN;
+CREATE TABLE "AiPreferences"("userId" uuid PRIMARY KEY REFERENCES "User"(id) ON DELETE CASCADE,"sharingEnabled" boolean NOT NULL DEFAULT false,"allowedDomains" text[] NOT NULL DEFAULT '{}',"weeklyEnabled" boolean NOT NULL DEFAULT false,"reportDay" integer NOT NULL DEFAULT 0 CHECK("reportDay" BETWEEN 0 AND 6),"reportTime" varchar(5) NOT NULL DEFAULT '18:00' CHECK("reportTime" ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'),"telegramReports" boolean NOT NULL DEFAULT false,version integer NOT NULL DEFAULT 1,"updatedAt" timestamptz NOT NULL DEFAULT now());
+CREATE TABLE "ChatThread"(id uuid PRIMARY KEY,"userId" uuid NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,title varchar(100) NOT NULL,"createdAt" timestamptz NOT NULL DEFAULT now(),"updatedAt" timestamptz NOT NULL DEFAULT now(),UNIQUE(id,"userId"));
+CREATE TABLE "ChatTurn"(id uuid PRIMARY KEY,"userId" uuid NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,"threadId" uuid NOT NULL,"requestId" uuid NOT NULL,question varchar(1000) NOT NULL,domains text[] NOT NULL,answer jsonb,status varchar(20) NOT NULL CHECK(status IN('generating','completed','failed')),"usageId" uuid,"createdAt" timestamptz NOT NULL DEFAULT now(),"completedAt" timestamptz,FOREIGN KEY("threadId","userId") REFERENCES "ChatThread"(id,"userId") ON DELETE CASCADE,UNIQUE("userId","requestId"));
+CREATE INDEX chat_customer_thread ON "ChatTurn"("userId","threadId","createdAt");
+CREATE TABLE "WeeklyReport"(id uuid PRIMARY KEY,"userId" uuid NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,"periodStart" date NOT NULL,"periodEnd" date NOT NULL,status varchar(20) NOT NULL DEFAULT 'queued' CHECK(status IN('queued','generating','completed','failed')),content jsonb,"leaseToken" uuid,"leaseUntil" timestamptz,attempts integer NOT NULL DEFAULT 0,"nextAttemptAt" timestamptz NOT NULL DEFAULT now(),"createdAt" timestamptz NOT NULL DEFAULT now(),"completedAt" timestamptz,"openedAt" timestamptz,"notifiedAt" timestamptz,UNIQUE("userId","periodStart"));
+CREATE TABLE "ResearchResult"(id uuid PRIMARY KEY,"userId" uuid NOT NULL REFERENCES "User"(id) ON DELETE CASCADE,query varchar(300) NOT NULL,result jsonb NOT NULL,"createdAt" timestamptz NOT NULL DEFAULT now());
+DO $$ DECLARE tab text;BEGIN
+ FOREACH tab IN ARRAY ARRAY['AiPreferences','ChatThread','ChatTurn','WeeklyReport','ResearchResult'] LOOP
+  EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY',tab);EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY',tab);EXECUTE format('REVOKE ALL ON %I FROM PUBLIC,anon,authenticated',tab);EXECUTE format('GRANT SELECT,INSERT,UPDATE,DELETE ON %I TO pluto_app',tab);
+  EXECUTE format('CREATE POLICY customer_private ON %I FOR ALL TO pluto_app USING("userId"=auth.uid() AND EXISTS(SELECT 1 FROM public."User" WHERE id=auth.uid() AND status=''active'')) WITH CHECK("userId"=auth.uid() AND EXISTS(SELECT 1 FROM public."User" WHERE id=auth.uid() AND status=''active''))',tab);
+ END LOOP;
+END $$;
+CREATE FUNCTION public.pluto_erase_intelligence() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,public AS $$
+BEGIN IF NEW.status='deleted' AND OLD.status<>'deleted' THEN DELETE FROM public."ChatThread" WHERE "userId"=NEW.id;DELETE FROM public."WeeklyReport" WHERE "userId"=NEW.id;DELETE FROM public."ResearchResult" WHERE "userId"=NEW.id;DELETE FROM public."AiPreferences" WHERE "userId"=NEW.id;END IF;RETURN NEW;END $$;
+REVOKE ALL ON FUNCTION public.pluto_erase_intelligence() FROM PUBLIC,anon,authenticated,pluto_app;
+CREATE TRIGGER pluto_erase_intelligence BEFORE UPDATE OF status ON "User" FOR EACH ROW EXECUTE FUNCTION public.pluto_erase_intelligence();
+COMMIT;
