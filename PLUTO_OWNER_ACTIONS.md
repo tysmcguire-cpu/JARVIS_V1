@@ -33,3 +33,7 @@ The owner approved the original 26 migrations and new restricted app login. Thos
 
 ## Permission cleanup completed with separate approval
 The owner explicitly approved migration 27. Preflight confirmed only 20261022080000_pluto_trigger_acl was pending, then the guarded wrapper applied it to qnfyrnbrrehgdqursitg. Live read-only checks confirm 27/27 completed migrations, matching installation identity, zero browser-accessible application tables, all 59 customer-owned tables with ENABLE/FORCE RLS, and no browser-executable Pluto security-definer functions. The remaining provider-owned rls_auto_enable event trigger was intentionally untouched. Runtime login still inherits only pluto_app, cannot bypass RLS or alter subscription/installation/admin data, and direct admin-table SELECT is denied. No password, records, deployment, paid provider or personal resource changed. No new code change required another test run; the prior 310 unit/database tests and production checks remain the relevant local evidence. Next input is the first private test account email, not a password.
+
+## Current handoff — October 22, 2026
+
+The owner recalls successful onboarding and customer-account tests on the other computer. Recover its local notes/commits before repeating setup; exact live scenario coverage is not yet available here. See PLUTO_HANDOFF.md. The latest committed setup record already confirms migration 28 was applied; earlier instructions to provide the first account or apply migration 27 are historical, not current next actions.
