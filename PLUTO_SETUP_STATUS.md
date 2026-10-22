@@ -58,3 +58,7 @@ The owner reports that onboarding and customer-account testing were completed on
 ## Current readiness gate — October 22
 
 Continue from PLUTO_READINESS.md. This computer now has the latest application/security regressions but no private commercial runtime configuration. The next input is the separate project's public Auth settings, restricted pluto_runtime connection and approved app origin in an ignored .env.local, not a password in chat or another database migration. Keep signup/providers/workers/checkout off. Onboarding/customer acceptance reported by the owner remains valid as an owner report; recover exact home-computer evidence before repeating completed work. Live email/recovery/MFA and hosted acceptance are not established by synthetic tests.
+
+## October 22 live runtime connection verified
+
+After the owner separately reset the existing runtime password and closed an idle role connection, this computer authenticated with pluto_runtime in a READ ONLY transaction. Verified the pinned Pluto installation, no superuser/BYPASSRLS attributes and zero unscoped customer rows. No customer data action or mutation was executed. Credentials remain in ignored .env.local and were not printed. The development app uses a one-connection local pool and loopback port 3002; owner customer sign-in is the next acceptance step. Home runtime configuration requires the new password independently of Git pull. The role's three-connection limit and permissions were not changed.
