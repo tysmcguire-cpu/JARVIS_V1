@@ -27,12 +27,27 @@ export async function register(form:FormData){
 export async function requestPasswordReset(form:FormData){
  if(getAuthConfig()){
   const email=z.email().max(254).safeParse(form.get('email'));
-  if(email.success){const site=new URL(process.env.PLUTO_SITE_URL??'');if(site.protocol!=='https:'&&process.env.NODE_ENV==='production')throw Error('Secure site URL required');await (await createAuthClient()).auth.resetPasswordForEmail(email.data,{redirectTo:new URL('/auth/callback?next=reset-password',site).toString()})}
+  if(email.success){
+   // Provider/network/configuration failures must not reveal account existence.
+   try{const site=new URL(process.env.PLUTO_SITE_URL??'');if(site.protocol==='https:'||(process.env.NODE_ENV!=='production'&&site.protocol==='http:'))await (await createAuthClient()).auth.resetPasswordForEmail(email.data,{redirectTo:new URL('/auth/callback?next=reset-password',site).toString()})}catch{}
+  }
  }
  redirect('/forgot-password?status=sent');
 }
 export async function resetPassword(form:FormData){
- await requireCustomer();const password=z.string().min(12).max(128).parse(form.get('password'));
- const client=await createAuthClient(),{error}=await client.auth.updateUser({password});if(error)redirect('/reset-password?status=invalid');await client.auth.signOut({scope:'global'});redirect('/login?status=password-reset');
+ await requireCustomer('reset-password');const password=z.string().min(12).max(128).safeParse(form.get('password'));
+ if(!password.success)redirect('/reset-password?status=invalid');
+ const client=await createAuthClient();
+ let failed=false;try{const {error}=await client.auth.updateUser({password:password.data});failed=!!error}catch{failed=true}
+ if(failed)redirect('/reset-password?status=invalid');
+ let signoutFailed=false;try{const {error}=await client.auth.signOut({scope:'global'});signoutFailed=!!error}catch{signoutFailed=true}
+ if(signoutFailed)redirect('/reset-password?status=signout-failed');
+ redirect('/login?status=password-reset');
+}
+export async function finishPasswordReset(){
+ await requireCustomer('reset-password');const client=await createAuthClient();
+ let failed=false;try{const {error}=await client.auth.signOut({scope:'global'});failed=!!error}catch{failed=true}
+ if(failed)redirect('/reset-password?status=signout-failed');
+ redirect('/login?status=password-reset');
 }
 export async function signOut(){const {error}=await (await createAuthClient()).auth.signOut();if(error)throw Error('Sign out failed. Please try again.');redirect('/login')}

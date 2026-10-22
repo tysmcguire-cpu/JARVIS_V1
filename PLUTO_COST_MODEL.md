@@ -2,6 +2,8 @@
 
 USD/month estimates, not capacity guarantees or profit forecasts. No purchases or charged API calls made. Recheck provider prices before purchase. ChatGPT Plus is separate from API billing.
 
+The numerical scenarios below are historical illustrations, not current provider quotes, approved runtime rates or launch economics. Runtime model/rate defaults have been removed; verify and explicitly configure rates as described in PLUTO_AI.md before activation.
+
 Assume 80% Free, 15% Plus ($9.99), 5% Pro ($19.99). Free uses 10% of 15 messages; paid uses 25% of 250/1,000. Average request: 2,000 input +400 output tokens at gpt-6-luna $0.10/$0.50 per million = $0.0004. Paid users receive 4.345 reports/month at that illustrative size. Research uses 25% of 20/100 limits at $0.005 search +$0.0004 summary. Voice uses 25% of 15/90 input minutes at estimated $0.003/min transcription; answer messages already count above. Actual usage meters tokens conservatively.
 
 US domestic monthly Stripe estimate: 2.9%+$0.30 card processing plus 0.7% Billing, or 3.6%+$0.30 per paying customer. Fractional customer counts at small sizes represent an expected mix. Blended revenue/user $2.498, provider cost/user $0.0254401, Stripe/user $0.149928.

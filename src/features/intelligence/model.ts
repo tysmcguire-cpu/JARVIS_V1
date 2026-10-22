@@ -4,7 +4,13 @@ import {z} from 'zod';
 import type {Answer} from '@/features/assistant/contract';
 import {selectionSchema,type Selection} from './contracts';
 export type ModelConfig={model:string;inputMicrosPerMillion:bigint;outputMicrosPerMillion:bigint};
-export function modelConfig():ModelConfig{const model=z.string().regex(/^[a-zA-Z0-9_.:-]{1,100}$/).parse(process.env.PLUTO_CHAT_MODEL??'gpt-6-luna');const input=process.env.PLUTO_AI_INPUT_MICROS_PER_MILLION??(model==='gpt-6-luna'?'100000':undefined),output=process.env.PLUTO_AI_OUTPUT_MICROS_PER_MILLION??(model==='gpt-6-luna'?'500000':undefined);const rate=(v:unknown)=>BigInt(z.string().regex(/^\d{1,12}$/).refine(n=>BigInt(n)>0n).parse(v));return {model,inputMicrosPerMillion:rate(input),outputMicrosPerMillion:rate(output)}}
+function configuredModel(modelValue:string|undefined,inputValue:string|undefined,outputValue:string|undefined):ModelConfig{
+ const model=z.string().regex(/^[a-zA-Z0-9_.:-]{1,100}$/).parse(modelValue);
+ const rate=(value:unknown)=>BigInt(z.string().regex(/^\d{1,12}$/).refine(amount=>BigInt(amount)>0n).parse(value));
+ return {model,inputMicrosPerMillion:rate(inputValue),outputMicrosPerMillion:rate(outputValue)};
+}
+export function modelConfig():ModelConfig{return configuredModel(process.env.PLUTO_CHAT_MODEL,process.env.PLUTO_AI_INPUT_MICROS_PER_MILLION,process.env.PLUTO_AI_OUTPUT_MICROS_PER_MILLION)}
+export function transcriptionConfig():ModelConfig{return configuredModel(process.env.PLUTO_TRANSCRIPTION_MODEL,process.env.PLUTO_TRANSCRIPTION_INPUT_MICROS_PER_MILLION,process.env.PLUTO_TRANSCRIPTION_OUTPUT_MICROS_PER_MILLION)}
 export function estimateCost(input:number,output:number,config:ModelConfig){return Number((BigInt(input)*config.inputMicrosPerMillion+BigInt(output)*config.outputMicrosPerMillion+999999n)/1000000n)}
 export function groundedModelRequest(question:string,history:string[],evidence:Answer,config=modelConfig()){
  const facts=evidence.claims.filter(c=>c.kind==='fact'||c.kind==='calculation').slice(0,24);

@@ -11,7 +11,7 @@ export function safeResearchUrl(value:string){const url=new URL(value),host=url.
 const inputSchema=z.object({requestId:z.uuid(),query:z.string().trim().min(1).max(300),consent:z.literal(true),freshness:z.enum(['any','week','month'])}).strict();
 export async function research(input:unknown,fetcher:typeof fetch=fetch){
  const request=inputSchema.parse(input);if(!features.research()||!process.env.BRAVE_SEARCH_API_KEY)throw Error('Research is disabled or unconfigured.');
- const searchCost=Number(z.string().regex(/^\d{1,9}$/).refine(n=>Number(n)>0).parse(process.env.PLUTO_RESEARCH_CALL_MICROS??'5000')),config=modelConfig();
+ const searchCost=Number(z.string().regex(/^\d{1,9}$/).refine(n=>Number(n)>0).parse(process.env.PLUTO_RESEARCH_CALL_MICROS)),config=modelConfig();
  const cap={tokens:26000,costMicros:searchCost+Math.ceil(estimateCost(23024,1400,config)*1.25),voiceSeconds:0,researchCalls:1},usageId=await reserveUsage('research','research:'+request.requestId,cap);
  try{
   const endpoint=new URL('https://api.search.brave.com/res/v1/web/search');endpoint.searchParams.set('q',request.query);endpoint.searchParams.set('count','5');endpoint.searchParams.set('result_filter','web');endpoint.searchParams.set('text_decorations','false');if(request.freshness!=='any')endpoint.searchParams.set('freshness',request.freshness==='week'?'pw':'pm');

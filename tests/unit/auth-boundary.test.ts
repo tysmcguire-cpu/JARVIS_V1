@@ -67,3 +67,9 @@ describe("password actions", () => {
 });
 
 it('accepts a second independent verified customer',async()=>{mocks.getUser.mockResolvedValue({data:{user:{id:'b2c92111-c2a3-4ab2-91dc-3d1abc84cc33',email_confirmed_at:'2026-01-01T00:00:00Z'}},error:null});expect((await requireCustomer()).id).toBe('b2c92111-c2a3-4ab2-91dc-3d1abc84cc33')});
+
+it('preserves the recovery destination through MFA without accepting a mismatched elevated subject',async()=>{
+ mocks.getUser.mockResolvedValue({data:{user:{id:ownerId,email_confirmed_at:'2026-01-01T00:00:00Z',factors:[{id:'factor',status:'verified'}]}},error:null});
+ for(const claims of [{sub:ownerId,aal:'aal1'},{sub:'other-user',aal:'aal2'}]){mocks.getClaims.mockResolvedValue({data:{claims},error:null});await expect(requireCustomer('reset-password')).rejects.toThrow('redirect:/mfa?next=reset-password')}
+ mocks.getClaims.mockResolvedValue({data:{claims:{sub:ownerId,aal:'aal2'}},error:null});expect((await requireCustomer('reset-password')).id).toBe(ownerId);
+});

@@ -30,3 +30,7 @@ Onboarding now keeps customer choices in the wizard when workspace creation fail
 The browser regression renders the production form with a synthetic action in an isolated page: no authenticated test route, session bypass or real customer creation is introduced. Separate PostgreSQL and action tests cover transaction/authorization behavior. This supplements the earlier handoff; production source does change in this follow-up. Live owner-reported acceptance remains separate from locally executed checks.
 
 Final verification for this follow-up: 320 unit/database tests, full ESLint, TypeScript, final production build, three production boundary tests and four relevant browser scenarios passed across the initial run plus corrected rerun. Personal JARVIS remains separate; no live credentials or services were used.
+
+## Continue here before home-computer reconciliation
+
+The owner authorized continued Pluto development on this computer until the next external input gate. New Settings deep links, onboarding plan review, profile transaction regressions, MFA/password-reset continuation, truthful session-revocation retry and explicit paid-provider model/rate configuration are included in the readiness follow-up. See PLUTO_READINESS.md for the minimal separate runtime environment needed next. No personal resource, migration, deployment or provider activation changed. Home-computer Codex should preserve/reconcile its local work, then pull the Pluto branch and read the newest readiness/test records.

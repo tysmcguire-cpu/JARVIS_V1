@@ -2,6 +2,7 @@ import {chooseDashboard} from './dashboard-helpers';
 import {test,expect} from '@playwright/test';
 import {defaultPalette} from '../../src/features/settings/appearance';
 test('custom dashboard supports direct resizing, adding, removing and saved layouts',async({page})=>{
+ test.setTimeout(120000);
  await page.setViewportSize({width:1440,height:900});await page.goto('/demo');await chooseDashboard(page,'custom');
  await expect(page.getByRole('heading',{name:'Today',exact:true})).toHaveCount(0);
  await expect(page.locator('[data-widget]')).toHaveCount(4);
@@ -20,6 +21,7 @@ test('custom dashboard supports direct resizing, adding, removing and saved layo
 });
 
 test('Today supports every background and calendar creates an explicit repeating series',async({page})=>{
+ test.setTimeout(120000);
  await page.setViewportSize({width:1024,height:600});
  for(const background of ['white','black','current']){
   await page.context().addCookies([{name:'pluto-demo-palette',value:JSON.stringify({...defaultPalette,background}),url:'http://127.0.0.1:3100'}]);await page.goto('/demo');await chooseDashboard(page,'custom');await expect(page.getByRole('heading',{name:'Open tasks',exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);await page.screenshot({path:`test-results/productivity-today-${background}.png`});

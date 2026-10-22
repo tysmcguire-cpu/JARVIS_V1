@@ -37,3 +37,7 @@ The owner explicitly approved migration 27. Preflight confirmed only 20261022080
 ## Current handoff — October 22, 2026
 
 The owner recalls successful onboarding and customer-account tests on the other computer. Recover its local notes/commits before repeating setup; exact live scenario coverage is not yet available here. See PLUTO_HANDOFF.md. The latest committed setup record already confirms migration 28 was applied; earlier instructions to provide the first account or apply migration 27 are historical, not current next actions.
+
+## Current next input — October 22 readiness pass
+
+Application fixes and release verification are documented in PLUTO_READINESS.md and PLUTO_TEST_RESULTS.md. Supply this computer with only the separate project's public Auth configuration, restricted runtime connection and approved app origin through an ignored .env.local. No administrative credentials, account password or personal JARVIS configuration should be sent in chat. Optional paid/provider/hosted setup follows later under its existing approval gates. Earlier first-account/migration next-action sections are historical and must not be repeated automatically.

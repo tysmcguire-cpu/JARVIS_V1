@@ -7,6 +7,7 @@ const state=vi.hoisted(()=>({id:'',email:'',failAudit:false}));
 let database:PGlite;
 const alice=randomUUID(),bob=randomUUID(),uninvited=randomUUID();
 vi.mock('server-only',()=>({}));
+vi.mock('next/cache',()=>({revalidatePath:vi.fn()}));
 vi.mock('next/navigation',()=>({redirect:(to:string)=>{throw Error('redirect:'+to)}}));
 vi.mock('@/features/auth/server',()=>({requireCustomer:async()=>({id:state.id,email:state.email})}));
 vi.mock('@/lib/db',()=>({db:{$transaction:async(work:(tx:unknown)=>Promise<unknown>)=>database.transaction(async tx=>{
@@ -22,6 +23,7 @@ vi.mock('@/lib/db',()=>({db:{$transaction:async(work:(tx:unknown)=>Promise<unkno
  });
 })}}));
 import {completeOnboarding} from '@/features/auth/onboarding-actions';
+import {loadProfile,saveProfile} from '@/features/settings/profile-actions';
 import {withCustomerDatabase} from '@/lib/customer-db';
 function form(name:string,timezone='America/Chicago',currency='USD'){
  const input=new FormData();input.set('displayName',name);input.set('timezone',timezone);input.set('currency',currency);input.append('modules','notes');input.append('modules','calendar');input.set('plan','free');
@@ -65,4 +67,17 @@ it('rejects uninvited enrollment and prevents suspended customers from completin
  await expect(completeOnboarding(form('Reactivation attempt'))).rejects.toThrow('unavailable');await expect(withCustomerDatabase(async()=>true)).rejects.toThrow('unavailable');
  expect((await database.query('SELECT status FROM "User" WHERE id=$1',[alice])).rows).toEqual([{status:'suspended'}]);
  actor(bob,'bob@example.invalid');expect(await withCustomerDatabase(async(_tx,id)=>id)).toBe(bob);
+});
+
+it('persists customer profile/module choices and rejects stale updates without partial changes',async()=>{
+ configure();actor(bob,'bob@example.invalid');const original=await loadProfile();
+ const changed=await saveProfile({displayName:'Bob updated',timezone:'Asia/Tokyo',currency:'CAD',enabledModules:['notes','goals']},original.updatedAt);
+ expect(changed).toMatchObject({displayName:'Bob updated',timezone:'Asia/Tokyo',currency:'CAD',enabledModules:['notes','goals']});expect(changed.updatedAt).not.toBe(original.updatedAt);
+ await expect(saveProfile({displayName:'Stale overwrite',timezone:'UTC',currency:'USD',enabledModules:['finances']},original.updatedAt)).rejects.toThrow('Profile changed');
+ expect(await loadProfile()).toEqual(changed);expect((await database.query('SELECT "displayName" FROM "User" WHERE id=$1',[alice])).rows).toEqual([{displayName:'Alice renamed'}]);
+});
+it('rolls back profile and settings together if the audit write fails',async()=>{
+ configure();actor(bob,'bob@example.invalid');const original=await loadProfile();state.failAudit=true;
+ await expect(saveProfile({displayName:'Must roll back',timezone:'UTC',currency:'EUR',enabledModules:['calendar']},original.updatedAt)).rejects.toThrow('Synthetic audit failure');
+ state.failAudit=false;expect(await loadProfile()).toEqual(original);
 });

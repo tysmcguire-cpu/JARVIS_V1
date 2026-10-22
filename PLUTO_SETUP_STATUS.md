@@ -54,3 +54,7 @@ The owner explicitly approved migration 28. The preflight confirmed only 2026102
 ## October 22 owner follow-up and second-computer review
 
 The owner reports that onboarding and customer-account testing were completed on the other computer; detailed evidence may not have been pushed. Treat this as owner-reported acceptance pending recovery of the exact results, rather than requiring the owner to repeat completed setup. Earlier pending-onboarding language above is historical. This computer has no commercial private environment and has not independently repeated live Auth/customer checks. See PLUTO_HANDOFF.md for the safe reconciliation sequence and new synthetic onboarding regression coverage.
+
+## Current readiness gate — October 22
+
+Continue from PLUTO_READINESS.md. This computer now has the latest application/security regressions but no private commercial runtime configuration. The next input is the separate project's public Auth settings, restricted pluto_runtime connection and approved app origin in an ignored .env.local, not a password in chat or another database migration. Keep signup/providers/workers/checkout off. Onboarding/customer acceptance reported by the owner remains valid as an owner report; recover exact home-computer evidence before repeating completed work. Live email/recovery/MFA and hosted acceptance are not established by synthetic tests.

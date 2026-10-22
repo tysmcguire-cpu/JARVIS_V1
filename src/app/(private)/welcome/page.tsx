@@ -1,2 +1,7 @@
-import Link from 'next/link';
-export default function WelcomePage(){return <main className="setup-guide"><p>PLUTO / SETUP</p><h1>Your workspace is ready</h1><p>Choose any optional setup step, or open your dashboard now.</p><nav><Link href="/settings#subscription"><strong>Review plan and usage</strong><span>Free tracking works immediately. Paid checkout is available only when the service is activated.</span></Link><Link href="/settings#integrations"><strong>Connect optional services</strong><span>Google Calendar, Apple Calendar, Canvas or GitHub, using your own read-only permissions.</span></Link><Link href="/settings#telegram"><strong>Pair Telegram</strong><span>Create a one-time code in Settings and send it to the separate Pluto bot.</span></Link><Link href="/notes"><strong>Add your first note</strong><span>You can also add finance entries, goals, projects and tasks from their modules.</span></Link><Link href="/settings#profile"><strong>Profile and security</strong><span>Review timezone, currency, modules and authenticator settings.</span></Link></nav><Link className="setup-open" href="/">Open dashboard</Link></main>}
+import {SetupGuide} from '@/features/auth/setup-guide';
+import {features} from '@/features/commercial/flags';
+import {suggestedPlan} from '@/features/settings/navigation';
+export default async function WelcomePage({searchParams}:{searchParams:Promise<{plan?:string}>}){
+ const plan=suggestedPlan((await searchParams).plan);
+ return <SetupGuide plan={plan} availability={{checkout:features.checkout(),integrations:features.integrations(),telegram:process.env.TELEGRAM_ENABLED==='true'&&!!process.env.TELEGRAM_BOT_TOKEN,ai:features.aiChat()}}/>;
+}

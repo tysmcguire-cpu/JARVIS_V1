@@ -3,6 +3,7 @@ import {redirect} from 'next/navigation';
 import {createAuthClient} from '@/lib/supabase/server';
 import {getAuthConfig} from '@/lib/env';
 import {verifiedCustomer} from './policy';
+import {mfaHref,type AuthDestination} from './destinations';
 import {cache} from 'react';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import type {User} from '@supabase/supabase-js';
@@ -14,13 +15,13 @@ const verifyIdentity=cache(async()=>{
  return data.user!;
 });
 export async function requireIdentity(){return verifyIdentity()}
-const verifyCustomer=cache(async()=>{
+const verifyCustomer=cache(async(next:AuthDestination)=>{
  const customer=await requireIdentity();
  if(process.env.PLUTO_REQUIRE_MFA==='true'||customer.factors?.some(f=>f.status==='verified')){
   const {data,error}=await (await createAuthClient()).auth.getClaims();
-  if(error||data?.claims.aal!=='aal2'||data.claims.sub!==customer.id)redirect('/mfa');
+  if(error||data?.claims.aal!=='aal2'||data.claims.sub!==customer.id)redirect(mfaHref(next));
  }
  return customer;
 });
-export async function requireCustomer(){return customerRequest.getStore()??verifyCustomer()}
+export async function requireCustomer(next:AuthDestination='workspace'){return customerRequest.getStore()??verifyCustomer(next)}
 export async function withCustomerRequest<T>(work:()=>Promise<T>){return customerRequest.run(await requireCustomer(),work)}
