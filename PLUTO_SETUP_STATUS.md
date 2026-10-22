@@ -1,4 +1,4 @@
-# Pluto setup status — database installed, permission cleanup awaiting approval
+# Pluto setup status — database and permission cleanup verified
 
 Commercial project: **qnfyrnbrrehgdqursitg**. Branch: **feature/pluto-saas-v1**.
 
@@ -21,11 +21,11 @@ The first role attempt rolled back before creating a login: Prisma could not des
 
 Local unit/database tests and production build checks are recorded in PLUTO_TEST_RESULTS.md. Client asset scan verified the actual restricted DATABASE_URL was absent from all 59 assets; no credential values were printed.
 
-## Prepared but NOT applied: migration 27
+## Applied with separate owner approval: migration 27
 
 Live Supabase metadata revealed explicit default browser EXECUTE grants on six Pluto **trigger** functions. PostgreSQL trigger functions cannot be invoked as ordinary functions; no browser table access or customer-data exposure was found in these checks. Nevertheless these unnecessary grants should be removed to match the intended boundary.
 
-Prepared permission-only migration:
+Approved and applied permission-only migration:
 `20261022080000_pluto_trigger_acl`
 
 It revokes PUBLIC/anon/authenticated execution on exactly:
@@ -36,9 +36,9 @@ It revokes PUBLIC/anon/authenticated execution on exactly:
 - pluto_erase_voice()
 - pluto_storage_budget()
 
-It does not change function bodies, records, passwords, table grants or RLS policies. It leaves the provider-owned rls_auto_enable() function untouched. The reviewed local manifest now contains 27 migrations; the database still has only the original 26. Tests now simulate Supabase's explicit default function grants.
+It does not change function bodies, records, passwords, table grants or RLS policies. It leaves the provider-owned rls_auto_enable() function untouched. The reviewed local manifest and live migration history now both contain 27 completed migrations. Read-only verification confirms the six Pluto browser EXECUTE grants are removed; the Supabase-managed event-trigger function remains unchanged. Tests now simulate Supabase's explicit default function grants.
 
-**Exact next owner action: approve this permission-only migration on qnfyrnbrrehgdqursitg.** It is outside the original 26-migration approval, so it has not been executed. After that, the next setup input will be the email address for a first allowlisted private test account; no password should be sent in chat.
+**Exact next owner action: provide the email address to allow for the first private Pluto test account. Do not send a password.** The permission cleanup received separate owner approval and is complete. Registration remains disabled until private account setup is explicitly configured; no Auth user has been created.
 
 ## Still disabled / not authorized
 
