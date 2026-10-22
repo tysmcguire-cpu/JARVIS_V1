@@ -57,3 +57,7 @@ Next owner input: personally sign in to a second existing Pluto test account wit
 Second-customer follow-up: owner completed onboarding successfully. Live Notes started at zero, excluding the first customer's synthetic note. A separate second-customer synthetic note survived full refresh and repository reload. Reverse visibility verification now requires the owner to sign back into the first account; direct-record/export and recovery/MFA acceptance remain open.
 
 Reverse live visibility completed: after owner returned to the first account, its original synthetic note remained intact and the second customer's note was absent, including after repository Reload. Normal note-list visibility is verified in both directions. Remaining identity acceptance includes email recovery/MFA and session expiry; direct-record/export acceptance remains separate.
+
+## Home continuation boundary
+
+Owner paused local work to continue at home. Initial recovery email arrived but opened sign-in after switching from Codex browser to Chrome/Edge. Exact recovery callback allowlist was owner-confirmed; subsequent same-browser retry was blocked by reported missing email delivery. Built-in SMTP rate limiting is suspected, not confirmed: Auth logs/SMTP settings have not been inspected. Password reset and live MFA are not accepted. See the latest opening section of PLUTO_HANDOFF.md for exact resume steps, private runtime password synchronization, verification results and remaining gates.

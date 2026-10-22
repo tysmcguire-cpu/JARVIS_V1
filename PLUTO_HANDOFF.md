@@ -1,3 +1,42 @@
+# Latest home-computer handoff — October 22, 2026
+
+This section supersedes historical status below. Work only on `feature/pluto-saas-v1`; never merge into personal JARVIS/master without explicit owner authorization. Owner is stopping work here and continuing at home.
+
+## Completed and pushed
+
+- Recoverable onboarding, Settings deep links/history, profile transaction regressions, MFA/reset destination handling, safe password/session-revocation failures and explicit paid model/rate requirements are implemented. Vitest was patched to 4.1.12.
+- Fixed signed-in Assistant routing to the commercial intelligence workspace. Paid features remain disabled.
+- Fixed actionable invitation-denial feedback. This computer's initially empty local beta invitation list blocked the second customer; owner supplied its email, added the Supabase Auth user and then successfully completed onboarding. Invitation exists only in ignored local configuration; do not open public signup.
+- Live two-account Notes acceptance: first account created/edited `Pluto acceptance check — synthetic (verified)` (tag synthetic-acceptance); second created `Pluto second-customer acceptance — synthetic` (tag synthetic-isolation). Both persisted through full refresh and repository Reload. Each account saw only its own note, including the first account after signing back in. Leave both synthetic records for remaining acceptance. This proves normal note-list separation, not every direct-record/write/export boundary.
+- Final broad verification: 336 unit/database tests across 64 files, eight focused browser tests, ESLint, TypeScript/route generation, production build, three production boundary tests, and a scan of 59 client assets against the configured private DATABASE_URL passed. Subsequent invitation-message change passed 12 focused enrollment/PostgreSQL tests, ESLint and TypeScript. Latest evidence-only commits did not require another build. One unpatched development-only braces advisory remains; production audit previously had zero advisories.
+
+## Exact stopping point: password recovery email delivery
+
+An initial recovery email arrived, but its link opened the Welcome back/sign-in page rather than Choose a new password. Owner confirmed the request began in Codex's browser and the email link opened in Chrome/Edge. PKCE browser mismatch is a likely explanation, not a verified resolution. Owner also confirmed this exact Redirect URL is configured in the separate Pluto Supabase project:
+
+`http://127.0.0.1:3002/auth/callback?next=reset-password`
+
+We instructed a fresh request and link opening in the same Chrome/Edge browser. Owner then reported that new recovery emails were no longer arriving. Suspected Supabase built-in email rate limit (documented two emails/hour/project and default 60 seconds between recovery requests for a user), but NO Auth log error or SMTP configuration was inspected to confirm the cause. The generic /forgot-password?status=sent response intentionally does not reveal delivery/account existence. Do not record recovery as passed. No password update, global sign-out acceptance or live MFA enrollment/recovery has been verified in this session.
+
+Next: inspect the separate project's Auth logs for the latest /recover result without copying tokens, determine rate-limit versus delivery/configuration failure, and check built-in versus custom SMTP. Avoid repeated email requests. When allowed, request ONE fresh recovery link and open it in the SAME browser and origin; owner handles recovery link/password/OTP privately. Verify reset form, password update, old-session revocation, new-password login and subsequent MFA acceptance. Do not reuse the already consumed link. Reliable commercial email requires separately approved custom SMTP configuration; no purchase/provider activation is authorized by this handoff.
+
+References: https://supabase.com/docs/guides/auth/rate-limits and https://supabase.com/docs/guides/auth/sessions/pkce-flow
+
+## Resume safely at home
+
+1. Inspect/preserve home Pluto uncommitted and unpushed work before fetching/pulling. Reconcile divergent Pluto commits; never discard changes or pull this branch into personal master. Read AGENTS.md, the preserved full JARVIS_SPEC.md, IMPLEMENTATION_PLAN.md, this latest handoff, PLUTO_READINESS.md and PLUTO_TEST_RESULTS.md.
+2. Install locked dependencies and generate Prisma client if needed. No new migration is required for this session's changes; do not rerun provisioning or migrations to repair login.
+3. Update ONLY the home Pluto ignored DATABASE_URL with the owner's newly rotated pluto_runtime password from the owner's secure copy, URL-encoded correctly. Git does not transfer it. Do not ask for passwords in chat or use admin/service-role credentials in the web runtime. Keep connection_limit=1 where suitable; the shared runtime role has a three-connection cap. Stop unused Pluto instances if they occupy the role's capacity; do not terminate unrelated work.
+4. Configure the separate project qnfyrnbrrehgdqursitg, its public Auth URL/key and exact PLUTO_SITE_URL matching the chosen home origin. This computer used http://127.0.0.1:3002; localhost is a different origin. Match Auth callback allowlists. Restore only the explicitly approved test-account email(s) in the local PLUTO_BETA_EMAILS as needed. Existing active customers remain usable without invitations; new workspace enrollment requires one. Keep secrets and private email lists outside Git.
+5. Keep registration, paid AI/Voice, checkout, workers and connectors disabled. No deployment or public launch approval has been given. Personal JARVIS, its database and configuration remain separate.
+6. Continue the recovery investigation above, then live MFA/session-expiry, direct-record/write/export isolation, separate admin acceptance, hosted load/restore, remaining security/tooling/legal/brand/expense gates. Local readiness is not public launch readiness.
+
+Local screenshots were saved outside Git on this computer; home Codex should rely on the committed exact test records and recreate only necessary non-destructive evidence. All application/source/docs work is pushed; ignored credentials intentionally remain local.
+
+---
+
+Historical handoff follows; statements about missing environment or pending sign-in describe earlier stages.
+
 # Pluto handoff — October 22, 2026
 
 Branch: `feature/pluto-saas-v1`. Personal JARVIS/master must never receive these changes without explicit owner authorization.
