@@ -52,3 +52,6 @@ Rollback code to a compatible commercial commit; additive migrations are not aut
 Sources: https://supabase.com/docs/guides/platform/backups ; https://supabase.com/pricing ; https://docs.stripe.com/webhooks
 
 Closed-beta Auth caveat: the application denies uninvited profile creation even if Auth signup occurs outside its form. Configure provider-side signup restrictions/invitation controls and Auth rate limits too; an application allowlist alone does not stop direct requests to the public Auth API or their email/MAU consumption. Validate this with the separate Supabase project.
+
+## Current setup progress — separate project identified
+The commercial target is now pinned to qnfyrnbrrehgdqursitg in pluto.setup.json. Offline checks verified the supplied Auth URL/project reference/publishable-key format. Database URLs are not yet present. See PLUTO_SETUP_STATUS.md for the exact next action and prepared automation. Do not enable migration/provisioning approvals merely because credentials have been saved. The Render file is prepared only and must not be imported without spending/deployment approval.

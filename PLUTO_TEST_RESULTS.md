@@ -43,3 +43,12 @@ All 290 unit/database tests passed (54 files), including WAV sample-duration val
 - Personal checkout remains clean master at 7dd529712d5e1745358898a3106a693c929f996a. No real commercial migration, provider request, Stripe operation, bot mutation, public deployment or purchase performed.
 
 Unexecuted acceptance: real Supabase registration/email/recovery/RLS/MFA, Stripe test flows, commercial Telegram, live provider accuracy/cost, real microphone/local speech, hosted concurrency/physical capacity and disaster recovery. Independent security and legal/brand reviews remain required.
+
+## Separate-project setup continuation
+Verified the supplied ZIP-folder environment offline: reference/Auth URL match qnfyrnbrrehgdqursitg and publishable-key format is valid. No DATABASE_URL/DIRECT_URL or enabled consequential flags are configured. No live connection or dashboard configuration verification has occurred. Its .env was not edited or copied.
+
+Added offline setup preflight, default-dry-run restricted role plans/provisioner, a default-off read-only inspector, exact installation pin and normalized hashes for all 26 historical migrations. Strengthened the migration wrapper to refuse an unmarked populated destination before any DDL. Added a separate feature-branch Render template with auto-deploy OFF and providers/workers/signup OFF; it is not imported or provisioned.
+
+Full local suite: 308 tests pass in 58 files, including eight new setup/catalog/role SQL checks. The initial run found three admin metric fixture failures after UTC midnight while local date remained the previous day; the fixture now explicitly uses UTC like the production wrappers, and the full rerun passes. Focused setup checks passed again after connection-guard refinements. TypeScript, ESLint, Prisma generation and production build pass. The three production boundary tests pass. Production audit reports no known vulnerabilities. Blueprint YAML parses locally; no Render API/cloud validation performed. No new UI code was changed, so the earlier browser matrix was not rerun.
+
+No remote migrations, role creation, cloud infrastructure changes, purchases, deployment, provider activation or personal-resource access occurred. Credentials and explicit consequential-action authorization remain required. See PLUTO_SETUP_STATUS.md and PLUTO_MIGRATION_REVIEW.md.

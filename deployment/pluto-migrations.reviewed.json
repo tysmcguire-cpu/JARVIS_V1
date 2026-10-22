@@ -1,0 +1,132 @@
+[
+  {
+    "name": "20261015000000_foundation",
+    "sha256": "d5f8efbdcd7b6bcd77a5fbad400cb636be066bef366ea7c956db8f0478bfa66b",
+    "bytes": 3456
+  },
+  {
+    "name": "20261016000000_core_tracking",
+    "sha256": "11bdb29322f651b2e6a6a84dc6531f4440f94e1e9a4cee39111cba508806ea26",
+    "bytes": 41042
+  },
+  {
+    "name": "20261016010000_telegram",
+    "sha256": "e50efe35c8ac00be3ff1da615793531cc2983ceb765b35d02941db0e4a99ca6b",
+    "bytes": 3269
+  },
+  {
+    "name": "20261016020000_integrations",
+    "sha256": "8cd7570a9bf81f5739555fed81940578865c2b4d3585392cafa5b005b678ccde",
+    "bytes": 9140
+  },
+  {
+    "name": "20261016030000_assistant",
+    "sha256": "5e682f065292ade16b609281943c94137b7695f5125abf403356a80369654e86",
+    "bytes": 1987
+  },
+  {
+    "name": "20261016040000_notifications",
+    "sha256": "7afcd0800a9923ac19c615409fcdbb603505b1e6af8de35b3f6216711735e70c",
+    "bytes": 3677
+  },
+  {
+    "name": "20261016050000_data_controls",
+    "sha256": "bfb732b8f0f421e5c8dae933dcb0843841c15983c9efcb553bce865bc56615cc",
+    "bytes": 367
+  },
+  {
+    "name": "20261016060000_security",
+    "sha256": "34e4364421a36ba2dfac016d3f43a89491cf1dd6c7a6d677f2d25d407b3e0fbf",
+    "bytes": 384
+  },
+  {
+    "name": "20261017000000_notification_frequency",
+    "sha256": "780c3383344c0cad6ae5e7a94c45e1e0bf29f3c35727879cc56e41ae797d9113",
+    "bytes": 527
+  },
+  {
+    "name": "20261017010000_apple_calendar",
+    "sha256": "e4dcdf4e190ff784d6cbede511853fc920379ae7c560e211c83a219e6355261d",
+    "bytes": 248
+  },
+  {
+    "name": "20261017020000_bank_history",
+    "sha256": "b6e32af172bb6fd87f4367e07397923f42a9920ef2ec1204ce9e360594dc1818",
+    "bytes": 675
+  },
+  {
+    "name": "20261019000000_appearance",
+    "sha256": "a05e3cb220705a232d4210bf437d6c1b374f7cab8619a21b4afd16f9a8ca1141",
+    "bytes": 529
+  },
+  {
+    "name": "20261020000000_background",
+    "sha256": "3ed8f6301356dc72c96bdb567e86b2fe72062d04fb79f68744b5d7af84efe730",
+    "bytes": 202
+  },
+  {
+    "name": "20261020010000_tertiary_color",
+    "sha256": "817ed8dae9175f865b0aef3d07d97d0eee9456717bc8f76cc2591425c0e048b0",
+    "bytes": 206
+  },
+  {
+    "name": "20261020020000_wordmark_styles",
+    "sha256": "9437ced2b13db4c93531ae1d536e0788b2fd92d1812341cb32b7621e03e5756b",
+    "bytes": 301
+  },
+  {
+    "name": "20261020030000_clock_format",
+    "sha256": "0e362befd98e29349b9a8c2ac219542293319a028674c48f4dff8c12cbaaa2ae",
+    "bytes": 191
+  },
+  {
+    "name": "20261021000000_productivity",
+    "sha256": "eb51176a5faf646df991bc760faddd6cbf82cb0a63d6af32de416bd8404bdcc9",
+    "bytes": 3312
+  },
+  {
+    "name": "20261021010000_note_capacity",
+    "sha256": "cf8c601984de7fc8d05b0b17b7992529bc3cc139930b667e1c6f456731a9aff0",
+    "bytes": 61
+  },
+  {
+    "name": "20261022000000_pluto_foundation",
+    "sha256": "e8c2ef600d08abbab75bd70ad1c4761dd4a3ac8ce7b0fba69ff7d1eb9194debe",
+    "bytes": 2696
+  },
+  {
+    "name": "20261022010000_pluto_lifecycle",
+    "sha256": "3b9abb298eef9942efe9dc51a344e0005314bc8f3bf6297441da826daab0fd82",
+    "bytes": 3329
+  },
+  {
+    "name": "20261022020000_pluto_billing",
+    "sha256": "5610af42a37693a7769b6d7e70d2f0581c85f02dba57afa27914d7c52bea4663",
+    "bytes": 12809
+  },
+  {
+    "name": "20261022030000_pluto_intelligence",
+    "sha256": "f7ec22fba05e2751618efd9db686920fe809fc914c4bfd907dd01e58707563ba",
+    "bytes": 3616
+  },
+  {
+    "name": "20261022040000_pluto_workers",
+    "sha256": "f2adbc9c61fe3548f37ab871b4e331333db91a718c88d5d42d380329248b39bd",
+    "bytes": 9569
+  },
+  {
+    "name": "20261022050000_pluto_admin",
+    "sha256": "6c024a94f9f702e404991e552042b5f97274af883c7996b8fd06b5fcc33e8819",
+    "bytes": 15206
+  },
+  {
+    "name": "20261022060000_pluto_experience",
+    "sha256": "27b9e67a87b75dab2eed5820dcc85a87363b7190b613c5cdbb4a73267f0d7595",
+    "bytes": 2227
+  },
+  {
+    "name": "20261022070000_pluto_hardening",
+    "sha256": "77d1c46fb26f3d2b6dfe3e0219171d90babaa0c98c55613abbaf5fd85c4d7cae",
+    "bytes": 9386
+  }
+]

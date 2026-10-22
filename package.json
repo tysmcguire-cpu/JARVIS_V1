@@ -34,7 +34,10 @@
     "db:verify-release": "tsx scripts/verify-release.ts",
     "check:client-secrets": "tsx scripts/check-client-secrets.ts",
     "local": "next start --hostname 127.0.0.1",
-    "hosted:start": "node --import tsx scripts/hosted-start.ts"
+    "hosted:start": "node --import tsx scripts/hosted-start.ts",
+    "setup:preflight": "tsx scripts/pluto-preflight.ts",
+    "setup:roles": "tsx scripts/pluto-provision-roles.ts",
+    "setup:inspect": "tsx scripts/pluto-inspect-database.ts"
   },
   "engines": {
     "node": ">=22.12"

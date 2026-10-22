@@ -1,0 +1,52 @@
+# PREPARED ONLY. Importing this Blueprint provisions a PAID new service.
+# Requires explicit owner approval. Never attach it to personal JARVIS.
+services:
+  - type: web
+    name: pluto-closed-beta-qnfyrnbrrehgdqursitg
+    runtime: node
+    repo: https://github.com/tysmcguire-cpu/JARVIS_V1
+    branch: feature/pluto-saas-v1
+    plan: starter
+    numInstances: 1
+    autoDeployTrigger: 'off'
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm db:generate && corepack pnpm build
+    startCommand: corepack pnpm hosted:start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: PLUTO_SUPABASE_PROJECT_REF
+        value: qnfyrnbrrehgdqursitg
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: https://qnfyrnbrrehgdqursitg.supabase.co
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: PLUTO_SITE_URL
+        sync: false
+      - key: PLUTO_STAGE
+        value: closed_beta
+      - key: PLUTO_PUBLIC_REGISTRATION
+        value: 'false'
+      - key: PLUTO_CHECKOUT_ENABLED
+        value: 'false'
+      - key: PLUTO_DEMO_MODE
+        value: 'false'
+      - key: PLUTO_WORKERS_ENABLED
+        value: 'false'
+      - key: PLUTO_AI_CHAT_ENABLED
+        value: 'false'
+      - key: PLUTO_WEEKLY_REPORTS_ENABLED
+        value: 'false'
+      - key: PLUTO_RESEARCH_ENABLED
+        value: 'false'
+      - key: PLUTO_VOICE_ENABLED
+        value: 'false'
+      - key: PLUTO_NEW_INTEGRATIONS_ENABLED
+        value: 'false'
+      - key: TELEGRAM_ENABLED
+        value: 'false'
+# No databases, workers, disks, previews, DIRECT_URL or provider secrets.
+# Disable Blueprint Auto Sync separately when creating it; autoDeployTrigger
+# governs code deploys and does not disable Blueprint configuration syncing.
