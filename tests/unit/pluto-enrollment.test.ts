@@ -23,3 +23,8 @@ it('returns actionable validation feedback before attempting any database write'
 it('preserves authentication redirects instead of turning expired sessions into retry messages',async()=>{
  state.identity.mockRejectedValueOnce(Error('redirect:/login?status=unauthorized'));await expect(submitOnboarding({message:''},form())).rejects.toThrow('redirect:/login');expect(state.write).not.toHaveBeenCalled();
 });
+
+it('explains an invitation rejection without suggesting that retry alone will resolve it',async()=>{
+ const result=await submitOnboarding({message:''},form());expect(result.message).toContain('invitation-only');expect(result.message).toContain('email address you used to sign in');expect(result.message).toContain('Your choices are still here');expect(state.write).not.toHaveBeenCalled();
+ vi.stubEnv('PLUTO_BETA_EMAILS','synthetic@example.invalid');await expect(submitOnboarding(result,form())).rejects.toThrow('redirect:/welcome');
+});
