@@ -46,3 +46,7 @@ Signup, checkout, workers, Telegram, integrations and paid AI/voice/research rem
 
 ## Current onboarding blocker — migration 28 prepared only
 The first account reached onboarding, but Prisma AuditLog INSERT RETURNING failed with RLS 42501 because the SELECT policy did not cover pluto_app. Prepared migration 28 adds only active-self audit SELECT visibility; no browser/other-customer access is added. Not applied; explicit authorization required. See PLUTO_ONBOARDING_FIX.md for reproduction, scope and tests.
+
+
+## Approved onboarding policy applied
+The owner explicitly approved migration 28. The preflight confirmed only 20261022090000_pluto_audit_self_read was pending, then applied it only to qnfyrnbrrehgdqursitg. Read-only post-checks confirm 28 completed migrations, active-self-only AuditLog SELECT for pluto_app, no browser audit reads, no audit UPDATE/DELETE privilege, no elevated runtime attributes, and all 59 customer-owned tables still FORCE RLS. Supabase-managed functions were untouched. An additional runtime-login probe hit the capped development connections; final role/policy attributes were checked using a single read-only admin connection, without changing limits or role memberships. No customer form was resubmitted automatically. The live user should refresh onboarding and retry Create my workspace. No code changes required another local test run; the prepared migration was already covered by the 313 passing tests. No password, personal resource, deployment or provider activation changed.

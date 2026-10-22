@@ -1,6 +1,6 @@
-# Pluto onboarding fix — permission policy awaiting approval
+# Pluto onboarding fix — applied and verified
 
-Project: qnfyrnbrrehgdqursitg. Existing 27 migrations are applied. Proposed migration 28 is prepared locally only.
+Project: qnfyrnbrrehgdqursitg. All 28 migrations are now applied. Migration 28 received explicit owner approval.
 
 ## Observed error
 
@@ -24,4 +24,4 @@ A local PostgreSQL regression reproduces the original INSERT RETURNING denial wi
 
 ## Next action
 
-Approve this one policy migration on qnfyrnbrrehgdqursitg. It is not yet executed because the owner's cloud/database changes require explicit approval. After applying it, retry the local onboarding form. No personal JARVIS change or commercial deployment is included.
+Migration 28 is applied on qnfyrnbrrehgdqursitg. Live read-only metadata confirms the policy applies only to pluto_app and requires active self identity, browser reads remain denied and no audit UPDATE/DELETE privilege is present. Refresh the local onboarding form and click Create my workspace again. No personal JARVIS change or commercial deployment occurred.
