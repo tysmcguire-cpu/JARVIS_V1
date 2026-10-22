@@ -1,44 +1,45 @@
-# Pluto setup — prepared locally, awaiting database connection
+# Pluto setup status — database installed, permission cleanup awaiting approval
 
-Target: **qnfyrnbrrehgdqursitg**. Branch: **feature/pluto-saas-v1**. No cloud changes, migrations, role creation, deployment, purchases or provider activation have been performed.
+Commercial project: **qnfyrnbrrehgdqursitg**. Branch: **feature/pluto-saas-v1**.
 
-## Verified locally
+## Completed with owner approval
 
-The supplied ZIP folder's `.env` exists. Its project reference and Auth URL match the target; its publishable-key format is valid. No personal owner variable or enabled consequential feature/approval flags were found. Neither DATABASE_URL nor DIRECT_URL is configured. These are offline checks, not authentication or connectivity tests. Existing Auth dashboard settings have not been independently inspected.
+- All original **26 migrations** applied successfully; live migration history shows 26 completed entries.
+- Installation marker matches the separate Pluto project.
+- Created exactly one new LOGIN role: **pluto_runtime**, inheriting only **pluto_app**. No auxiliary LOGIN roles were created and no existing passwords were changed.
+- Runtime login has no superuser, role/database creation, replication or RLS-bypass attributes. It cannot create public-schema objects, change subscriptions/installation metadata or read administrator membership. A direct attempted admin-table SELECT was denied.
+- Live metadata confirms **59 customer-owned tables** have ENABLE + FORCE RLS; browser roles have no application-table privileges. Customer queries without an identity return no rows. Two real Auth customers and write isolation still require acceptance; empty-table reads alone do not prove that acceptance.
+- Connection credentials are saved privately outside Git at `C:\Users\tysmc\Documents\Codex\2026-10-15\pu\work\pluto-private\.env.runtime`. Windows ACLs restrict this folder to the current user, SYSTEM and Administrators.
+- Maintained local Pluto checkout has a Git-ignored, similarly ACL-restricted `.env.local` using the restricted DATABASE_URL and public Auth configuration. It excludes DIRECT_URL and approval flags. Working checkout: `C:\Users\tysmc\Documents\Codex\2026-10-15\pu\PLUTO_V1`.
+- Original ZIP-folder `.env` remains the migration-only credential source; do not upload it to Render or commit it. Its existing values have not been overwritten. No personal JARVIS resources were changed.
 
-The ZIP folder has no `.git`. Development stays in the maintained PLUTO_V1 branch checkout. No credentials were copied from the ZIP, printed or committed. Its `.env` was not edited.
+## Local compatibility fixes verified
 
-## Prepared automation
+The first migration-launch attempt failed locally before connecting because top-level await was incompatible with the actual Node/tsx module format. The launcher now uses an async entrypoint; an execution regression test verifies fail-closed behavior before network access when unapproved.
 
-- `corepack pnpm setup:preflight --env=PATH`: offline project/key/URL/flag checks and reviewed migration inventory verification; never connects.
-- `corepack pnpm setup:inspect --env=PATH`: default offline inspection plan. After the URI is saved, `--connect` authenticates using a READ ONLY transaction and checks Auth prerequisites/destination safety; never migrates or provisions.
-- `corepack pnpm setup:roles --env=PATH`: default offline SQL plan for one app login; no connection. Optional `--role=worker|billing|erasure|admin|adminApi` plans are separate.
-- Role execution requires **both** `--apply` and `PLUTO_ALLOW_ROLE_PROVISIONING=approved`, a reviewed project/installation and private `--credentials-file=PATH` outside Git. It generates a new random password, refuses an existing login instead of changing credentials, grants one fixed group, checks inherited privilege/schema-CREATE hazards, and writes the connection URL privately. Do not run it before explicit approval.
-- Migration execution still requires `PLUTO_ALLOW_MIGRATIONS=approved` and DIRECT_URL. It now checks the exact project pin and all 26 reviewed migration hashes, then inspects the destination **before any DDL**. Unmarked databases with public tables/views or existing Pluto roles are refused; existing installations must match. A partially applied/unmarked migration needs recovery review, not blind retry. Admin URL is supplied only to the migration child, never web requests. Raw migration output is suppressed.
-- `deployment/render.pluto.yaml` describes only one new Pluto web service on this branch, with auto-deploy OFF, no database/worker creation, no admin URL, and all consequential capabilities OFF. Importing it would create a paid resource and is **not authorized or performed**. Disable Blueprint Auto Sync separately when approving creation. `/login` is a web liveness check, not database health acceptance.
+The first role attempt rolled back before creating a login: Prisma could not deserialize PostgreSQL void results. Installation/request/activity/maintenance calls now cast results to text. Live read-only validation confirms the cast works; local regression checks the production helper's actual PostgreSQL result type. A transient initial connection timeout resolved on a subsequent read-only connection check; no credentials were rotated.
 
-Use Node 24 and pinned **corepack pnpm 11.25.0**. Existing bare pnpm on the agent host resolves to 11.19.0, so final setup checks use corepack explicitly. Prisma remains 6.19.3.
+Local unit/database tests and production build checks are recorded in PLUTO_TEST_RESULTS.md. Client asset scan verified the actual restricted DATABASE_URL was absent from all 59 assets; no credential values were printed.
 
-## Exact next owner action
+## Prepared but NOT applied: migration 27
 
-1. Open the **Pluto project only**: https://supabase.com/dashboard/project/qnfyrnbrrehgdqursitg
-2. Click **Connect**, select **Session pooler** (port **5432**, not Transaction pooler 6543). This avoids buying an IPv4 add-on. Copy that project's administrative PostgreSQL URI; use its exact provided pooler hostname and username.
-3. Replace the password placeholder privately with this new project's database password, percent-encoding reserved password characters. Add `sslmode=require` using `?` or `&` as appropriate.
-4. Save it locally as `DIRECT_URL` in your Pluto `.env`, or in a separate private migration environment file outside Git. Keep all existing values unchanged and all approval flags false. Do not paste the URI/password into chat. Avoid cloud-synchronizing administrative secrets; review OneDrive backup/sync and local file permissions when choosing a private storage location.
-5. Reply **“DIRECT_URL saved”** (and the file path only if you chose another file). I can then validate the URL shape privately and prepare the exact read-only connection check. **Saving a credential is not authorization to migrate.** I will request explicit authorization before migration/role creation or any consequential cloud change.
+Live Supabase metadata revealed explicit default browser EXECUTE grants on six Pluto **trigger** functions. PostgreSQL trigger functions cannot be invoked as ordinary functions; no browser table access or customer-data exposure was found in these checks. Nevertheless these unnecessary grants should be removed to match the intended boundary.
 
-Do not set DATABASE_URL to the postgres administrator URI. The separate `pluto_runtime` connection is generated only after approved migrations and role provisioning. Initial tracking needs only this app login; all five auxiliary logins and paid services can wait.
+Prepared permission-only migration:
+`20261022080000_pluto_trigger_acl`
 
-## Approval sequence after credentials
+It revokes PUBLIC/anon/authenticated execution on exactly:
+- pluto_erase_worker_data()
+- pluto_enforce_service_limits()
+- pluto_product_customer()
+- pluto_admin_separate()
+- pluto_erase_voice()
+- pluto_storage_budget()
 
-First authenticate/read-only inspect the pinned destination and confirm schema/roles are empty or already correctly marked. Then obtain explicit approval for the reviewed 26-migration chain on this project only. After successful schema installation, obtain approval for the app login only and write its password privately. Test two real customers, verified-email/recovery and RLS before approving a separate Render deployment. Keep signup, checkout, workers and providers off until their individual acceptance steps pass.
+It does not change function bodies, records, passwords, table grants or RLS policies. It leaves the provider-owned rls_auto_enable() function untouched. The reviewed local manifest now contains 27 migrations; the database still has only the original 26. Tests now simulate Supabase's explicit default function grants.
 
-A private credential file can remain after a failed/uncertain provisioning commit; keep it for reconciliation. Never delete the only copy of a potentially committed password or automatically rotate an existing login. Unix file mode is requested by tooling; on Windows, verify inherited ACLs and avoid shared/cloud folders. No private keys are included in deliverables.
+**Exact next owner action: approve this permission-only migration on qnfyrnbrrehgdqursitg.** It is outside the original 26-migration approval, so it has not been executed. After that, the next setup input will be the email address for a first allowlisted private test account; no password should be sent in chat.
 
-## Migration review and remaining acceptance
+## Still disabled / not authorized
 
-`deployment/pluto-migrations.reviewed.json` records normalized SHA-256 and size for every migration in execution order. Historical migrations are unchanged. Local SQL tests apply all 26 to embedded PostgreSQL, then verify every customer-owned table forces RLS, browser roles have no application-table privileges, all public definer functions fix search_path and deny browser execution, and the six planned logins have bounded connections/no ownership/no elevated attributes. Existing cross-customer and lifecycle tests continue to apply.
-
-This does not prove hosted Supabase grants/permissions, network reachability, database emptiness, SMTP/email delivery, MFA, live Stripe/bot/provider behavior or hosted restore/load. Those remain external acceptance. No paid plan is required merely to supply a connection URI; do not upgrade or buy IPv4/other services for this step.
-
-Primary references: https://supabase.com/docs/guides/database/connecting-to-postgres ; https://supabase.com/docs/guides/database/postgres/roles ; https://render.com/docs/blueprint-spec ; https://render.com/docs/infrastructure-as-code
+Signup, checkout, workers, Telegram, integrations and paid AI/voice/research remain disabled. No deployment, purchase, personal-JARVIS change, real Auth-user creation or provider activation has occurred. Email/recovery/MFA, two-customer acceptance and hosted recovery/load remain pending.

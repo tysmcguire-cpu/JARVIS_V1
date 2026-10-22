@@ -1,6 +1,6 @@
 # Pluto migration review and execution boundary
 
-Target project: qnfyrnbrrehgdqursitg. All 26 migrations are reviewed as one ordered fresh-install chain; NONE have been run remotely. Historical migration SQL is unchanged. The normalized full SHA-256 manifest is deployment/pluto-migrations.reviewed.json; any changed migration causes the execution wrapper to refuse until reviewed again.
+Target project: qnfyrnbrrehgdqursitg. The original 26 migrations were applied with owner approval to this project. Migration 27, a permission-only trigger ACL cleanup, is reviewed locally but NOT approved/applied. Historical migration SQL is unchanged. The normalized full SHA-256 manifest is deployment/pluto-migrations.reviewed.json; any changed migration causes the execution wrapper to refuse until reviewed again.
 
 Historical foundation/tracking migrations create the User/Auth foreign key, exact financial records, composite ownership foreign keys, per-user policies and FORCE RLS. Telegram/integrations/assistant/notifications and later appearance/productivity changes are retained for schema compatibility. Retired bank columns may exist; bank activation remains disabled. Commercial foundation removes the singleton constraint/index/column only on an empty separate installation. Lifecycle adds active-customer restrictions and fixed self-erasure. Billing adds isolated service privileges, catalog, canonical subscription/refund ledgers and atomic usage/spend reservations. Intelligence creates customer-owned history/reports/preferences. Workers introduce narrow routing/lease/erasure functions. Admin adds separate MFA membership and aggregate-only functions. Experience adds owned voice/profile preferences. Hardening adds fixed storage/request accounting, retention and installation checks.
 
@@ -38,3 +38,6 @@ Not proven locally: actual Supabase admin/group privileges, provider-default gra
 | 20261022050000_pluto_admin | 15206 | 6c024a94f9f702e4 |
 | 20261022060000_pluto_experience | 2227 | 27b9e67a87b75dab |
 | 20261022070000_pluto_hardening | 9386 | 77d1c46fb26f3d2b |
+
+## Pending migration 27: Supabase explicit default grants
+20261022080000_pluto_trigger_acl revokes PUBLIC/anon/authenticated EXECUTE on six fixed Pluto trigger functions only. It leaves provider functions, data, policies and credentials unchanged. Live metadata established the extra grants; local SQL tests now simulate provider-default explicit grants. This migration needs separate owner approval before execution.

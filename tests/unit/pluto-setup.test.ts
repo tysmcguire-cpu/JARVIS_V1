@@ -21,4 +21,4 @@ it('plans fixed restricted logins only, with one group and bounded connections, 
  expect(roleSql('app',"synthetic'quote")).toContain("synthetic''quote");
  expect(()=>roleSql('unknown' as 'app')).toThrow('Unknown');
 });
-it('has a stable complete reviewed inventory without mutating historical migrations',()=>{expect(migrationInventory()).toHaveLength(26);expect(()=>assertReviewedMigrations()).not.toThrow();expect(migrationInventory().every(m=>/^[a-f0-9]{64}$/.test(m.sha256))).toBe(true)});
+it('has a stable complete reviewed inventory without mutating historical migrations',()=>{expect(migrationInventory()).toHaveLength(27);expect(()=>assertReviewedMigrations()).not.toThrow();expect(migrationInventory().every(m=>/^[a-f0-9]{64}$/.test(m.sha256))).toBe(true)});

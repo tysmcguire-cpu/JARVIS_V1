@@ -14,7 +14,7 @@ async function main(){
  for(let folder=dirname(path);;folder=dirname(folder)){if(existsSync(join(folder,'.git')))throw Error('Credential output must be outside every Git checkout.');if(dirname(folder)===folder)break}
  const role=runtimeRoles[key],password=randomBytes(32).toString('base64url'),db=new PrismaClient({datasourceUrl:env.DIRECT_URL});
  try{await db.$transaction(async tx=>{
-  await tx.$queryRawUnsafe('SELECT public.pluto_assert_installation($1)',setup.projectRef);
+  await tx.$queryRawUnsafe('SELECT public.pluto_assert_installation($1)::text',setup.projectRef);
   const groups=await tx.$queryRawUnsafe<{rolsuper:boolean;rolbypassrls:boolean;rolcanlogin:boolean;rolcreaterole:boolean;rolcreatedb:boolean;rolreplication:boolean}[]>('SELECT rolsuper,rolbypassrls,rolcanlogin,rolcreaterole,rolcreatedb,rolreplication FROM pg_roles WHERE rolname=$1',role.group);
   if(groups.length!==1||Object.values(groups[0]).some(Boolean))throw Error('Restricted NOLOGIN group is missing or unsafe.');
   const parents=await tx.$queryRawUnsafe<{rolname:string}[]>('WITH RECURSIVE inherited(oid) AS(SELECT roleid FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=$1) UNION SELECT m.roleid FROM pg_auth_members m JOIN inherited i ON m.member=i.oid)SELECT r.rolname FROM inherited i JOIN pg_roles r ON r.oid=i.oid',role.group);

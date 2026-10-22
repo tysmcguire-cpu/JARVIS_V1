@@ -1,6 +1,6 @@
 # Pluto — what you need to provide
 
-The commercial build is isolated on feature/pluto-saas-v1. Personal JARVIS remains unchanged. Local checks do not establish public launch readiness. No commercial deployment, real migration, purchase or charged provider request has been made. Enter secrets only in the separate project/host environment, never chat or Git.
+The commercial build is isolated on feature/pluto-saas-v1. Personal JARVIS remains unchanged. Local checks do not establish public launch readiness. The original 26 commercial migrations and new restricted app login are now installed with explicit approval. No commercial deployment, purchase or charged provider request has been made. Enter secrets only in the separate project/host environment, never chat or Git.
 
 ## Start here: closed beta
 1. Separate Supabase project qnfyrnbrrehgdqursitg has been created; its local Auth URL/reference/key format are verified offline. A separate Render service still needs approval. Never reuse the personal database/service. Budget roughly $7/month for a limited beta with available Supabase Free; a production starting budget is $32/month ($7 host +$25 Supabase Pro), before optional email/domain and usage costs. See PLUTO_COST_MODEL.md for assumptions.
@@ -28,3 +28,5 @@ Decisions still needed: annual pricing, legal/business jurisdiction and taxes, f
 If a GitHub token previously pasted into chat is still active, revoke it in GitHub and replace it locally. Do not reuse it for commercial services.
 ## Current setup progress — separate project identified
 The commercial target is now pinned to qnfyrnbrrehgdqursitg in pluto.setup.json. Offline checks verified the supplied Auth URL/project reference/publishable-key format. Database URLs are not yet present. See PLUTO_SETUP_STATUS.md for the exact next action and prepared automation. Do not enable migration/provisioning approvals merely because credentials have been saved. The Render file is prepared only and must not be imported without spending/deployment approval.
+## Approved database installation and pending ACL follow-up
+The owner approved the original 26 migrations and new restricted app login. Those migrations are applied and pluto_runtime is created/verified on qnfyrnbrrehgdqursitg only. The local runtime configuration excludes administrative credentials. Live metadata found explicit Supabase default EXECUTE grants on six Pluto trigger functions; a 27th permission-only migration is prepared locally but is NOT approved/applied. See PLUTO_SETUP_STATUS.md for exact scope and next action. No deployment, purchases, providers or personal-resource changes occurred.

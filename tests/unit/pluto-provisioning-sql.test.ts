@@ -5,6 +5,8 @@ import {roleSql,runtimeRoles,assertMigrationDestination,setup} from '../../scrip
 let db:PGlite;
 beforeAll(async()=>{
  db=new PGlite();await db.exec("CREATE SCHEMA auth;CREATE ROLE anon;CREATE ROLE authenticated;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;");
+ // Model Supabase's default explicit browser grants, rather than only PUBLIC.
+ await db.exec('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon,authenticated;');
  for(const dir of readdirSync('prisma/migrations').filter(n=>/^\d/.test(n)).sort())await db.exec(readFileSync(`prisma/migrations/${dir}/migration.sql`,'utf8'));
  for(const key of Object.keys(runtimeRoles) as (keyof typeof runtimeRoles)[])await db.exec(roleSql(key,'synthetic-test-only-password'));
 },30000);

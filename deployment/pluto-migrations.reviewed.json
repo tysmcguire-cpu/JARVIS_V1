@@ -128,5 +128,10 @@
     "name": "20261022070000_pluto_hardening",
     "sha256": "77d1c46fb26f3d2b6dfe3e0219171d90babaa0c98c55613abbaf5fd85c4d7cae",
     "bytes": 9386
+  },
+  {
+    "name": "20261022080000_pluto_trigger_acl",
+    "sha256": "3eb8a60d34b0c1e43c1c7cca99b5ba220383bd5c30ee697bd63b371fb070a6c0",
+    "bytes": 751
   }
 ]
