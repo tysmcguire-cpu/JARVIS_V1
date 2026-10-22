@@ -43,3 +43,6 @@ It does not change function bodies, records, passwords, table grants or RLS poli
 ## Still disabled / not authorized
 
 Signup, checkout, workers, Telegram, integrations and paid AI/voice/research remain disabled. No deployment, purchase, personal-JARVIS change, real Auth-user creation or provider activation has occurred. Email/recovery/MFA, two-customer acceptance and hosted recovery/load remain pending.
+
+## Current onboarding blocker — migration 28 prepared only
+The first account reached onboarding, but Prisma AuditLog INSERT RETURNING failed with RLS 42501 because the SELECT policy did not cover pluto_app. Prepared migration 28 adds only active-self audit SELECT visibility; no browser/other-customer access is added. Not applied; explicit authorization required. See PLUTO_ONBOARDING_FIX.md for reproduction, scope and tests.

@@ -133,5 +133,10 @@
     "name": "20261022080000_pluto_trigger_acl",
     "sha256": "3eb8a60d34b0c1e43c1c7cca99b5ba220383bd5c30ee697bd63b371fb070a6c0",
     "bytes": 751
+  },
+  {
+    "name": "20261022090000_pluto_audit_self_read",
+    "sha256": "3b4e6e2e7d2ff5ba3b9c52d496bef8ee26f13c1f44fb65fa8724113ef26470c3",
+    "bytes": 474
   }
 ]
