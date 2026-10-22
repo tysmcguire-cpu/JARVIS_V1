@@ -13,3 +13,9 @@ it('accepts the exact Render public origin behind an internal HTTP listener and 
  expect((await POST(proxied('https://synthetic.onrender.com'))).status).toBe(200);expect(mocks.read).toHaveBeenCalledWith('Assignment',{});mocks.read.mockClear();
  for(const origin of ['https://evil.invalid','http://synthetic.onrender.com','https://synthetic.onrender.com.evil.invalid','null',''])expect((await POST(proxied(origin))).status).toBe(403);expect(mocks.read).not.toHaveBeenCalled();vi.unstubAllEnvs();
 });
+
+it('requires the configured canonical origin even for localhost versus loopback aliases',async()=>{
+ vi.stubEnv('PLUTO_SITE_URL','http://127.0.0.1:3002');
+ const local=(origin:string)=>new Request('http://127.0.0.1:3002/api/tracking/read',{method:'POST',headers:{origin},body:'{"key":"Note","query":{}}'});
+ expect((await POST(local('http://localhost:3002'))).status).toBe(403);expect(mocks.read).not.toHaveBeenCalled();expect((await POST(local('http://127.0.0.1:3002'))).status).toBe(200);
+});

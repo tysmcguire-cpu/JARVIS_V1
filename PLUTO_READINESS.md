@@ -4,7 +4,7 @@ Branch: feature/pluto-saas-v1. Personal JARVIS/master, its database, host, bot a
 
 ## Current boundary
 
-Application work is being verified locally with synthetic data and mocked providers. This is readiness for live acceptance, not approval for public launch, paid provider activation or deployment. The owner reports successful onboarding/customer tests on the other computer; exact evidence is still to be reconciled.
+Application work has automated synthetic coverage and initial live acceptance against the separate commercial project. This is readiness for live acceptance, not approval for public launch, paid provider activation or deployment. The owner reports successful onboarding/customer tests on the other computer; exact evidence is still to be reconciled.
 
 ## Completed in this readiness pass
 
@@ -16,9 +16,9 @@ Application work is being verified locally with synthetic data and mocked provid
 - MFA preserves password-reset/admin/workspace destinations using a fixed internal allowlist. Password/provider failures and failed global session revocation no longer claim success; session sign-out has a separate retry.
 - Paid text/transcription/search requires explicit operator-supplied models/rates. Voice reserves a conservative bound calculated from configured rates. Existing consent, plan and global-budget gates remain in place.
 
-## First required input: this computer's private Pluto environment
+## Private Pluto environment — configured and verified locally
 
-Save a new ignored .env.local in the Pluto checkout using only the separate commercial project configuration. Do not send credentials or passwords in chat and do not copy personal JARVIS configuration.
+The owner saved an ignored .env.local in the Pluto checkout using the separate commercial project configuration. Restricted runtime authentication and installation identity were verified. Do not send credentials or passwords in chat and do not copy personal JARVIS configuration.
 
 Required for normal live acceptance:
 
@@ -45,3 +45,11 @@ Exact local results are recorded in PLUTO_TEST_RESULTS.md. Prepared Render confi
 ## Executed local acceptance
 
 334 unit/database tests (63 files), all 73 distinct browser scenarios across the broad run plus corrected targeted rerun, full ESLint, TypeScript, final production build and three production boundary checks pass. Client scan found none of four synthetic private sentinels in 59 assets. Production dependency audit has zero known advisories; one unpatched development-only braces issue remains for review. See PLUTO_TEST_RESULTS.md for exact limits, initial failures and rerun details. These results do not replace live Auth/customer/hosting/provider acceptance.
+
+## Live signed-in acceptance — October 22 follow-up
+
+The owner signed in to an existing test customer on this computer. All primary module pages loaded; profile settings loaded, subscription checkout remained disabled and integrations remained unconfigured. A synthetic note was created, edited, refreshed and reloaded successfully through the live customer-scoped repository. The note titled `Pluto acceptance check — synthetic (verified)` remains available for the next cross-customer isolation check. No real customer content was edited.
+
+Fixed the private Assistant route, which previously rendered the legacy local-only panel instead of Pluto's commercial intelligence workspace. Signed-in Chat, Reports, Research, Local analysis and Voice tabs now load; paid capabilities remain disabled. Added a private-route regression. A local origin mismatch caused correctly rejected tracking reloads: ignored PLUTO_SITE_URL now exactly matches http://127.0.0.1:3002. Origin enforcement is unchanged and has an additional exact-origin regression. Auth callback/reset allowlists still need review before live recovery testing.
+
+Next owner input: personally sign in to a second existing Pluto test account without sharing its password. Verify that the first customer's synthetic note is absent and that second-customer writes remain isolated. Live cross-customer/export/session-expiry, email/recovery/MFA, administration, hosting/recovery and launch gates above remain open. The runtime password must be updated manually on the home computer; Git does not transfer ignored credentials.

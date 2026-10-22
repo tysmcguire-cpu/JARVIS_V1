@@ -100,3 +100,9 @@ Final executed checks:
 - Minimum-size Settings/Appearance screenshot reviewed. Existing responsive/form checks cover phone/tablet fit. Master JARVIS_SPEC.md remains unchanged.
 
 No live Pluto database/Auth account, private owner record, paid model/search/speech, Stripe operation, Telegram/provider activation, migration, cloud deployment or personal JARVIS resource was changed. The owner-reported home-computer onboarding/customer acceptance remains separate from these executed local results. Local code is ready for the next live acceptance step; public launch is not claimed. PLUTO_READINESS.md specifies this computer's missing separate runtime environment and remaining hosted/provider/security/legal gates.
+
+## Live signed-in Assistant and persistence follow-up — October 22, 2026
+
+Executed with the owner-authenticated separate Pluto test customer: primary module navigation, profile/settings reads and synthetic note create/edit/full refresh/list reload. Synthetic note remains for a second-customer visibility check. Corrected only ignored local PLUTO_SITE_URL to the exact loopback browser origin after the existing CSRF check correctly rejected the localhost alias. Fixed private Assistant routing to commercial ModulePage; signed-in intelligence tabs and disabled Voice were visually verified. No paid call or deployment occurred.
+
+Final checks: 336/336 unit/database tests across 64 files, all eight focused desktop browser scenarios (intelligence, inline notes, setup navigation), ESLint, serialized TypeScript/Next route generation, production build, three production boundary scenarios and git diff --check passed. The final 59-client-asset scan checked the actual configured private DATABASE_URL and found no match; no secret value was printed. These checks do not establish live second-customer isolation or recovery/MFA delivery. Credentials remain ignored and must be updated independently at home.
