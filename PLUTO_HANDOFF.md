@@ -22,3 +22,11 @@ Coverage: failed audit rolls back profile/settings; retry succeeds; two independ
 Production source and schema are unchanged in this handoff; this change adds executable regression coverage and clarifies verification status. See PLUTO_TEST_RESULTS.md for checks executed on this computer.
 
 Executed checks on October 22: focused 12/12 tests, full 317/317 tests (61 files), full ESLint, TypeScript/Next route generation and git diff --check passed. Prisma client generation was needed after the fresh dependency install. Browser/production-build checks were not rerun for this test/documentation-only change.
+
+## Recoverable onboarding — October 22, 2026
+
+Onboarding now keeps customer choices in the wizard when workspace creation fails and offers a retry with a generic error message. Server-side authentication runs outside the recoverable transaction boundary, so login/MFA redirects still work. Successful completion redirects only after the transaction commits. Name/timezone validation happens before the next step; Enter advances intermediate steps without creating a workspace, and pending submission disables Back/Create controls. No schema, provider or account configuration changes are required.
+
+The browser regression renders the production form with a synthetic action in an isolated page: no authenticated test route, session bypass or real customer creation is introduced. Separate PostgreSQL and action tests cover transaction/authorization behavior. This supplements the earlier handoff; production source does change in this follow-up. Live owner-reported acceptance remains separate from locally executed checks.
+
+Final verification for this follow-up: 320 unit/database tests, full ESLint, TypeScript, final production build, three production boundary tests and four relevant browser scenarios passed across the initial run plus corrected rerun. Personal JARVIS remains separate; no live credentials or services were used.
